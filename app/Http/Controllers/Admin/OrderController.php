@@ -89,6 +89,19 @@ class OrderController extends Controller
 
         if ($user->role === User::ROLE_DELIVERY) {
             abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لعرض هذا الطلب.');
+
+            if (!$order->is_seen_by_admin) {
+                $order->update(['is_seen_by_admin' => true]);
+            }
+
+            $deliveryUsers = User::query()
+                ->where('user_type', User::TYPE_STAFF)
+                ->where('role', User::ROLE_DELIVERY)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+
+            return view('admin.orders.show', compact('order', 'deliveryUsers'));
         }
 
         if (
@@ -128,6 +141,25 @@ class OrderController extends Controller
 
         if ($user->role === User::ROLE_DELIVERY) {
             abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لتحديث هذا الطلب.');
+
+            $validated = $request->validate([
+                'status' => 'required|in:out_for_delivery,delivered,cancelled',
+                'status_note' => 'nullable|string',
+                'estimated_delivery_minutes' => 'nullable|integer|min:1|max:300',
+            ]);
+
+            $minutes = $validated['estimated_delivery_minutes'] ?? null;
+
+            $order->update([
+                'status' => $validated['status'],
+                'status_note' => $validated['status_note'] ?? null,
+                'estimated_delivery_minutes' => $minutes,
+                'estimated_delivery_at' => $minutes
+                    ? now()->addMinutes((int) $minutes)
+                    : $order->estimated_delivery_at,
+            ]);
+
+            return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
         }
 
         if (

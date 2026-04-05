@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryOrderController;
+use App\Http\Controllers\Admin\DeliveryManagementController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -191,6 +192,10 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
         ->name('admin.delivery.dashboard');
     Route::get('/delivery', [DeliveryDashboardController::class, 'index']);
 
+    Route::get('/delivery/orders', [DeliveryOrderController::class, 'index'])->name('admin.delivery.orders.index');
+    Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');
+    Route::get('/delivery/orders/completed', [DeliveryOrderController::class, 'completed'])->name('admin.delivery.orders.completed');
+    Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])->name('admin.delivery.management');
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
 
