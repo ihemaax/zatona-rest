@@ -26,7 +26,7 @@
                         <td>{{ $order->status }}</td>
                         <td>{{ number_format($order->total, 2) }}</td>
                         <td>{{ $order->branch->name ?? '-' }}</td>
-                        <td>{{ $order->address ?? '-' }}</td>
+                        <td>{{ $order->address_line ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>

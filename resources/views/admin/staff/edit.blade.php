@@ -305,13 +305,11 @@
                     <div class="field-card field-col-6">
                         <label class="form-label">الدور الوظيفي</label>
                         <select name="role" class="form-select" required>
-                            @foreach($roles as $key => $label)
-                                @if($key !== \App\Models\User::ROLE_SUPER_ADMIN)
-                                    <option value="{{ $key }}" {{ old('role', $staff->role) === $key ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endif
-                            @endforeach
+                            <option value="{{ \App\Models\User::ROLE_MANAGER }}" {{ old('role', $staff->role) === \App\Models\User::ROLE_MANAGER ? 'selected' : '' }}>مدير</option>
+                            <option value="{{ \App\Models\User::ROLE_BRANCH_STAFF }}" {{ old('role', $staff->role) === \App\Models\User::ROLE_BRANCH_STAFF ? 'selected' : '' }}>موظف فرع</option>
+                            <option value="{{ \App\Models\User::ROLE_CASHIER }}" {{ old('role', $staff->role) === \App\Models\User::ROLE_CASHIER ? 'selected' : '' }}>كاشير</option>
+                            <option value="{{ \App\Models\User::ROLE_KITCHEN }}" {{ old('role', $staff->role) === \App\Models\User::ROLE_KITCHEN ? 'selected' : '' }}>مطبخ</option>
+                            <option value="{{ \App\Models\User::ROLE_DELIVERY }}" {{ old('role', $staff->role) === \App\Models\User::ROLE_DELIVERY ? 'selected' : '' }}>دليفري</option>
                         </select>
                         <div class="field-hint">يحدد الدور مستوى الوصول والمهام المتاحة داخل لوحة الإدارة.</div>
                     </div>

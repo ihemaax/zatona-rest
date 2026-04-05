@@ -692,28 +692,46 @@
             </div>
 
             <div class="order-panel-body">
+                @php($isDeliveryUser = auth()->user()?->role === \App\Models\User::ROLE_DELIVERY)
+
                 <form action="{{ route('admin.orders.status', $order->id) }}" method="POST" class="side-form-grid">
                     @csrf
+
+                    @unless($isDeliveryUser)
+                        <div>
+                            <label class="form-label">نوع الطلب</label>
+                            <select name="order_type" class="form-select">
+                                <option value="delivery" {{ $order->order_type === 'delivery' ? 'selected' : '' }}>توصيل</option>
+                                <option value="pickup" {{ $order->order_type === 'pickup' ? 'selected' : '' }}>استلام</option>
+                            </select>
+                        </div>
+                    @endunless
 
                     <div>
                         <label class="form-label">حالة الطلب</label>
                         <select name="status" class="form-select" required>
-                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>قيد المراجعة</option>
-                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>تم التأكيد</option>
-                            <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
-
-                            @if($order->order_type === 'delivery')
+                            @if($isDeliveryUser)
                                 <option value="out_for_delivery" {{ $order->status === 'out_for_delivery' ? 'selected' : '' }}>خرج للتوصيل</option>
-                            @endif
+                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التسليم</option>
+                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>تم الإلغاء</option>
+                            @else
+                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>قيد المراجعة</option>
+                                <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>تم التأكيد</option>
+                                <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
 
-                            <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التسليم</option>
-                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>تم الإلغاء</option>
+                                @if($order->order_type === 'delivery')
+                                    <option value="out_for_delivery" {{ $order->status === 'out_for_delivery' ? 'selected' : '' }}>خرج للتوصيل</option>
+                                @endif
+
+                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التسليم</option>
+                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>تم الإلغاء</option>
+                            @endif
                         </select>
                     </div>
 
                     <div>
                         <label class="form-label">
-                            @if($order->order_type === 'delivery')
+                            @if($order->order_type === 'delivery' || $isDeliveryUser)
                                 الوقت المتوقع للتوصيل بالدقائق
                             @else
                                 الوقت المتوقع للاستلام بالدقائق
@@ -739,43 +757,7 @@
                             placeholder="مثال: تم بدء التحضير / المندوب في الطريق / الطلب جاهز للاستلام"
                         >{{ old('status_note', $order->status_note) }}</textarea>
                     </div>
-<div class="admin-card p-4 mt-4">
-    <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
 
-    <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
-        @csrf
-        @method('PATCH')
-
-        <select name="delivery_user_id" class="form-select" style="max-width: 320px;">
-            <option value="">اختر الدليفري</option>
-            @foreach($deliveryUsers as $deliveryUser)
-                <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
-                    {{ $deliveryUser->name }} - {{ $deliveryUser->phone }}
-                </option>
-            @endforeach
-        </select>
-
-        <button type="submit" class="btn-admin">
-            إسناد للدليفري
-        </button>
-    </form>
-
-    @if($order->deliveryUser)
-        <div class="mb-3">
-            <strong>الدليفري الحالي:</strong>
-            {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->phone }}
-        </div>
-    @endif
-
-    <form action="{{ route('admin.orders.mark-out-for-delivery', $order->id) }}" method="POST">
-        @csrf
-        @method('PATCH')
-
-        <button type="submit" class="btn-admin-soft">
-            تحويل إلى خرج للتوصيل
-        </button>
-    </form>
-</div>
                     <div class="helper-box">
                         <div class="fw-bold mb-1">موعد التنفيذ المتوقع الحالي</div>
                         <div>
@@ -786,6 +768,35 @@
                     <button type="submit" class="btn-save-order">حفظ التحديثات</button>
                     <a href="{{ route('admin.orders.index') }}" class="btn-back-order">الرجوع إلى قائمة الطلبات</a>
                 </form>
+
+                @unless($isDeliveryUser)
+                    <div class="admin-card p-4 mt-4">
+                        <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
+
+                        <form action="{{ url('/admin/orders/' . $order->id . '/assign-delivery') }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+                            @csrf
+                            @method('PATCH')
+
+                            <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
+                                <option value="">اختر الدليفري</option>
+                                @foreach($deliveryUsers as $deliveryUser)
+                                    <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
+                                        {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <button type="submit" class="btn-admin">إسناد للدليفري</button>
+                        </form>
+
+                        @if($order->deliveryUser)
+                            <div class="mb-0">
+                                <strong>الدليفري الحالي:</strong>
+                                {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->email }}
+                            </div>
+                        @endif
+                    </div>
+                @endunless
             </div>
         </div>
     </div>
