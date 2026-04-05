@@ -23,6 +23,7 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
+use App\Http\Controllers\Admin\DeliveryDashboardController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -187,6 +188,10 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/orders/poll', [OrderController::class, 'poll'])->name('admin.orders.poll');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
+    Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])->name('admin.orders.assign-delivery');
+
+    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
+        ->name('admin.delivery.dashboard');
 });
 
 require __DIR__ . '/auth.php';
