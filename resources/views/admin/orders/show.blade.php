@@ -750,6 +750,23 @@
 <div class="admin-card p-4 mt-4">
     <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
 
+    <form action="{{ url('/admin/orders/' . $order->id . '/assign-delivery') }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+        @csrf
+        @method('PATCH')
+
+        <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
+            <option value="">اختر الدليفري</option>
+            @foreach($deliveryUsers as $deliveryUser)
+                <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
+                    {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="btn-admin">
+            إسناد للدليفري
+        </button>
+    </form>
     @if(Route::has('admin.orders.assign-delivery'))
         <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
             @csrf

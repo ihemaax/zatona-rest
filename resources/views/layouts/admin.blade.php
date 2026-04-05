@@ -1204,6 +1204,15 @@
                 <div class="sb-submenu">
                     @if($adminUser?->hasPermission('view_orders') || $adminUser?->isSuperAdmin())
                         @if($adminUser?->role === \App\Models\User::ROLE_DELIVERY)
+                            <a href="{{ url('/admin/delivery-dashboard') }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>طلباتي (الدليفري)</span>
+                            </a>
+
+                            <a href="{{ url('/delivery') }}" class="sb-sublink {{ request()->is('delivery*') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>صفحة الدليفري</span>
+                            </a>
                             @if(Route::has('admin.delivery.dashboard'))
                                 <a href="{{ route('admin.delivery.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.dashboard') ? 'active' : '' }}">
                                     <span class="sb-sublink-dot"></span>
