@@ -1136,6 +1136,7 @@
 
     $dashboardGroupOpen =
         request()->routeIs('admin.dashboard') ||
+        request()->routeIs('admin.delivery.dashboard') ||
         request()->routeIs('admin.orders.index') ||
         request()->routeIs('admin.orders.show') ||
         request()->routeIs('admin.orders.delivery') ||
@@ -1202,6 +1203,22 @@
 
                 <div class="sb-submenu">
                     @if($adminUser?->hasPermission('view_orders') || $adminUser?->isSuperAdmin())
+                        @if($adminUser?->role === \App\Models\User::ROLE_DELIVERY)
+                            @if(Route::has('admin.delivery.dashboard'))
+                                <a href="{{ route('admin.delivery.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.dashboard') ? 'active' : '' }}">
+                                    <span class="sb-sublink-dot"></span>
+                                    <span>طلباتي (الدليفري)</span>
+                                </a>
+                            @endif
+
+                            @if(Route::has('delivery.orders.index'))
+                                <a href="{{ route('delivery.orders.index') }}" class="sb-sublink {{ request()->routeIs('delivery.orders.*') ? 'active' : '' }}">
+                                    <span class="sb-sublink-dot"></span>
+                                    <span>صفحة الدليفري</span>
+                                </a>
+                            @endif
+                        @endif
+
                         <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الرئيسية</span>
