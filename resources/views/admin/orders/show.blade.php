@@ -696,6 +696,14 @@
                     @csrf
 
                     <div>
+                        <label class="form-label">نوع الطلب</label>
+                        <select name="order_type" class="form-select">
+                            <option value="delivery" {{ $order->order_type === 'delivery' ? 'selected' : '' }}>توصيل</option>
+                            <option value="pickup" {{ $order->order_type === 'pickup' ? 'selected' : '' }}>استلام</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="form-label">حالة الطلب</label>
                         <select name="status" class="form-select" required>
                             <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>قيد المراجعة</option>
@@ -742,15 +750,15 @@
 <div class="admin-card p-4 mt-4">
     <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
 
-    <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+    <form action="{{ url('/admin/orders/' . $order->id . '/assign-delivery') }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
         @csrf
         @method('PATCH')
 
-        <select name="delivery_user_id" class="form-select" style="max-width: 320px;">
+        <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
             <option value="">اختر الدليفري</option>
             @foreach($deliveryUsers as $deliveryUser)
                 <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
-                    {{ $deliveryUser->name }} - {{ $deliveryUser->phone }}
+                    {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
                 </option>
             @endforeach
         </select>
@@ -763,18 +771,9 @@
     @if($order->deliveryUser)
         <div class="mb-3">
             <strong>الدليفري الحالي:</strong>
-            {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->phone }}
+            {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->email }}
         </div>
     @endif
-
-    <form action="{{ route('admin.orders.mark-out-for-delivery', $order->id) }}" method="POST">
-        @csrf
-        @method('PATCH')
-
-        <button type="submit" class="btn-admin-soft">
-            تحويل إلى خرج للتوصيل
-        </button>
-    </form>
 </div>
                     <div class="helper-box">
                         <div class="fw-bold mb-1">موعد التنفيذ المتوقع الحالي</div>
