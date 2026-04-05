@@ -77,6 +77,7 @@ class User extends Authenticatable
             'manage_settings' => 'إدارة الإعدادات',
             'manage_digital_menu' => 'إدارة المنيو الإلكتروني',
             'manage_staff' => 'إدارة الموظفين',
+            'manage_delivery' => 'متابعة وإدارة الدليفري',
             'view_reports' => 'عرض التقارير',
         ];
     }
@@ -96,6 +97,7 @@ class User extends Authenticatable
                 'manage_settings',
                 'manage_digital_menu',
                 'manage_staff',
+                'manage_delivery',
                 'view_reports',
             ],
 
@@ -106,6 +108,7 @@ class User extends Authenticatable
                 'manage_products',
                 'manage_categories',
                 'manage_digital_menu',
+                'manage_delivery',
                 'view_reports',
             ],
 

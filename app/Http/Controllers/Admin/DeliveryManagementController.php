@@ -11,7 +11,7 @@ class DeliveryManagementController extends Controller
     public function index()
     {
         $user = auth()->user();
-        abort_unless($user && ($user->isSuperAdmin() || $user->hasPermission('view_orders')), 403);
+        abort_unless($user && ($user->isSuperAdmin() || $user->hasPermission('manage_delivery')), 403);
 
         $deliveryUsers = User::query()
             ->where('user_type', User::TYPE_STAFF)

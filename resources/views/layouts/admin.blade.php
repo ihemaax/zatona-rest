@@ -1232,10 +1232,12 @@
                             <span>طلبات الاستلام</span>
                         </a>
 
-                        <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>متابعة الدليفري</span>
-                        </a>
+                        @if($adminUser?->isSuperAdmin() || $adminUser?->hasPermission('manage_delivery'))
+                            <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>متابعة الدليفري</span>
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>

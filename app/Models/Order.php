@@ -11,6 +11,9 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'delivery_user_id',
+        'assigned_to_delivery_at',
+        'out_for_delivery_at',
+        'delivered_at',
         'order_type',
         'branch_id',
         'order_number',
@@ -35,6 +38,9 @@ class Order extends Model
 
     protected $casts = [
         'estimated_delivery_at' => 'datetime',
+        'assigned_to_delivery_at' => 'datetime',
+        'out_for_delivery_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'is_seen_by_admin' => 'boolean',
     ];
 

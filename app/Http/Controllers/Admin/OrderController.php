@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
+use App\Notifications\DeliveryOrderAssigned;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -157,6 +158,12 @@ class OrderController extends Controller
                 'estimated_delivery_at' => $minutes
                     ? now()->addMinutes((int) $minutes)
                     : $order->estimated_delivery_at,
+                'out_for_delivery_at' => $validated['status'] === 'out_for_delivery'
+                    ? ($order->out_for_delivery_at ?? now())
+                    : $order->out_for_delivery_at,
+                'delivered_at' => $validated['status'] === 'delivered'
+                    ? ($order->delivered_at ?? now())
+                    : $order->delivered_at,
             ]);
 
             return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
@@ -196,6 +203,12 @@ class OrderController extends Controller
             'estimated_delivery_at' => $minutes
                 ? now()->addMinutes((int) $minutes)
                 : $order->estimated_delivery_at,
+            'out_for_delivery_at' => $validated['status'] === 'out_for_delivery'
+                ? ($order->out_for_delivery_at ?? now())
+                : $order->out_for_delivery_at,
+            'delivered_at' => $validated['status'] === 'delivered'
+                ? ($order->delivered_at ?? now())
+                : $order->delivered_at,
         ]);
 
         return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
@@ -222,13 +235,25 @@ class OrderController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
+        $wasAssignedToDifferentUser = (int) ($order->delivery_user_id ?? 0) !== (int) $deliveryUser->id;
+
         $order->update([
             'order_type' => 'delivery',
             'delivery_user_id' => $deliveryUser->id,
+            'assigned_to_delivery_at' => $wasAssignedToDifferentUser
+                ? now()
+                : ($order->assigned_to_delivery_at ?? now()),
             'status' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
                 ? 'out_for_delivery'
                 : $order->status,
+            'out_for_delivery_at' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
+                ? now()
+                : $order->out_for_delivery_at,
         ]);
+
+        if ($wasAssignedToDifferentUser) {
+            $deliveryUser->notify(new DeliveryOrderAssigned($order->fresh()));
+        }
 
         return redirect()->back()->with('success', 'تم إسناد الطلب للدليفري بنجاح.');
     }

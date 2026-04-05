@@ -24,7 +24,6 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
-use App\Http\Controllers\Admin\DeliveryOrderController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
 
 use App\Http\Controllers\Admin\ReportController;
@@ -186,26 +185,22 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
     Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])->name('admin.orders.assign-delivery');
-    Route::patch('/orders/{order}/assignDelivery', [OrderController::class, 'assignDelivery']);
 
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
-    Route::get('/delivery', [DeliveryDashboardController::class, 'index']);
+    Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])
+        ->middleware('permission:manage_delivery')
+        ->name('admin.delivery.management');
 
-    Route::get('/delivery/orders', [DeliveryOrderController::class, 'index'])->name('admin.delivery.orders.index');
-    Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');
-    Route::get('/delivery/orders/completed', [DeliveryOrderController::class, 'completed'])->name('admin.delivery.orders.completed');
-    Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])->name('admin.delivery.management');
+    Route::redirect('/delivery', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders/active', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders/completed', '/admin/delivery-dashboard');
 });
 
-Route::prefix('delivery')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [DeliveryOrderController::class, 'index'])->name('delivery.orders.index');
-    Route::get('/active', [DeliveryOrderController::class, 'active'])->name('delivery.orders.active');
-    Route::get('/completed', [DeliveryOrderController::class, 'completed'])->name('delivery.orders.completed');
-});
-
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index']);
-});
+Route::redirect('/delivery', '/admin/delivery-dashboard');
+Route::redirect('/delivery/active', '/admin/delivery-dashboard');
+Route::redirect('/delivery/completed', '/admin/delivery-dashboard');
+Route::redirect('/delivery-dashboard', '/admin/delivery-dashboard');
 
 require __DIR__ . '/auth.php';
