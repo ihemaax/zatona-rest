@@ -1126,6 +1126,7 @@
 
 @php
     $adminUser = auth()->user();
+    $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
     $newOrdersCount = \App\Models\Order::where('is_seen_by_admin', false)->count();
 
     if ($adminUser && !$adminUser->isSuperAdmin() && !$adminUser->hasPermission('view_all_branches_orders') && $adminUser->branch_id) {
@@ -1136,6 +1137,9 @@
 
     $dashboardGroupOpen =
         request()->routeIs('admin.dashboard') ||
+        request()->routeIs('admin.delivery.dashboard') ||
+        request()->routeIs('admin.delivery.management') ||
+        request()->routeIs('delivery.orders.*') ||
         request()->routeIs('admin.orders.index') ||
         request()->routeIs('admin.orders.show') ||
         request()->routeIs('admin.orders.delivery') ||
@@ -1202,30 +1206,43 @@
 
                 <div class="sb-submenu">
                     @if($adminUser?->hasPermission('view_orders') || $adminUser?->isSuperAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>الرئيسية</span>
-                        </a>
+                        @if($isDeliveryUser)
+                            <a href="{{ url('/admin/delivery-dashboard') }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>طلباتي (الدليفري)</span>
+                            </a>
+                        @else
+                            <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>الرئيسية</span>
+                            </a>
 
-                        <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>جميع الطلبات</span>
-                            <span class="sb-badge" id="sidebarNewOrdersCount">{{ $newOrdersCount }}</span>
-                        </a>
+                            <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>جميع الطلبات</span>
+                                <span class="sb-badge" id="sidebarNewOrdersCount">{{ $newOrdersCount }}</span>
+                            </a>
 
-                        <a href="{{ route('admin.orders.delivery') }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>طلبات التوصيل</span>
-                        </a>
+                            <a href="{{ route('admin.orders.delivery') }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>طلبات التوصيل</span>
+                            </a>
 
-                        <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>طلبات الاستلام</span>
-                        </a>
+                            <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>طلبات الاستلام</span>
+                            </a>
+
+                            <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>متابعة الدليفري</span>
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>
 
+            @unless($isDeliveryUser)
             <div class="sb-group {{ $operationsGroupOpen ? 'active' : '' }}" data-group>
                 <button type="button" class="sb-group-toggle" data-group-toggle>
                     <svg class="sb-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8">
@@ -1284,7 +1301,9 @@
                     @endauth
                 </div>
             </div>
+            @endunless
 
+            @unless($isDeliveryUser)
             @if(($adminUser?->hasPermission('manage_digital_menu') || $adminUser?->isSuperAdmin()) && Route::has('admin.digital-menu.settings'))
                 <div class="sb-group {{ $digitalMenuGroupOpen ? 'active' : '' }}" data-group>
                     <button type="button" class="sb-group-toggle" data-group-toggle>
@@ -1349,6 +1368,7 @@
                     </div>
                 </div>
             @endif
+            @endunless
         </div>
 
         <div class="sb-footer">

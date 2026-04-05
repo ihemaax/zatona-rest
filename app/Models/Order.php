@@ -10,6 +10,7 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id',
+        'delivery_user_id',
         'order_type',
         'branch_id',
         'order_number',
@@ -61,6 +62,11 @@ class Order extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function deliveryUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'delivery_user_id');
     }
 
     public function canBeCancelledByCustomer(): bool
