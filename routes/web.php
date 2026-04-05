@@ -23,6 +23,8 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
+use App\Http\Controllers\Admin\DeliveryDashboardController;
+use App\Http\Controllers\Admin\DeliveryManagementController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -187,6 +189,23 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/orders/poll', [OrderController::class, 'poll'])->name('admin.orders.poll');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
+    Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])->name('admin.orders.assign-delivery');
+
+    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
+        ->name('admin.delivery.dashboard');
+    Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])
+        ->middleware('permission:manage_delivery')
+        ->name('admin.delivery.management');
+
+    Route::redirect('/delivery', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders/active', '/admin/delivery-dashboard');
+    Route::redirect('/delivery/orders/completed', '/admin/delivery-dashboard');
 });
+
+Route::redirect('/delivery', '/admin/delivery-dashboard');
+Route::redirect('/delivery/active', '/admin/delivery-dashboard');
+Route::redirect('/delivery/completed', '/admin/delivery-dashboard');
+Route::redirect('/delivery-dashboard', '/admin/delivery-dashboard');
 
 require __DIR__ . '/auth.php';

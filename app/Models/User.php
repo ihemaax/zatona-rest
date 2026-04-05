@@ -55,13 +55,13 @@ class User extends Authenticatable
     public static function availableRoles(): array
     {
         return [
-            self::ROLE_SUPER_ADMIN => 'Super Admin',
-            self::ROLE_OWNER => 'Owner',
-            self::ROLE_MANAGER => 'Manager',
-            self::ROLE_BRANCH_STAFF => 'Branch Staff',
-            self::ROLE_CASHIER => 'Cashier',
-            self::ROLE_KITCHEN => 'Kitchen',
-            self::ROLE_DELIVERY => 'Delivery',
+            self::ROLE_SUPER_ADMIN => 'سوبر أدمن',
+            self::ROLE_OWNER => 'المالك',
+            self::ROLE_MANAGER => 'مدير',
+            self::ROLE_BRANCH_STAFF => 'موظف فرع',
+            self::ROLE_CASHIER => 'كاشير',
+            self::ROLE_KITCHEN => 'مطبخ',
+            self::ROLE_DELIVERY => 'دليفري',
         ];
     }
 
@@ -77,6 +77,7 @@ class User extends Authenticatable
             'manage_settings' => 'إدارة الإعدادات',
             'manage_digital_menu' => 'إدارة المنيو الإلكتروني',
             'manage_staff' => 'إدارة الموظفين',
+            'manage_delivery' => 'متابعة وإدارة الدليفري',
             'view_reports' => 'عرض التقارير',
         ];
     }
@@ -96,6 +97,7 @@ class User extends Authenticatable
                 'manage_settings',
                 'manage_digital_menu',
                 'manage_staff',
+                'manage_delivery',
                 'view_reports',
             ],
 
@@ -106,6 +108,7 @@ class User extends Authenticatable
                 'manage_products',
                 'manage_categories',
                 'manage_digital_menu',
+                'manage_delivery',
                 'view_reports',
             ],
 

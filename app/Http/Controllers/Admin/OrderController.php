@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
+use App\Notifications\DeliveryOrderAssigned;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +20,12 @@ class OrderController extends Controller
         }
 
         if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+            return $query;
+        }
+
+        if ($user->role === User::ROLE_DELIVERY) {
+            $query->where('delivery_user_id', $user->id);
+
             return $query;
         }
 
@@ -77,8 +85,25 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('branch', 'items');
+        $order->load('branch', 'items', 'deliveryUser');
         $user = auth()->user();
+
+        if ($user->role === User::ROLE_DELIVERY) {
+            abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لعرض هذا الطلب.');
+
+            if (!$order->is_seen_by_admin) {
+                $order->update(['is_seen_by_admin' => true]);
+            }
+
+            $deliveryUsers = User::query()
+                ->where('user_type', User::TYPE_STAFF)
+                ->where('role', User::ROLE_DELIVERY)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+
+            return view('admin.orders.show', compact('order', 'deliveryUsers'));
+        }
 
         if (
             !$user->isSuperAdmin()
@@ -101,12 +126,48 @@ class OrderController extends Controller
             $order->update(['is_seen_by_admin' => true]);
         }
 
-        return view('admin.orders.show', compact('order'));
+        $deliveryUsers = User::query()
+            ->where('user_type', User::TYPE_STAFF)
+            ->where('role', User::ROLE_DELIVERY)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.orders.show', compact('order', 'deliveryUsers'));
     }
 
     public function updateStatus(Request $request, Order $order)
     {
         $user = auth()->user();
+
+        if ($user->role === User::ROLE_DELIVERY) {
+            abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لتحديث هذا الطلب.');
+
+            $validated = $request->validate([
+                'status' => 'required|in:out_for_delivery,delivered,cancelled',
+                'status_note' => 'nullable|string',
+                'estimated_delivery_minutes' => 'nullable|integer|min:1|max:300',
+            ]);
+
+            $minutes = $validated['estimated_delivery_minutes'] ?? null;
+
+            $order->update([
+                'status' => $validated['status'],
+                'status_note' => $validated['status_note'] ?? null,
+                'estimated_delivery_minutes' => $minutes,
+                'estimated_delivery_at' => $minutes
+                    ? now()->addMinutes((int) $minutes)
+                    : $order->estimated_delivery_at,
+                'out_for_delivery_at' => $validated['status'] === 'out_for_delivery'
+                    ? ($order->out_for_delivery_at ?? now())
+                    : $order->out_for_delivery_at,
+                'delivered_at' => $validated['status'] === 'delivered'
+                    ? ($order->delivered_at ?? now())
+                    : $order->delivered_at,
+            ]);
+
+            return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
+        }
 
         if (
             !$user->isSuperAdmin()
@@ -127,6 +188,7 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'status' => 'required|string',
+            'order_type' => 'nullable|in:delivery,pickup',
             'status_note' => 'nullable|string',
             'estimated_delivery_minutes' => 'nullable|integer|min:1|max:300',
         ]);
@@ -135,14 +197,65 @@ class OrderController extends Controller
 
         $order->update([
             'status' => $validated['status'],
+            'order_type' => $validated['order_type'] ?? $order->order_type,
             'status_note' => $validated['status_note'] ?? null,
             'estimated_delivery_minutes' => $minutes,
             'estimated_delivery_at' => $minutes
                 ? now()->addMinutes((int) $minutes)
                 : $order->estimated_delivery_at,
+            'out_for_delivery_at' => $validated['status'] === 'out_for_delivery'
+                ? ($order->out_for_delivery_at ?? now())
+                : $order->out_for_delivery_at,
+            'delivered_at' => $validated['status'] === 'delivered'
+                ? ($order->delivered_at ?? now())
+                : $order->delivered_at,
         ]);
 
         return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
+    }
+
+    public function assignDelivery(Request $request, Order $order)
+    {
+        $user = auth()->user();
+
+        abort_unless(
+            $user->isSuperAdmin() || $user->hasPermission('update_order_status'),
+            403,
+            'ليس لديك صلاحية لإسناد الطلب للدليفري.'
+        );
+
+        $validated = $request->validate([
+            'delivery_user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $deliveryUser = User::query()
+            ->where('id', $validated['delivery_user_id'])
+            ->where('user_type', User::TYPE_STAFF)
+            ->where('role', User::ROLE_DELIVERY)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $wasAssignedToDifferentUser = (int) ($order->delivery_user_id ?? 0) !== (int) $deliveryUser->id;
+
+        $order->update([
+            'order_type' => 'delivery',
+            'delivery_user_id' => $deliveryUser->id,
+            'assigned_to_delivery_at' => $wasAssignedToDifferentUser
+                ? now()
+                : ($order->assigned_to_delivery_at ?? now()),
+            'status' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
+                ? 'out_for_delivery'
+                : $order->status,
+            'out_for_delivery_at' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
+                ? now()
+                : $order->out_for_delivery_at,
+        ]);
+
+        if ($wasAssignedToDifferentUser) {
+            $deliveryUser->notify(new DeliveryOrderAssigned($order->fresh()));
+        }
+
+        return redirect()->back()->with('success', 'تم إسناد الطلب للدليفري بنجاح.');
     }
 
     public function poll(Request $request): JsonResponse
