@@ -12,6 +12,21 @@ class DeliveryDashboardController extends Controller
     {
         $user = auth()->user();
 
+        abort_unless(
+            $user && $user->role === User::ROLE_DELIVERY,
+            403,
+            'هذه الصفحة مخصصة للدليفري فقط.'
+        );
+
+        $baseQuery = Order::with('branch')
+            ->where('delivery_user_id', $user->id)
+            ->latest();
+
+        $activeOrders = (clone $baseQuery)
+            ->whereIn('status', ['confirmed', 'preparing', 'out_for_delivery'])
+            ->paginate(12, ['*'], 'active_page');
+
+        $completedOrders = (clone $baseQuery)
         abort_unless($user && $user->role === User::ROLE_DELIVERY, 403, 'هذه الصفحة مخصصة للدليفري فقط.');
 
         $base = Order::with('branch')

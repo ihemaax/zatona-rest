@@ -1205,6 +1205,12 @@
                 </button>
 
                 <div class="sb-submenu">
+                    @if($isDeliveryUser)
+                        <a href="{{ url('/admin/delivery-dashboard') }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>طلباتي (الدليفري)</span>
+                        </a>
+                    @else
                     @if($adminUser?->hasPermission('view_orders') || $adminUser?->isSuperAdmin())
                         @if($isDeliveryUser)
                         @if($adminUser?->role === \App\Models\User::ROLE_DELIVERY)
@@ -1253,6 +1259,15 @@
                                 <span>طلبات التوصيل</span>
                             </a>
 
+                        <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>طلبات الاستلام</span>
+                        </a>
+
+                        <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>متابعة الدليفري</span>
+                        </a>
                             <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>طلبات الاستلام</span>
