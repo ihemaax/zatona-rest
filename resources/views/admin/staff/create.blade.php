@@ -28,11 +28,11 @@
         <div class="col-12 col-md-6">
             <label class="form-label fw-bold">الدور</label>
             <select name="role" class="form-select" required>
-                @foreach($roles as $key => $label)
-                    @if($key !== \App\Models\User::ROLE_SUPER_ADMIN)
-                        <option value="{{ $key }}" {{ old('role') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endif
-                @endforeach
+                <option value="{{ \App\Models\User::ROLE_MANAGER }}" {{ old('role') === \App\Models\User::ROLE_MANAGER ? 'selected' : '' }}>مدير</option>
+                <option value="{{ \App\Models\User::ROLE_BRANCH_STAFF }}" {{ old('role') === \App\Models\User::ROLE_BRANCH_STAFF ? 'selected' : '' }}>موظف فرع</option>
+                <option value="{{ \App\Models\User::ROLE_CASHIER }}" {{ old('role') === \App\Models\User::ROLE_CASHIER ? 'selected' : '' }}>كاشير</option>
+                <option value="{{ \App\Models\User::ROLE_KITCHEN }}" {{ old('role') === \App\Models\User::ROLE_KITCHEN ? 'selected' : '' }}>مطبخ</option>
+                <option value="{{ \App\Models\User::ROLE_DELIVERY }}" {{ old('role') === \App\Models\User::ROLE_DELIVERY ? 'selected' : '' }}>دليفري</option>
             </select>
         </div>
 

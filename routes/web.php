@@ -24,14 +24,10 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
+use App\Http\Controllers\Admin\DeliveryOrderController;
 
 use App\Http\Controllers\Admin\ReportController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
@@ -192,6 +188,16 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
 
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
+
+    Route::get('/delivery/orders', [DeliveryOrderController::class, 'index'])->name('admin.delivery.orders.index');
+    Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');
+    Route::get('/delivery/orders/completed', [DeliveryOrderController::class, 'completed'])->name('admin.delivery.orders.completed');
+});
+
+Route::prefix('delivery')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', [DeliveryOrderController::class, 'index'])->name('delivery.orders.index');
+    Route::get('/active', [DeliveryOrderController::class, 'active'])->name('delivery.orders.active');
+    Route::get('/completed', [DeliveryOrderController::class, 'completed'])->name('delivery.orders.completed');
 });
 
 require __DIR__ . '/auth.php';
