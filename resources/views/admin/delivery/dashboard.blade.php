@@ -38,14 +38,6 @@
 
 <div class="admin-card p-4 mb-4">
     <h3 class="section-title mb-3">الطلبات الجارية</h3>
-    $pageTitle = 'لوحة الدليفري';
-    $pageSubtitle = 'الطلبات المسندة إليك تلقائياً من الكاشير أو مسؤول الطلبات';
-@endphp
-
-@section('content')
-<div class="admin-card p-4">
-    <h3 class="section-title mb-3">طلبات الدليفري المسندة لي</h3>
-
     <div class="admin-table-wrap">
         <table class="table align-middle">
             <thead>
@@ -55,14 +47,12 @@
                     <th>العميل</th>
                     <th>الحالة</th>
                     <th>الإجمالي</th>
-                    <th>الفرع</th>
                     <th>العنوان</th>
                     <th>تفاصيل</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($activeOrders as $order)
-                @forelse($orders as $order)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $order->order_number ?? ('ORD-' . $order->id) }}</td>
@@ -109,24 +99,10 @@
                     </tr>
                 @empty
                     <tr><td colspan="7" class="text-center">لا توجد طلبات منتهية حالياً.</td></tr>
-                        <td>{{ $order->branch->name ?? '-' }}</td>
-                        <td>{{ $order->address_line ?? '-' }}</td>
-                        <td>
-                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn-admin-soft btn-sm">عرض</a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center">لا توجد طلبات دليفري مسندة لك حالياً</td>
-                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     <div class="mt-3">{{ $completedOrders->links() }}</div>
-
-    <div class="mt-3">
-        {{ $orders->links() }}
-    </div>
 </div>
 @endsection
