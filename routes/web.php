@@ -28,11 +28,6 @@ use App\Http\Controllers\Admin\DeliveryOrderController;
 
 use App\Http\Controllers\Admin\ReportController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
@@ -195,6 +190,9 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
     Route::get('/delivery', [DeliveryDashboardController::class, 'index']);
+
+    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
+        ->name('admin.delivery.dashboard');
 
     Route::get('/delivery/orders', [DeliveryOrderController::class, 'index'])->name('admin.delivery.orders.index');
     Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');

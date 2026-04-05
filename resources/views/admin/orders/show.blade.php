@@ -767,6 +767,29 @@
             إسناد للدليفري
         </button>
     </form>
+    @if(Route::has('admin.orders.assign-delivery'))
+        <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+            @csrf
+            @method('PATCH')
+
+            <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
+                <option value="">اختر الدليفري</option>
+                @foreach($deliveryUsers as $deliveryUser)
+                    <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
+                        {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
+                    </option>
+                @endforeach
+            </select>
+
+            <button type="submit" class="btn-admin">
+                إسناد للدليفري
+            </button>
+        </form>
+    @else
+        <div class="alert alert-warning mb-3">
+            مسار إسناد الدليفري غير متاح حالياً. لو سمحت نفّذ: php artisan route:clear && php artisan optimize:clear
+        </div>
+    @endif
 
     @if($order->deliveryUser)
         <div class="mb-3">
