@@ -1216,16 +1216,16 @@
                             <span>الرئيسية</span>
                         </a>
 
-                        <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>جميع الطلبات</span>
-                            <span class="sb-badge" id="sidebarNewOrdersCount">{{ $newOrdersCount }}</span>
-                        </a>
+                            <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>جميع الطلبات</span>
+                                <span class="sb-badge" id="sidebarNewOrdersCount">{{ $newOrdersCount }}</span>
+                            </a>
 
-                        <a href="{{ route('admin.orders.delivery') }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>طلبات التوصيل</span>
-                        </a>
+                            <a href="{{ route('admin.orders.delivery') }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>طلبات التوصيل</span>
+                            </a>
 
                         <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
