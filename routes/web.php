@@ -28,11 +28,6 @@ use App\Http\Controllers\Admin\DeliveryManagementController;
 
 use App\Http\Controllers\Admin\ReportController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
