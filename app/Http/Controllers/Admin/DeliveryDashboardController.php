@@ -42,3 +42,16 @@ class DeliveryDashboardController extends Controller
         ]);
     }
 }
+        abort_unless($user && $user->role === 'delivery', 403, 'هذه الصفحة مخصصة للدليفري فقط.');
+
+        $orders = Order::with('branch')
+            ->where('delivery_user_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
+        return view('admin.delivery.dashboard', [
+            'orders' => $orders,
+        ]);
+    }
+}
+

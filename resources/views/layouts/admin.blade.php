@@ -1207,6 +1207,7 @@
                 <div class="sb-submenu">
                     @if($adminUser?->hasPermission('view_orders') || $adminUser?->isSuperAdmin())
                         @if($isDeliveryUser)
+                        @if($adminUser?->role === \App\Models\User::ROLE_DELIVERY)
                             <a href="{{ url('/admin/delivery-dashboard') }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>طلباتي (الدليفري)</span>
@@ -1216,6 +1217,30 @@
                                 <span class="sb-sublink-dot"></span>
                                 <span>الرئيسية</span>
                             </a>
+
+                            <a href="{{ url('/delivery') }}" class="sb-sublink {{ request()->is('delivery*') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>صفحة الدليفري</span>
+                            </a>
+                            @if(Route::has('admin.delivery.dashboard'))
+                                <a href="{{ route('admin.delivery.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.dashboard') ? 'active' : '' }}">
+                                    <span class="sb-sublink-dot"></span>
+                                    <span>طلباتي (الدليفري)</span>
+                                </a>
+                            @endif
+
+                            @if(Route::has('delivery.orders.index'))
+                                <a href="{{ route('delivery.orders.index') }}" class="sb-sublink {{ request()->routeIs('delivery.orders.*') ? 'active' : '' }}">
+                                    <span class="sb-sublink-dot"></span>
+                                    <span>صفحة الدليفري</span>
+                                </a>
+                            @endif
+                        @endif
+
+                        <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>الرئيسية</span>
+                        </a>
 
                             <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>

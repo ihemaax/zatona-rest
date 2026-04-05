@@ -29,11 +29,6 @@ use App\Http\Controllers\Admin\DeliveryManagementController;
 
 use App\Http\Controllers\Admin\ReportController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
@@ -201,6 +196,12 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');
     Route::get('/delivery/orders/completed', [DeliveryOrderController::class, 'completed'])->name('admin.delivery.orders.completed');
     Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])->name('admin.delivery.management');
+    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
+        ->name('admin.delivery.dashboard');
+
+    Route::get('/delivery/orders', [DeliveryOrderController::class, 'index'])->name('admin.delivery.orders.index');
+    Route::get('/delivery/orders/active', [DeliveryOrderController::class, 'active'])->name('admin.delivery.orders.active');
+    Route::get('/delivery/orders/completed', [DeliveryOrderController::class, 'completed'])->name('admin.delivery.orders.completed');
 });
 
 Route::prefix('delivery')->middleware(['auth', 'admin'])->group(function () {

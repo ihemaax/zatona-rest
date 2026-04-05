@@ -708,6 +708,14 @@
                     @endunless
 
                     <div>
+                        <label class="form-label">نوع الطلب</label>
+                        <select name="order_type" class="form-select">
+                            <option value="delivery" {{ $order->order_type === 'delivery' ? 'selected' : '' }}>توصيل</option>
+                            <option value="pickup" {{ $order->order_type === 'pickup' ? 'selected' : '' }}>استلام</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="form-label">حالة الطلب</label>
                         <select name="status" class="form-select" required>
                             @if($isDeliveryUser)
@@ -758,6 +766,57 @@
                         >{{ old('status_note', $order->status_note) }}</textarea>
                     </div>
 
+<div class="admin-card p-4 mt-4">
+    <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
+
+    <form action="{{ url('/admin/orders/' . $order->id . '/assign-delivery') }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+        @csrf
+        @method('PATCH')
+
+        <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
+            <option value="">اختر الدليفري</option>
+            @foreach($deliveryUsers as $deliveryUser)
+                <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
+                    {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="btn-admin">
+            إسناد للدليفري
+        </button>
+    </form>
+    @if(Route::has('admin.orders.assign-delivery'))
+        <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
+            @csrf
+            @method('PATCH')
+
+            <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
+                <option value="">اختر الدليفري</option>
+                @foreach($deliveryUsers as $deliveryUser)
+                    <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
+                        {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
+                    </option>
+                @endforeach
+            </select>
+
+            <button type="submit" class="btn-admin">
+                إسناد للدليفري
+            </button>
+        </form>
+    @else
+        <div class="alert alert-warning mb-3">
+            مسار إسناد الدليفري غير متاح حالياً. لو سمحت نفّذ: php artisan route:clear && php artisan optimize:clear
+        </div>
+    @endif
+
+    @if($order->deliveryUser)
+        <div class="mb-3">
+            <strong>الدليفري الحالي:</strong>
+            {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->email }}
+        </div>
+    @endif
+</div>
                     <div class="helper-box">
                         <div class="fw-bold mb-1">موعد التنفيذ المتوقع الحالي</div>
                         <div>
