@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'brand' => 'زعتر وزتونه',
+    'menu' => 'المنيو',
+    'cart' => 'السلة',
+    'admin_panel' => 'لوحة الأدمن',
+    'categories' => 'الأقسام',
+    'products' => 'المنتجات',
+    'my_orders' => 'طلباتي',
+    'login' => 'دخول',
+    'register' => 'إنشاء حساب',
+    'logout' => 'تسجيل خروج',
+    'hero_title' => 'اطلب أكلك المفضل بسرعة وسهولة',
+    'hero_subtitle' => 'وجبات ساخنة، طعم ممتاز، وتوصيل سريع حتى باب البيت',
+    'cash_only' => 'الدفع المتاح: كاش عند الاستلام',
+    'browse_menu' => 'تصفح المنيو',
+    'use_current_location' => 'استخدم موقعي الحالي',
+    'detecting_location' => 'جاري تحديد موقعك...',
+    'location_detected' => 'تم تحديد الموقع بنجاح',
+    'location_failed' => 'تعذر تحديد الموقع الحالي',
+    'address_auto_filled' => 'تم تعبئة العنوان تلقائيًا',
+    'language' => 'اللغة',
+    'arabic' => 'العربية',
+    'english' => 'English',
+];
