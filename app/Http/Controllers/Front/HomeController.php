@@ -12,7 +12,7 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $settingPayload = Cache::remember('front.home.setting.v2', now()->addMinutes(10), function () {
+        $settingPayload = Cache::remember('front.home.setting.v3', now()->addMinutes(10), function () {
             $setting = Setting::first();
 
             if (!$setting) {
@@ -24,6 +24,7 @@ class HomeController extends Controller
                 'restaurant_phone' => $setting->restaurant_phone,
                 'restaurant_address' => $setting->restaurant_address,
                 'logo' => $setting->logo,
+                'banner' => $setting->banner,
                 'cover_image' => $setting->cover_image,
                 'delivery_fee' => $setting->delivery_fee,
                 'is_open' => (bool) $setting->is_open,
