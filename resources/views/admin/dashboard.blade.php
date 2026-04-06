@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetching = true;
 
         try {
-            const res = await fetch(`{{ secure_url('/admin/dashboard/poll') }}?range=${encodeURIComponent(range)}`, {
+            const res = await fetch(`{{ route('admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'

@@ -803,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function () {
         isFetching = true;
 
         try {
-            const response = await fetch(`{{ secure_url('/admin/orders/poll') }}?type=${encodeURIComponent(currentType)}`, {
+            const response = await fetch(`{{ route('admin.orders.poll', absolute: false) }}?type=${encodeURIComponent(currentType)}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
