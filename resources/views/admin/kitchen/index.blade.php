@@ -33,6 +33,43 @@
     .btn-start { background:#eef2ff; color:#3730a3; }
     .btn-ready { background:#ecfdf3; color:#166534; }
     .empty-state { text-align:center; padding:24px; color:#8a847a; font-weight:700; }
+
+    @media (max-width: 767.98px){
+        .kitchen-body{ padding:12px; }
+        .kitchen-table{ min-width:100%; border-spacing:0 10px; }
+        .kitchen-table thead{ display:none; }
+        .kitchen-table tbody tr{
+            display:block;
+            background:#fffdfa;
+            border:1px solid #e9dfd2;
+            border-radius:16px;
+            box-shadow:0 8px 18px rgba(35,31,27,.05);
+            margin-bottom:10px;
+            overflow:hidden;
+        }
+        .kitchen-table tbody td{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:10px;
+            border-bottom:1px dashed #eee4d8;
+            padding:10px 12px;
+            white-space:normal;
+            text-align:start;
+        }
+        .kitchen-table tbody td::before{
+            content:attr(data-label);
+            color:#7c7369;
+            font-size:.72rem;
+            font-weight:900;
+            flex-shrink:0;
+            min-width:86px;
+        }
+        .kitchen-table tbody td:last-child{ border-bottom:none; }
+        .actions-col{ width:100%; justify-content:flex-end; }
+        .actions-col form{ width:100%; }
+        .actions-col .btn-kitchen{ width:100%; }
+    }
 </style>
 
 <div class="kitchen-grid">
@@ -67,34 +104,34 @@
                     <tbody id="kitchenOrdersBody">
                         @forelse($orders as $order)
                             <tr data-order-id="{{ $order->id }}">
-                                <td class="order-no">{{ $order->order_number }}</td>
-                                <td>
+                                <td class="order-no" data-label="رقم الطلب">{{ $order->order_number }}</td>
+                                <td data-label="العميل">
                                     <div>{{ $order->customer_name }}</div>
                                     <small class="text-muted">{{ $order->created_at?->format('Y-m-d h:i A') }}</small>
                                 </td>
-                                <td>{{ $order->branch?->name ?? '-' }}</td>
-                                <td>
+                                <td data-label="الفرع">{{ $order->branch?->name ?? '-' }}</td>
+                                <td data-label="النوع">
                                     @if($order->order_type === 'delivery')
                                         <span class="chip chip-delivery">توصيل</span>
                                     @else
                                         <span class="chip chip-pickup">استلام</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-label="الحالة">
                                     @if($order->status === 'confirmed')
                                         <span class="chip chip-confirmed">مؤكد</span>
                                     @else
                                         <span class="chip chip-preparing">قيد التحضير</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-label="المنتجات">
                                     <ul class="items-list">
                                         @foreach($order->items as $item)
                                             <li>{{ $item->product?->name ?? 'منتج' }} × {{ (int) $item->quantity }}</li>
                                         @endforeach
                                     </ul>
                                 </td>
-                                <td>
+                                <td data-label="الإجراءات">
                                     <div class="actions-col">
                                         @if($order->status === 'confirmed')
                                             <form method="POST" action="{{ route('admin.kitchen.start', $order->id) }}" data-once-submit>
@@ -114,7 +151,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="empty-state">لا توجد طلبات مؤكدة في المطبخ حالياً.</td>
+                        <td colspan="7" class="empty-state" data-label="الحالة">لا توجد طلبات مؤكدة في المطبخ حالياً.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -197,16 +234,16 @@
 
                 return `
                     <tr data-order-id="${order.id}">
-                        <td class="order-no">${order.order_number || ('#' + order.id)}</td>
-                        <td>
+                        <td class="order-no" data-label="رقم الطلب">${order.order_number || ('#' + order.id)}</td>
+                        <td data-label="العميل">
                             <div>${order.customer_name || '-'}</div>
                             <small class="text-muted">${order.created_at || ''}</small>
                         </td>
-                        <td>${order.branch_name || '-'}</td>
-                        <td>${typeChip(order.order_type)}</td>
-                        <td>${statusChip(order.status)}</td>
-                        <td>${itemList(order.items)}</td>
-                        <td>
+                        <td data-label="الفرع">${order.branch_name || '-'}</td>
+                        <td data-label="النوع">${typeChip(order.order_type)}</td>
+                        <td data-label="الحالة">${statusChip(order.status)}</td>
+                        <td data-label="المنتجات">${itemList(order.items)}</td>
+                        <td data-label="الإجراءات">
                             <div class="actions-col">
                                 ${startForm}
                                 ${readyForm}
