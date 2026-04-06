@@ -23,6 +23,8 @@
                 <span class="badge bg-primary">{{ __('order_success.preparing') }}</span>
             @elseif($order->status == 'out_for_delivery')
                 <span class="badge bg-dark">{{ __('order_success.out_for_delivery') }}</span>
+            @elseif($order->status == 'ready_for_pickup')
+                <span class="badge bg-primary">جاهز للاستلام من الفرع</span>
             @elseif($order->status == 'delivered')
                 <span class="badge bg-success">{{ __('order_success.delivered') }}</span>
             @else

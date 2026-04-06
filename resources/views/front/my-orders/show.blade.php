@@ -7,6 +7,7 @@
         'confirmed' => 2,
         'preparing' => 3,
         'out_for_delivery' => 4,
+        'ready_for_pickup' => 4,
         'delivered' => 5,
     ];
 
@@ -18,6 +19,7 @@
             'confirmed' => 'status-pill status-confirmed',
             'preparing' => 'status-pill status-preparing',
             'out_for_delivery' => 'status-pill status-delivery',
+            'ready_for_pickup' => 'status-pill status-confirmed',
             'delivered' => 'status-pill status-delivered',
             default => 'status-pill status-cancelled',
         };
@@ -29,6 +31,7 @@
             'confirmed' => 'تم التأكيد',
             'preparing' => 'جاري التحضير',
             'out_for_delivery' => 'خرج للتوصيل',
+            'ready_for_pickup' => 'جاهز للاستلام',
             'delivered' => 'تم التوصيل',
             default => 'ملغي',
         };

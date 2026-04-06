@@ -26,6 +26,8 @@ use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
+use App\Http\Controllers\Admin\KitchenController;
+use App\Http\Controllers\Admin\ReadyOrderController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -189,6 +191,12 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
     Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])->name('admin.orders.assign-delivery');
+
+    Route::get('/kitchen', [KitchenController::class, 'index'])->name('admin.kitchen.index');
+    Route::get('/kitchen/poll', [KitchenController::class, 'poll'])->name('admin.kitchen.poll');
+    Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])->name('admin.kitchen.start');
+    Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])->name('admin.kitchen.ready');
+    Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
 
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
