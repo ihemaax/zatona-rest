@@ -16,6 +16,7 @@ class Order extends Model
         'delivered_at',
         'order_type',
         'branch_id',
+        'coupon_id',
         'order_number',
         'customer_name',
         'customer_phone',
@@ -24,7 +25,9 @@ class Order extends Model
         'latitude',
         'longitude',
         'notes',
+        'coupon_code',
         'subtotal',
+        'discount_amount',
         'delivery_fee',
         'total',
         'payment_method',
@@ -73,6 +76,11 @@ class Order extends Model
     public function deliveryUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'delivery_user_id');
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function canBeCancelledByCustomer(): bool
