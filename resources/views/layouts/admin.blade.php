@@ -1222,6 +1222,11 @@
     $hasAdminPermission = function (string $permission) use ($isDemoDashboard, $adminUser) {
         return $isDemoDashboard || $adminUser?->isSuperAdmin() || $adminUser?->hasPermission($permission);
     };
+    $demoOrAdminUrl = function (string $demoPath, string $adminUrl) use ($isDemoDashboard) {
+        return $isDemoDashboard
+            ? route('admin.demo.module', ['path' => $demoPath])
+            : $adminUrl;
+    };
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
     $isKitchenUser = $adminUser?->role === \App\Models\User::ROLE_KITCHEN;
     $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
@@ -1301,13 +1306,13 @@
 
                 <div class="sb-submenu">
                     @if($isDeliveryUser)
-                        <a href="{{ url('/admin/delivery-dashboard') }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('delivery-dashboard', url('/admin/delivery-dashboard')) }}" class="sb-sublink {{ request()->is('admin/delivery-dashboard') || request()->is('delivery-dashboard') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>طلباتي (الدليفري)</span>
                         </a>
                     @elseif($isKitchenUser)
                         @if($adminUser?->isSuperAdmin() || $adminUser?->isOwner() || $adminUser?->role === \App\Models\User::ROLE_MANAGER || $adminUser?->role === \App\Models\User::ROLE_KITCHEN)
-                            <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('kitchen', route('admin.kitchen.index')) }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>شاشة المطبخ</span>
                             </a>
@@ -1318,34 +1323,34 @@
                             <span>الرئيسية</span>
                         </a>
 
-                            <a href="{{ route('admin.orders.index') }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('orders', route('admin.orders.index')) }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>جميع الطلبات</span>
                                 <span class="sb-badge" id="sidebarNewOrdersCount">{{ $newOrdersCount }}</span>
                             </a>
 
-                            <a href="{{ route('admin.orders.delivery') }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('orders-delivery', route('admin.orders.delivery')) }}" class="sb-sublink {{ request()->routeIs('admin.orders.delivery') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>طلبات التوصيل</span>
                             </a>
 
-                        <a href="{{ route('admin.orders.pickup') }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('orders-pickup', route('admin.orders.pickup')) }}" class="sb-sublink {{ request()->routeIs('admin.orders.pickup') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>طلبات الاستلام</span>
                         </a>
 
-                        <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('kitchen', route('admin.kitchen.index')) }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>شاشة المطبخ</span>
                         </a>
 
-                        <a href="{{ route('admin.orders.ready') }}" class="sb-sublink {{ request()->routeIs('admin.orders.ready') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('ready-orders', route('admin.orders.ready')) }}" class="sb-sublink {{ request()->routeIs('admin.orders.ready') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الطلبات الجاهزة</span>
                         </a>
 
                         @if($hasAdminPermission('manage_delivery'))
-                            <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('delivery-management', route('admin.delivery.management')) }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>متابعة الدليفري</span>
                             </a>
@@ -1369,47 +1374,47 @@
 
                 <div class="sb-submenu">
                     @if($hasAdminPermission('manage_branches'))
-                        <a href="{{ route('admin.branches.index') }}" class="sb-sublink {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('branches', route('admin.branches.index')) }}" class="sb-sublink {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الفروع</span>
                         </a>
                     @endif
 
                     @if($hasAdminPermission('manage_categories'))
-                        <a href="{{ route('admin.categories.index') }}" class="sb-sublink {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('categories', route('admin.categories.index')) }}" class="sb-sublink {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الأقسام</span>
                         </a>
                     @endif
 
                     @if($hasAdminPermission('manage_products'))
-                        <a href="{{ route('admin.products.index') }}" class="sb-sublink {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('products', route('admin.products.index')) }}" class="sb-sublink {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>المنتجات</span>
                         </a>
                     @endif
 
-                    <a href="{{ url('/admin/coupons') }}" class="sb-sublink {{ request()->is('admin/coupons*') ? 'active' : '' }}">
+                    <a href="{{ $demoOrAdminUrl('coupons', url('/admin/coupons')) }}" class="sb-sublink {{ request()->is('admin/coupons*') ? 'active' : '' }}">
                         <span class="sb-sublink-dot"></span>
                         <span>كوبونات الخصم</span>
                     </a>
 
                     @if($hasAdminPermission('manage_settings'))
-                        <a href="{{ route('admin.settings.edit') }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('settings', route('admin.settings.edit')) }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الإعدادات</span>
                         </a>
                     @endif
 
                     @if($hasAdminPermission('manage_staff'))
-                        <a href="{{ route('admin.staff.index') }}" class="sb-sublink {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('staff', route('admin.staff.index')) }}" class="sb-sublink {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الموظفون</span>
                         </a>
                     @endif
 
                     @if($hasAdminPermission('view_reports'))
-                        <a href="{{ route('admin.reports.index') }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('reports', route('admin.reports.index')) }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>التقارير</span>
                         </a>
@@ -1433,27 +1438,27 @@
                     </button>
 
                     <div class="sb-submenu">
-                        <a href="{{ route('admin.digital-menu.settings') }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.settings') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('digital-menu/settings', route('admin.digital-menu.settings')) }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.settings') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الإعدادات</span>
                         </a>
 
                         @if(Route::has('admin.digital-menu.categories'))
-                            <a href="{{ route('admin.digital-menu.categories') }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.categories') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('digital-menu/categories', route('admin.digital-menu.categories')) }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.categories') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>الأقسام</span>
                             </a>
                         @endif
 
                         @if(Route::has('admin.digital-menu.items'))
-                            <a href="{{ route('admin.digital-menu.items') }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.items') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('digital-menu/items', route('admin.digital-menu.items')) }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.items') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>المنتجات</span>
                             </a>
                         @endif
 
                         @if(Route::has('admin.digital-menu.qr'))
-                            <a href="{{ route('admin.digital-menu.qr') }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.qr*') ? 'active' : '' }}">
+                            <a href="{{ $demoOrAdminUrl('digital-menu/qr', route('admin.digital-menu.qr')) }}" class="sb-sublink {{ request()->routeIs('admin.digital-menu.qr*') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>QR والروابط</span>
                             </a>
@@ -1476,7 +1481,7 @@
                     </button>
 
                     <div class="sb-submenu">
-                        <a href="{{ route('admin.popup-campaign.edit') }}" class="sb-sublink {{ request()->routeIs('admin.popup-campaign.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('popup-campaign', route('admin.popup-campaign.edit')) }}" class="sb-sublink {{ request()->routeIs('admin.popup-campaign.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الإعلان المنبثق</span>
                         </a>
@@ -1581,7 +1586,7 @@
                     </svg>
                 </button>
 
-                <a href="{{ url('/admin/ai-assistant') }}" class="admin-ai-icon-btn" title="فتح في صفحة كاملة">
+                <a href="{{ $demoOrAdminUrl('ai-assistant', url('/admin/ai-assistant')) }}" class="admin-ai-icon-btn" title="فتح في صفحة كاملة">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
                         <path d="M14 5h5v5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M10 14L19 5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1602,7 +1607,7 @@
                 id="adminAiFrame"
                 class="admin-ai-frame"
                 src="about:blank"
-                data-src="{{ url('/admin/ai-assistant?embed=1') }}"
+                data-src="{{ $demoOrAdminUrl('ai-assistant', url('/admin/ai-assistant?embed=1')) }}"
                 loading="lazy"
                 referrerpolicy="same-origin"
             ></iframe>
@@ -1610,7 +1615,7 @@
                 <div class="admin-ai-fallback-card">
                     <p class="admin-ai-fallback-title">تعذر تحميل نافذة المساعد داخل الودجت</p>
                     <p class="admin-ai-fallback-text">استخدم فتح الصفحة الكاملة للمساعد وسيعمل بشكل طبيعي.</p>
-                    <a href="{{ url('/admin/ai-assistant') }}" class="btn-admin-soft">فتح صفحة المساعد الكاملة</a>
+                    <a href="{{ $demoOrAdminUrl('ai-assistant', url('/admin/ai-assistant')) }}" class="btn-admin-soft">فتح صفحة المساعد الكاملة</a>
                 </div>
             </div>
         </div>

@@ -12,7 +12,6 @@
                 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
                     <div>
                         <h4 class="mb-1 fw-bold">{{ $demoSectionTitle }}</h4>
-                        <div class="text-muted">المسار: <code>/demo/admin/{{ $demoSectionPath }}</code></div>
                         <p class="mb-0 mt-2 text-muted">هذه شاشة ديمو للمعاينة قبل الشراء. لا يمكن تنفيذ أي عمليات فعلية.</p>
                     </div>
                     <span class="badge text-bg-warning px-3 py-2" style="font-size:.85rem;">Demo Mode</span>

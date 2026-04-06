@@ -7,6 +7,10 @@
     $dashboardPollRoute ??= 'admin.dashboard.poll';
     $dashboardExportRoute ??= 'admin.dashboard.export-snapshot';
     $isDemoDashboard ??= false;
+    $ordersIndexUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders']) : route('admin.orders.index');
+    $ordersDeliveryUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-delivery']) : route('admin.orders.delivery');
+    $ordersPickupUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-pickup']) : route('admin.orders.pickup');
+    $branchesIndexUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'branches']) : route('admin.branches.index');
 @endphp
 
 @section('content')
@@ -690,10 +694,10 @@
                 </div>
 
                 <div class="ops-actions">
-                    <a href="{{ route('admin.orders.index') }}" class="ops-action">جميع الطلبات</a>
-                    <a href="{{ route('admin.orders.delivery') }}" class="ops-action">طلبات التوصيل</a>
-                    <a href="{{ route('admin.orders.pickup') }}" class="ops-action">طلبات الاستلام</a>
-                    <a href="{{ route('admin.branches.index') }}" class="ops-action">الفروع</a>
+                    <a href="{{ $ordersIndexUrl }}" class="ops-action">جميع الطلبات</a>
+                    <a href="{{ $ordersDeliveryUrl }}" class="ops-action">طلبات التوصيل</a>
+                    <a href="{{ $ordersPickupUrl }}" class="ops-action">طلبات الاستلام</a>
+                    <a href="{{ $branchesIndexUrl }}" class="ops-action">الفروع</a>
                 </div>
             </div>
 
@@ -819,7 +823,7 @@
                     <p class="ops-card-subtitle">أحدث الطلبات الجديدة التي تحتاج إلى متابعة</p>
                 </div>
 
-                <a href="{{ route('admin.orders.index') }}" class="ops-mini-btn">
+                <a href="{{ $ordersIndexUrl }}" class="ops-mini-btn">
                     عرض جميع الطلبات
                 </a>
             </div>
@@ -856,7 +860,7 @@
                     <p class="ops-card-subtitle">متابعة سريعة لعدد الطلبات المسجلة لكل فرع</p>
                 </div>
 
-                <a href="{{ route('admin.branches.index') }}" class="ops-mini-btn">إدارة الفروع</a>
+                <a href="{{ $branchesIndexUrl }}" class="ops-mini-btn">إدارة الفروع</a>
             </div>
 
             <div class="ops-card-body">
@@ -886,7 +890,7 @@
                     <p class="ops-card-subtitle">آخر طلبات التوصيل المسجلة في النظام</p>
                 </div>
 
-                <a href="{{ route('admin.orders.delivery') }}" class="ops-mini-btn">عرض الكل</a>
+                <a href="{{ $ordersDeliveryUrl }}" class="ops-mini-btn">عرض الكل</a>
             </div>
 
             <div class="ops-table-body">
@@ -947,7 +951,7 @@
                     <p class="ops-card-subtitle">آخر طلبات الاستلام من الفروع</p>
                 </div>
 
-                <a href="{{ route('admin.orders.pickup') }}" class="ops-mini-btn">عرض الكل</a>
+                <a href="{{ $ordersPickupUrl }}" class="ops-mini-btn">عرض الكل</a>
             </div>
 
             <div class="ops-table-body">
@@ -1043,7 +1047,7 @@
                 <p class="ops-card-subtitle">عرض مباشر لآخر الطلبات مع النوع والحالة والإجمالي</p>
             </div>
 
-            <a href="{{ route('admin.orders.index') }}" class="btn-admin">كل الطلبات</a>
+            <a href="{{ $ordersIndexUrl }}" class="btn-admin">كل الطلبات</a>
         </div>
 
         <div class="ops-table-body">
