@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $title = __('site.brand');
+    $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
+@endphp
+
 <div class="card border-0 shadow-sm rounded-4 text-center">
     <div class="card-body p-5">
         <h2 class="fw-bold text-success mb-3">{{ __('order_success.order_sent_successfully') }}</h2>
@@ -32,3 +37,15 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+<script>
+window.dataLayer = window.dataLayer || [];
+window.dataLayer.push({
+    event: 'purchase',
+    transaction_id: @json($order->order_number ?? ('order-' . $order->id)),
+    value: {{ (float) $order->total }},
+    shipping: {{ (float) $order->delivery_fee }},
+    currency: @json(__('order_success.currency_egp')),
+});
+</script>
+@endpush
