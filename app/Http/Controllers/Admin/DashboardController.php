@@ -174,6 +174,59 @@ class DashboardController extends Controller
         ];
     }
 
+    protected function buildEmptyDashboardData(string $range = 'today'): array
+    {
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) {
+            $date = Carbon::today()->subDays($daysAgo);
+
+            return [
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->format('D'),
+                'orders' => 0,
+                'sales' => 0,
+            ];
+        })->values();
+
+        return [
+            'range' => $range,
+            'ordersCount' => 0,
+            'todayOrders' => 0,
+            'newOrders' => 0,
+            'pendingOrders' => 0,
+            'deliveryOrders' => 0,
+            'pickupOrders' => 0,
+            'todaySales' => 0,
+            'deliverySales' => 0,
+            'pickupSales' => 0,
+            'latestOrders' => collect(),
+            'deliveryLatest' => collect(),
+            'pickupLatest' => collect(),
+            'branchesStats' => collect(),
+            'notifications' => collect(),
+            'statusBreakdown' => [
+                'pending' => 0,
+                'confirmed' => 0,
+                'preparing' => 0,
+                'out_for_delivery' => 0,
+                'delivered' => 0,
+                'cancelled' => 0,
+            ],
+            'weeklyTrend' => $weeklyTrend,
+            'kpis' => [
+                'prep_sla_minutes' => 0,
+                'avg_delivery_minutes' => 0,
+                'cancellation_rate' => 0,
+                'completion_rate' => 0,
+            ],
+            'shiftSummary' => [
+                'orders_count' => 0,
+                'sales_total' => 0,
+                'avg_order_value' => 0,
+            ],
+            'topProducts' => collect(),
+        ];
+    }
+
     public function index(Request $request)
     {
         $range = $request->query('range', 'today');
@@ -200,7 +253,7 @@ class DashboardController extends Controller
         }
 
         return view('admin.dashboard', array_merge(
-            $this->buildDashboardData($range),
+            $this->buildEmptyDashboardData($range),
             [
                 'dashboardBaseRoute' => 'admin.dashboard.demo',
                 'dashboardPollRoute' => null,
