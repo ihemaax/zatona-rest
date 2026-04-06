@@ -19,13 +19,13 @@ class HomeController extends Controller
                 $query->orderBy('sort_order')->with([
                     'items' => function ($q) {
                         $q->where('is_active', 1)->orderBy('sort_order');
-                    }
+                    },
                 ]);
-            }
+            },
         ])
-        ->where('is_available', 1)
-        ->orderBy('id', 'desc')
-        ->get();
+            ->where('is_available', 1)
+            ->orderBy('id', 'desc')
+            ->get();
 
         $popupCampaign = PopupCampaign::query()
             ->where('is_active', true)
