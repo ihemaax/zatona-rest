@@ -40,7 +40,7 @@ class OrderController extends Controller
             return $query;
         }
 
-        if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if ($user->canViewAllBranchesOrders()) {
             return $query;
         }
 
@@ -51,14 +51,24 @@ class OrderController extends Controller
         }
 
         if ($user->branch_id) {
-            $query->where(function ($branchScopedQuery) use ($user) {
-                $branchScopedQuery
-                    ->where('branch_id', $user->branch_id)
-                    ->orWhereNull('branch_id');
-            });
+            $query->where('branch_id', $user->branch_id);
+            return $query;
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
+    }
+
+    protected function canAccessBranchOrder(User $user, Order $order): bool
+    {
+        if ($user->canViewAllBranchesOrders()) {
+            return true;
+        }
+
+        if (!$user->branch_id || !$order->branch_id) {
+            return false;
+        }
+
+        return (int) $user->branch_id === (int) $order->branch_id;
     }
 
     public function index()
@@ -134,21 +144,7 @@ class OrderController extends Controller
             return view('admin.orders.show', compact('order', 'deliveryUsers'));
         }
 
-        if (
-            !$user->isSuperAdmin()
-            && !$user->hasPermission('view_all_branches_orders')
-            && $user->branch_id
-            && $order->branch_id !== null
-            && (int) $order->branch_id !== (int) $user->branch_id
-        ) {
-            abort(403, 'ليس لديك صلاحية لعرض هذا الطلب.');
-        }
-
-        if (
-            !$user->isSuperAdmin()
-            && !$user->hasPermission('view_all_branches_orders')
-            && !$user->branch_id
-        ) {
+        if (!$this->canAccessBranchOrder($user, $order)) {
             abort(403, 'ليس لديك صلاحية لعرض هذا الطلب.');
         }
 
@@ -205,21 +201,7 @@ class OrderController extends Controller
             return redirect()->back()->with('success', 'تم تحديث حالة الطلب بنجاح.');
         }
 
-        if (
-            !$user->isSuperAdmin()
-            && !$user->hasPermission('view_all_branches_orders')
-            && $user->branch_id
-            && $order->branch_id !== null
-            && (int) $order->branch_id !== (int) $user->branch_id
-        ) {
-            abort(403, 'ليس لديك صلاحية لتحديث هذا الطلب.');
-        }
-
-        if (
-            !$user->isSuperAdmin()
-            && !$user->hasPermission('view_all_branches_orders')
-            && !$user->branch_id
-        ) {
+        if (!$this->canAccessBranchOrder($user, $order)) {
             abort(403, 'ليس لديك صلاحية لتحديث هذا الطلب.');
         }
 
@@ -268,6 +250,8 @@ class OrderController extends Controller
             403,
             'ليس لديك صلاحية لإسناد الطلب للدليفري.'
         );
+
+        abort_unless($this->canAccessBranchOrder($user, $order), 403, 'ليس لديك صلاحية لإسناد هذا الطلب.');
 
         $validated = $request->validate([
             'delivery_user_id' => ['required', 'exists:users,id'],

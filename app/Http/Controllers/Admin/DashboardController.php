@@ -21,19 +21,16 @@ class DashboardController extends Controller
             return $query;
         }
 
-        if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if ($user->canViewAllBranchesOrders()) {
             return $query;
         }
 
         if ($user->branch_id) {
-            $query->where(function ($branchScopedQuery) use ($user) {
-                $branchScopedQuery
-                    ->where('branch_id', $user->branch_id)
-                    ->orWhereNull('branch_id');
-            });
+            $query->where('branch_id', $user->branch_id);
+            return $query;
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 
     protected function applyDateRange($query, string $range, string $column = 'created_at'): void
@@ -142,7 +139,7 @@ class DashboardController extends Controller
 
         if (!$user) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
-        } elseif ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        } elseif ($user->canViewAllBranchesOrders()) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
         } elseif ($user->branch_id) {
             $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
@@ -229,6 +226,9 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        $user = auth()->user();
+        abort_unless($user && $user->canAccessDashboard(), 403, 'هذه الصفحة متاحة للمدير والإدمن والسوبر أدمن فقط.');
+
         $range = $request->query('range', 'today');
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
@@ -265,6 +265,9 @@ class DashboardController extends Controller
 
     public function exportSnapshot(Request $request): StreamedResponse
     {
+        $user = auth()->user();
+        abort_unless($user && $user->canAccessDashboard(), 403, 'هذه الصفحة متاحة للمدير والإدمن والسوبر أدمن فقط.');
+
         $range = $request->query('range', 'today');
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
@@ -295,6 +298,9 @@ class DashboardController extends Controller
 
     public function poll(Request $request): JsonResponse
     {
+        $user = auth()->user();
+        abort_unless($user && $user->canAccessDashboard(), 403, 'هذه الصفحة متاحة للمدير والإدمن والسوبر أدمن فقط.');
+
         $range = $request->query('range', 'today');
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';

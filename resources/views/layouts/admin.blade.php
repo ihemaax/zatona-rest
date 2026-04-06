@@ -42,6 +42,7 @@
     };
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
     $isKitchenUser = $adminUser?->role === \App\Models\User::ROLE_KITCHEN;
+    $canViewDashboard = $isDemoDashboard || $adminUser?->canAccessDashboard();
     $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
 
     $dashboardGroupOpen =
@@ -131,10 +132,12 @@
                             </a>
                         @endif
                     @else
-                        <a href="{{ route($dashboardHomeRoute) }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.dashboard.demo') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>الرئيسية</span>
-                        </a>
+                        @if($canViewDashboard)
+                            <a href="{{ route($dashboardHomeRoute) }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.dashboard.demo') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>الرئيسية</span>
+                            </a>
+                        @endif
 
                             <a href="{{ $demoOrAdminUrl('orders', route('admin.orders.index')) }}" class="sb-sublink {{ request()->routeIs('admin.orders.index') || request()->routeIs('admin.orders.show') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
