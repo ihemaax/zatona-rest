@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryOrderController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Front\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -116,7 +117,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         if (!Route::has('checkout.apply-coupon')) {
-            Route::middleware(['web'])
+            Route::middleware('web')
                 ->post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
                 ->name('checkout.apply-coupon');
         }
