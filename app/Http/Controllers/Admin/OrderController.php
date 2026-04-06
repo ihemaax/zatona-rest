@@ -52,8 +52,6 @@ class OrderController extends Controller
 
         if ($user->branch_id) {
             $query->where('branch_id', $user->branch_id);
-        } else {
-            $query->whereRaw('1 = 0');
         }
 
         return $query;

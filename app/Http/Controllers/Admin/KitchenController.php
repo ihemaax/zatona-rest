@@ -31,7 +31,7 @@ class KitchenController extends Controller
             return $query->where('branch_id', $user->branch_id);
         }
 
-        return $query->whereRaw('1 = 0');
+        return $query;
     }
 
     protected function kitchenQueueQuery()
