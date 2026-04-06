@@ -103,6 +103,8 @@ Route::get('/dashboard', function () {
     return redirect()->route('home');
 })->middleware(['auth'])->name('dashboard');
 
+Route::get('/demo/admin-dashboard', [DashboardController::class, 'demo'])->name('admin.dashboard.demo');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes

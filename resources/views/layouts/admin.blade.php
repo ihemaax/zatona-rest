@@ -1217,12 +1217,18 @@
 
 @php
     $adminUser = auth()->user();
+    $isDemoDashboard = ($isDemoDashboard ?? false) && request()->routeIs('admin.dashboard.demo');
+    $dashboardHomeRoute = $isDemoDashboard ? 'admin.dashboard.demo' : 'admin.dashboard';
+    $hasAdminPermission = function (string $permission) use ($isDemoDashboard, $adminUser) {
+        return $isDemoDashboard || $adminUser?->isSuperAdmin() || $adminUser?->hasPermission($permission);
+    };
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
     $isKitchenUser = $adminUser?->role === \App\Models\User::ROLE_KITCHEN;
     $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
 
     $dashboardGroupOpen =
         request()->routeIs('admin.dashboard') ||
+        request()->routeIs('admin.dashboard.demo') ||
         request()->routeIs('admin.delivery.dashboard') ||
         request()->routeIs('admin.delivery.management') ||
         request()->routeIs('delivery.orders.*') ||
@@ -1307,7 +1313,7 @@
                             </a>
                         @endif
                     @else
-                        <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <a href="{{ route($dashboardHomeRoute) }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.dashboard.demo') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الرئيسية</span>
                         </a>
@@ -1338,7 +1344,7 @@
                             <span>الطلبات الجاهزة</span>
                         </a>
 
-                        @if($adminUser?->isSuperAdmin() || $adminUser?->hasPermission('manage_delivery'))
+                        @if($hasAdminPermission('manage_delivery'))
                             <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
                                 <span>متابعة الدليفري</span>
@@ -1362,21 +1368,21 @@
                 </button>
 
                 <div class="sb-submenu">
-                    @if($adminUser?->hasPermission('manage_branches') || $adminUser?->isSuperAdmin())
+                    @if($hasAdminPermission('manage_branches'))
                         <a href="{{ route('admin.branches.index') }}" class="sb-sublink {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الفروع</span>
                         </a>
                     @endif
 
-                    @if($adminUser?->hasPermission('manage_categories') || $adminUser?->isSuperAdmin())
+                    @if($hasAdminPermission('manage_categories'))
                         <a href="{{ route('admin.categories.index') }}" class="sb-sublink {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الأقسام</span>
                         </a>
                     @endif
 
-                    @if($adminUser?->hasPermission('manage_products') || $adminUser?->isSuperAdmin())
+                    @if($hasAdminPermission('manage_products'))
                         <a href="{{ route('admin.products.index') }}" class="sb-sublink {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>المنتجات</span>
@@ -1388,34 +1394,32 @@
                         <span>كوبونات الخصم</span>
                     </a>
 
-                    @if($adminUser?->hasPermission('manage_settings') || $adminUser?->isSuperAdmin())
+                    @if($hasAdminPermission('manage_settings'))
                         <a href="{{ route('admin.settings.edit') }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الإعدادات</span>
                         </a>
                     @endif
 
-                    @if($adminUser?->hasPermission('manage_staff') || $adminUser?->isSuperAdmin())
+                    @if($hasAdminPermission('manage_staff'))
                         <a href="{{ route('admin.staff.index') }}" class="sb-sublink {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>الموظفون</span>
                         </a>
                     @endif
 
-                    @auth
-                        @if(auth()->user()->hasPermission('view_reports') || auth()->user()->isSuperAdmin())
-                            <a href="{{ route('admin.reports.index') }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                                <span class="sb-sublink-dot"></span>
-                                <span>التقارير</span>
-                            </a>
-                        @endif
-                    @endauth
+                    @if($hasAdminPermission('view_reports'))
+                        <a href="{{ route('admin.reports.index') }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>التقارير</span>
+                        </a>
+                    @endif
                 </div>
             </div>
             @endunless
 
             @unless($isDeliveryUser || $isKitchenUser)
-            @if(($adminUser?->hasPermission('manage_digital_menu') || $adminUser?->isSuperAdmin()) && Route::has('admin.digital-menu.settings'))
+            @if($hasAdminPermission('manage_digital_menu') && Route::has('admin.digital-menu.settings'))
                 <div class="sb-group {{ $digitalMenuGroupOpen ? 'active' : '' }}" data-group>
                     <button type="button" class="sb-group-toggle" data-group-toggle>
                         <svg class="sb-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8">
@@ -1483,17 +1487,23 @@
         </div>
 
         <div class="sb-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="sb-logout">
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
-                        <path d="M10 17l-5-5 5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M5 12h9" stroke="currentColor" stroke-linecap="round"/>
-                        <path d="M14 5.75h2.25A1.75 1.75 0 0118 7.5v9a1.75 1.75 0 01-1.75 1.75H14" stroke="currentColor" stroke-linecap="round"/>
-                    </svg>
-                    <span>تسجيل الخروج</span>
-                </button>
-            </form>
+            @if($isDemoDashboard)
+                <div class="sb-logout" style="cursor:default;justify-content:center;">
+                    <span>وضع العرض التجريبي</span>
+                </div>
+            @else
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="sb-logout">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+                            <path d="M10 17l-5-5 5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 12h9" stroke="currentColor" stroke-linecap="round"/>
+                            <path d="M14 5.75h2.25A1.75 1.75 0 0118 7.5v9a1.75 1.75 0 01-1.75 1.75H14" stroke="currentColor" stroke-linecap="round"/>
+                        </svg>
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </form>
+            @endif
         </div>
     </aside>
 
