@@ -70,6 +70,36 @@
         align-items:start;
     }
 
+
+    .ops-insights-grid{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:18px;
+    }
+
+    .ops-status-list{
+        display:grid;
+        gap:10px;
+    }
+
+    .ops-status-row{
+        display:grid;
+        grid-template-columns: 130px 1fr auto;
+        align-items:center;
+        gap:10px;
+    }
+
+    .ops-status-name{font-size:.8rem;font-weight:800;color:#6f6a61;}
+    .ops-status-bar{height:10px;background:#f0e9de;border-radius:999px;overflow:hidden;}
+    .ops-status-bar > span{display:block;height:100%;background:linear-gradient(90deg,#6f7f5f,#8d9d7c);}
+    .ops-status-value{font-size:.78rem;font-weight:900;color:#231f1b;}
+
+    .ops-trend-list{display:grid;gap:8px;}
+    .ops-trend-row{display:grid;grid-template-columns:50px 1fr auto;align-items:center;gap:10px;}
+    .ops-trend-bar{height:10px;background:#efe7da;border-radius:999px;overflow:hidden;}
+    .ops-trend-bar > span{display:block;height:100%;background:linear-gradient(90deg,#5d7a9a,#87a7c9);}
+    .ops-trend-note{font-size:.75rem;color:#8a847a;font-weight:700;}
+
     .ops-card{
         background: var(--admin-surface);
         border: 1px solid var(--admin-border);
@@ -673,6 +703,63 @@
         </div>
     </section>
 
+
+    <section class="ops-insights-grid">
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">توزيع حالات الطلبات</h2>
+                    <p class="ops-card-subtitle">رؤية سريعة لأماكن الضغط التشغيلي</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                @php
+                    $statusTotal = max(1, array_sum($statusBreakdown));
+                    $statusLabels = [
+                        'pending' => 'قيد الانتظار',
+                        'confirmed' => 'مؤكد',
+                        'preparing' => 'قيد التحضير',
+                        'out_for_delivery' => 'خرج للتوصيل',
+                        'delivered' => 'تم التسليم',
+                        'cancelled' => 'ملغي',
+                    ];
+                @endphp
+                <div class="ops-status-list" id="statusBreakdownBox">
+                    @foreach($statusBreakdown as $key => $value)
+                        <div class="ops-status-row">
+                            <div class="ops-status-name">{{ $statusLabels[$key] ?? $key }}</div>
+                            <div class="ops-status-bar"><span style="width: {{ ($value / $statusTotal) * 100 }}%"></span></div>
+                            <div class="ops-status-value">{{ $value }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">اتجاه الطلبات (7 أيام)</h2>
+                    <p class="ops-card-subtitle">متابعة تطور الطلبات يوميًا</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                @php $trendMax = max(1, collect($weeklyTrend)->max('orders')); @endphp
+                <div class="ops-trend-list" id="weeklyTrendBox">
+                    @foreach($weeklyTrend as $row)
+                        <div class="ops-trend-row">
+                            <div class="ops-status-name">{{ $row['label'] }}</div>
+                            <div class="ops-trend-bar"><span style="width: {{ ($row['orders'] / $trendMax) * 100 }}%"></span></div>
+                            <div class="ops-status-value">{{ $row['orders'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="ops-trend-note mt-2">يتم التحديث تلقائيًا مع تحديث لوحة التحكم.</div>
+            </div>
+        </div>
+    </section>
+
+
     <section class="ops-grid">
         <div class="ops-card">
             <div class="ops-card-head">
@@ -1059,6 +1146,47 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     };
 
+
+    const renderStatusBreakdown = (status = {}) => {
+        const el = $('statusBreakdownBox');
+        if (!el) return;
+
+        const labels = {
+            pending:'قيد الانتظار',
+            confirmed:'مؤكد',
+            preparing:'قيد التحضير',
+            out_for_delivery:'خرج للتوصيل',
+            delivered:'تم التسليم',
+            cancelled:'ملغي'
+        };
+
+        const entries = Object.entries(labels).map(([k, label]) => ({ key:k, label, value: Number(status[k] || 0) }));
+        const total = Math.max(1, entries.reduce((sum, r) => sum + r.value, 0));
+
+        el.innerHTML = entries.map(r => `
+            <div class="ops-status-row">
+                <div class="ops-status-name">${r.label}</div>
+                <div class="ops-status-bar"><span style="width:${(r.value / total) * 100}%"></span></div>
+                <div class="ops-status-value">${r.value}</div>
+            </div>
+        `).join('');
+    };
+
+    const renderWeeklyTrend = (items = []) => {
+        const el = $('weeklyTrendBox');
+        if (!el) return;
+        const max = Math.max(1, ...items.map(i => Number(i.orders || 0)));
+
+        el.innerHTML = items.map(i => `
+            <div class="ops-trend-row">
+                <div class="ops-status-name">${esc(i.label || '')}</div>
+                <div class="ops-trend-bar"><span style="width:${(Number(i.orders || 0) / max) * 100}%"></span></div>
+                <div class="ops-status-value">${Number(i.orders || 0)}</div>
+            </div>
+        `).join('');
+    };
+
+
     const renderBranches = items => {
         if (!els.branches) return;
         if (!items.length) {
@@ -1119,6 +1247,8 @@ document.addEventListener('DOMContentLoaded', function () {
             renderDelivery(data.delivery_latest || []);
             renderPickup(data.pickup_latest || []);
             renderBranches(data.branches_stats || []);
+            renderStatusBreakdown(c.status_breakdown || {});
+            renderWeeklyTrend(data.weekly_trend || []);
         } catch (e) {
             console.log('Poll error:', e);
         } finally {

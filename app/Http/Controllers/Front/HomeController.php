@@ -16,21 +16,19 @@ class HomeController extends Controller
             return Setting::first();
         });
 
-        $products = Cache::remember('front.home.products', now()->addMinutes(3), function () {
-            return Product::with([
-                'category',
-                'optionGroups' => function ($query) {
-                    $query->orderBy('sort_order')->with([
-                        'items' => function ($q) {
-                            $q->where('is_active', 1)->orderBy('sort_order');
-                        },
-                    ]);
-                },
-            ])
-                ->where('is_available', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+        $products = Product::with([
+            'category',
+            'optionGroups' => function ($query) {
+                $query->orderBy('sort_order')->with([
+                    'items' => function ($q) {
+                        $q->where('is_active', 1)->orderBy('sort_order');
+                    },
+                ]);
+            },
+        ])
+            ->where('is_available', 1)
+            ->orderBy('id', 'desc')
+            ->get();
 
         $popupCampaign = PopupCampaign::query()
             ->where('is_active', true)
