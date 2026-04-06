@@ -3,6 +3,10 @@
 @php
     $pageTitle = 'لوحة التحكم';
     $pageSubtitle = 'متابعة الطلبات والمبيعات والتشغيل اليومي بشكل واضح ومنظم';
+    $dashboardBaseRoute ??= 'admin.dashboard';
+    $dashboardPollRoute ??= 'admin.dashboard.poll';
+    $dashboardExportRoute ??= 'admin.dashboard.export-snapshot';
+    $isDemoDashboard ??= false;
 @endphp
 
 @section('content')
@@ -611,11 +615,15 @@
     <section class="ops-card" style="padding:14px 18px;">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('admin.dashboard', ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
-                <a href="{{ route('admin.dashboard', ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
-                <a href="{{ route('admin.dashboard', ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
             </div>
-            <a href="{{ route('admin.dashboard.export-snapshot', ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+            @if($isDemoDashboard)
+                <span class="ops-mini-btn active">نسخة تجريبية للعرض فقط</span>
+            @else
+                <a href="{{ route($dashboardExportRoute, ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+            @endif
         </div>
     </section>
 
@@ -1323,7 +1331,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetching = true;
 
         try {
-            const res = await fetch(`{{ route('admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
+            const res = await fetch(`{{ route($dashboardPollRoute ?? 'admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'
@@ -1378,7 +1386,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    @if(!$isDemoDashboard && $dashboardPollRoute)
     setInterval(poll, 5000);
+    @endif
 });
 </script>
 @endpush
