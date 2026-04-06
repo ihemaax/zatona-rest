@@ -101,9 +101,10 @@
         if (!deliveryBody || !pickupBody) return;
 
         const csrf = @json(csrf_token());
-        const assignBase = @json(url('/admin/orders'));
+        const assignBase = @json(route('admin.orders.index', absolute: false));
         const deliveryUsers = @json($deliveryUsers->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values());
-        const statusUrlBase = @json(route('admin.orders.status', ['order' => '__ORDER__']));
+        const statusUrlBase = @json(route('admin.orders.status', ['order' => '__ORDER__'], false));
+        const pollUrl = @json(route('admin.orders.ready.poll', absolute: false));
         const statusUrl = (id) => statusUrlBase.replace('__ORDER__', id);
 
         let seenReadyOrderIds = new Set([
@@ -124,11 +125,11 @@
         };
 
         const escapeHtml = (value) => String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
 
         const deliveryOptionsHtml = () => [
             '<option value="">اختار موظف دليفري</option>',
@@ -203,7 +204,7 @@
 
         const poll = async () => {
             try {
-                const response = await fetch(@json(route('admin.orders.ready.poll')), {
+                const response = await fetch(pollUrl, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
                     cache: 'no-store',

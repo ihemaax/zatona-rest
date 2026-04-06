@@ -134,7 +134,8 @@
         if (!body) return;
 
         const csrf = @json(csrf_token());
-        const startBase = @json(url('/admin/kitchen'));
+        const startBase = @json(route('admin.kitchen.index', absolute: false));
+        const pollUrl = @json(route('admin.kitchen.poll', absolute: false));
 
         const statusChip = (status) => {
             if (status === 'confirmed') {
@@ -249,7 +250,7 @@
 
         const poll = async () => {
             try {
-                const response = await fetch(@json(route('admin.kitchen.poll')), {
+                const response = await fetch(pollUrl, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
                     cache: 'no-store',
