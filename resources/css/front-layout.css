@@ -489,6 +489,24 @@
                 display:block;
             }
 
+            .mobile-bottom-icon{
+                width:34px;
+                height:34px;
+                border-radius:12px;
+                background: #fff;
+                border: 1px solid rgba(223, 215, 202, .9);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 6px 14px rgba(60, 52, 40, .08);
+            }
+
+            .mobile-bottom-icon svg{
+                width:18px;
+                height:18px;
+                fill: currentColor;
+            }
+
             .mobile-bottom-link.active{
                 background: linear-gradient(180deg, #f2f6ed 0%, #e9f0e2 100%);
                 color: var(--fb-primary-dark);
