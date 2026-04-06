@@ -3,6 +3,14 @@
 @php
     $pageTitle = 'لوحة التحكم';
     $pageSubtitle = 'متابعة الطلبات والمبيعات والتشغيل اليومي بشكل واضح ومنظم';
+    $dashboardBaseRoute ??= 'admin.dashboard';
+    $dashboardPollRoute ??= 'admin.dashboard.poll';
+    $dashboardExportRoute ??= 'admin.dashboard.export-snapshot';
+    $isDemoDashboard ??= false;
+    $ordersIndexUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders']) : route('admin.orders.index');
+    $ordersDeliveryUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-delivery']) : route('admin.orders.delivery');
+    $ordersPickupUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-pickup']) : route('admin.orders.pickup');
+    $branchesIndexUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'branches']) : route('admin.branches.index');
 @endphp
 
 @section('content')
@@ -611,11 +619,15 @@
     <section class="ops-card" style="padding:14px 18px;">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('admin.dashboard', ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
-                <a href="{{ route('admin.dashboard', ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
-                <a href="{{ route('admin.dashboard', ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
+                <a href="{{ route($dashboardBaseRoute, ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
             </div>
-            <a href="{{ route('admin.dashboard.export-snapshot', ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+            @if($isDemoDashboard)
+                <span class="ops-mini-btn active">نسخة تجريبية للعرض فقط</span>
+            @else
+                <a href="{{ route($dashboardExportRoute, ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+            @endif
         </div>
     </section>
 
@@ -682,10 +694,10 @@
                 </div>
 
                 <div class="ops-actions">
-                    <a href="{{ route('admin.orders.index') }}" class="ops-action">جميع الطلبات</a>
-                    <a href="{{ route('admin.orders.delivery') }}" class="ops-action">طلبات التوصيل</a>
-                    <a href="{{ route('admin.orders.pickup') }}" class="ops-action">طلبات الاستلام</a>
-                    <a href="{{ route('admin.branches.index') }}" class="ops-action">الفروع</a>
+                    <a href="{{ $ordersIndexUrl }}" class="ops-action">جميع الطلبات</a>
+                    <a href="{{ $ordersDeliveryUrl }}" class="ops-action">طلبات التوصيل</a>
+                    <a href="{{ $ordersPickupUrl }}" class="ops-action">طلبات الاستلام</a>
+                    <a href="{{ $branchesIndexUrl }}" class="ops-action">الفروع</a>
                 </div>
             </div>
 
@@ -811,7 +823,7 @@
                     <p class="ops-card-subtitle">أحدث الطلبات الجديدة التي تحتاج إلى متابعة</p>
                 </div>
 
-                <a href="{{ route('admin.orders.index') }}" class="ops-mini-btn">
+                <a href="{{ $ordersIndexUrl }}" class="ops-mini-btn">
                     عرض جميع الطلبات
                 </a>
             </div>
@@ -848,7 +860,7 @@
                     <p class="ops-card-subtitle">متابعة سريعة لعدد الطلبات المسجلة لكل فرع</p>
                 </div>
 
-                <a href="{{ route('admin.branches.index') }}" class="ops-mini-btn">إدارة الفروع</a>
+                <a href="{{ $branchesIndexUrl }}" class="ops-mini-btn">إدارة الفروع</a>
             </div>
 
             <div class="ops-card-body">
@@ -878,7 +890,7 @@
                     <p class="ops-card-subtitle">آخر طلبات التوصيل المسجلة في النظام</p>
                 </div>
 
-                <a href="{{ route('admin.orders.delivery') }}" class="ops-mini-btn">عرض الكل</a>
+                <a href="{{ $ordersDeliveryUrl }}" class="ops-mini-btn">عرض الكل</a>
             </div>
 
             <div class="ops-table-body">
@@ -939,7 +951,7 @@
                     <p class="ops-card-subtitle">آخر طلبات الاستلام من الفروع</p>
                 </div>
 
-                <a href="{{ route('admin.orders.pickup') }}" class="ops-mini-btn">عرض الكل</a>
+                <a href="{{ $ordersPickupUrl }}" class="ops-mini-btn">عرض الكل</a>
             </div>
 
             <div class="ops-table-body">
@@ -1035,7 +1047,7 @@
                 <p class="ops-card-subtitle">عرض مباشر لآخر الطلبات مع النوع والحالة والإجمالي</p>
             </div>
 
-            <a href="{{ route('admin.orders.index') }}" class="btn-admin">كل الطلبات</a>
+            <a href="{{ $ordersIndexUrl }}" class="btn-admin">كل الطلبات</a>
         </div>
 
         <div class="ops-table-body">
@@ -1323,7 +1335,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetching = true;
 
         try {
-            const res = await fetch(`{{ route('admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
+            const res = await fetch(`{{ route($dashboardPollRoute ?? 'admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'
@@ -1378,7 +1390,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    @if(!$isDemoDashboard && $dashboardPollRoute)
     setInterval(poll, 5000);
+    @endif
 });
 </script>
 @endpush
