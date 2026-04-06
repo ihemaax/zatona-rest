@@ -29,7 +29,6 @@ use App\Http\Controllers\Admin\DeliveryManagementController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\ReadyOrderController;
 use App\Http\Controllers\Demo\AdminDemoController;
-
 use App\Http\Controllers\Admin\ReportController;
 
 
@@ -126,8 +125,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
     Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
-Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
-Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name('admin.popup-campaign.update');
+
+    Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
+    Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name('admin.popup-campaign.update');
+
     Route::resource('branches', BranchController::class)->names('admin.branches');
     Route::resource('categories', CategoryController::class)->names('admin.categories');
     Route::resource('products', ProductController::class)->names('admin.products');
