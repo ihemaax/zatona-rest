@@ -13,19 +13,15 @@ class ReadyOrderController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || $user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if (!$user || $user->canViewAllBranchesOrders()) {
             return $query;
         }
 
         if ($user->branch_id) {
-            return $query->where(function ($branchScopedQuery) use ($user) {
-                $branchScopedQuery
-                    ->where('branch_id', $user->branch_id)
-                    ->orWhereNull('branch_id');
-            });
+            return $query->where('branch_id', $user->branch_id);
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 
     public function index()

@@ -23,19 +23,15 @@ class KitchenController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || $user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if (!$user || $user->canViewAllBranchesOrders()) {
             return $query;
         }
 
         if ($user->branch_id) {
-            return $query->where(function ($branchScopedQuery) use ($user) {
-                $branchScopedQuery
-                    ->where('branch_id', $user->branch_id)
-                    ->orWhereNull('branch_id');
-            });
+            return $query->where('branch_id', $user->branch_id);
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 
     protected function kitchenQueueQuery()
@@ -56,15 +52,15 @@ class KitchenController extends Controller
             return false;
         }
 
-        if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if ($user->canViewAllBranchesOrders()) {
             return true;
         }
 
-        if (!$user->branch_id) {
-            return true;
+        if (!$user->branch_id || !$order->branch_id) {
+            return false;
         }
 
-        return $order->branch_id === null || (int) $user->branch_id === (int) $order->branch_id;
+        return (int) $user->branch_id === (int) $order->branch_id;
     }
 
     public function index()
