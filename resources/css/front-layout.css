@@ -1,12 +1,12 @@
 :root{
-            --fb-bg: #f6f3ee;
+            --fb-bg: #f2eee4;
             --fb-card: #fffdf9;
             --fb-border: #e9e3d8;
             --fb-text: #222222;
             --fb-muted: #6f6a61;
 
-            --fb-primary: #6f7f5f;
-            --fb-primary-dark: #5c6a4f;
+            --fb-primary: #1d5a4c;
+            --fb-primary-dark: #123e34;
             --fb-soft: #eef2e8;
 
             --fb-success: #4e7a57;
@@ -34,8 +34,8 @@
         }
 
         body{
-            font-family:'Cairo', Tahoma, Arial, sans-serif !important;
-            background: linear-gradient(180deg, #f7f4ef 0%, #fbf9f5 52%, #f2eee7 100%);
+            font-family:'Instrument Sans','Cairo', Tahoma, Arial, sans-serif !important;
+            background: linear-gradient(180deg, #f6f1e7 0%, #faf7f1 50%, #efe6d8 100%);
             color: var(--fb-text);
         }
 
@@ -73,7 +73,19 @@
             white-space: nowrap;
         }
 
-        .brand-badge{
+        
+
+        .brand-logo-image{
+            width:46px;
+            height:46px;
+            border-radius:14px;
+            object-fit:cover;
+            border:1px solid rgba(0,0,0,.06);
+            box-shadow:0 8px 18px rgba(18,62,52,.16);
+            flex-shrink:0;
+            background:#fff;
+        }
+.brand-badge{
             width: 46px;
             height: 46px;
             border-radius: 16px;
@@ -463,6 +475,30 @@
             .mobile-bottom-link i{
                 font-size:1.22rem;
                 line-height:1;
+                color: currentColor;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 1;
+            }
+
+            .mobile-bottom-icon{
+                width:34px;
+                height:34px;
+                border-radius:12px;
+                background: #fff;
+                border: 1px solid rgba(223, 215, 202, .9);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 6px 14px rgba(60, 52, 40, .08);
+            }
+
+            .mobile-bottom-icon svg{
+                width:18px;
+                height:18px;
+                fill: currentColor;
+                display:block;
             }
 
             .mobile-bottom-link.active{
@@ -471,8 +507,29 @@
                 box-shadow: inset 0 0 0 1px rgba(111, 127, 95, .10);
             }
 
+            .mobile-bottom-link{
+                color: #5f5a53;
+            }
+
+            .mobile-bottom-link.active .mobile-bottom-icon{
+                background: linear-gradient(180deg, #ffffff 0%, #f4f8ee 100%);
+                border-color: rgba(111, 127, 95, .25);
+            }
+
             .mobile-bottom-link:hover{
                 color: var(--fb-primary-dark);
+            }
+
+            .mobile-bottom-widget{
+                background: linear-gradient(180deg, #f5f9ef 0%, #eaf1e1 100%);
+                color: var(--fb-primary-dark);
+                box-shadow: inset 0 0 0 1px rgba(111, 127, 95, .14);
+            }
+
+            .mobile-bottom-widget .mobile-bottom-icon{
+                background: linear-gradient(135deg, var(--fb-primary-dark) 0%, var(--fb-primary) 100%);
+                border-color: transparent;
+                color: #fff;
             }
 
             .mobile-bottom-badge{

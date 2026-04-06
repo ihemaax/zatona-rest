@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'order_sent_successfully' => 'تم إرسال الطلب بنجاح',
+    'order_sent_successfully' => 'طلبك اتسجّل بنجاح 🎉',
     'order_number' => 'رقم الطلب',
     'name' => 'الاسم',
     'total' => 'الإجمالي',
@@ -13,6 +13,6 @@ return [
     'out_for_delivery' => 'خرج للتوصيل',
     'delivered' => 'تم التوصيل',
     'cancelled' => 'ملغي',
-    'track_order' => 'متابعة الطلب',
-    'back_to_menu' => 'الرجوع للمنيو',
+    'track_order' => 'تابع طلبك',
+    'back_to_menu' => 'ارجع للمنيو',
 ];

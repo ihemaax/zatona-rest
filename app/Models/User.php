@@ -198,6 +198,22 @@ class User extends Authenticatable
         return in_array($permission, $permissions, true);
     }
 
+    public function canViewAllBranchesOrders(): bool
+    {
+        return $this->isSuperAdmin() || $this->hasPermission('view_all_branches_orders');
+    }
+
+    public function canAccessDashboard(): bool
+    {
+        return $this->isStaff()
+            && $this->is_active
+            && in_array($this->role, [
+                self::ROLE_SUPER_ADMIN,
+                self::ROLE_OWNER,
+                self::ROLE_MANAGER,
+            ], true);
+    }
+
     public function canManageStaff(): bool
     {
         return $this->isSuperAdmin() || $this->hasPermission('manage_staff');

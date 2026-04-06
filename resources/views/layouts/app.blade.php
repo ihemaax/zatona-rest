@@ -10,6 +10,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo-meta :title="$title ?? __('site.brand')" :description="$metaDescription ?? null" :image="$metaImage ?? null" :site-name="$layoutSetting?->restaurant_name" :site-phone="$layoutSetting?->restaurant_phone" :site-address="$layoutSetting?->restaurant_address" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap{{ app()->getLocale() === 'ar' ? '.rtl' : '' }}.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <x-analytics />
 
     @php
@@ -40,7 +44,12 @@
 <nav class="navbar navbar-expand-lg main-navbar" id="mainNavbar">
     <div class="container py-2">
         <a class="navbar-brand brand-logo" href="{{ route('home') }}">
-            <span>{{ __('site.brand') }}</span>
+            @if(($layoutSetting?->logo))
+                <img src="{{ asset('storage/' . $layoutSetting->logo) }}" alt="{{ $layoutSetting->restaurant_name ?? __('site.brand') }}" class="brand-logo-image">
+            @else
+                <span class="brand-badge">ZZ</span>
+            @endif
+            <span>{{ $layoutSetting->restaurant_name ?? __('site.brand') }}</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarContent" aria-controls="mainNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,8 +101,7 @@
                         <span class="badge text-bg-danger">{{ $cartCount }}</span>
                     </a>
 
-                    <a href="{{ route('login') }}" class="btn-soft">{{ __('site.login') }}</a>
-                    <a href="{{ route('register') }}" class="btn-brand">{{ __('site.register') }}</a>
+                    <a href="{{ route('login') }}" class="btn-brand">{{ __('site.login') }}</a>
                 @endauth
             </div>
         </div>
@@ -160,7 +168,6 @@
                             @endif
                         @else
                             <a href="{{ route('login') }}">تسجيل الدخول</a>
-                            <a href="{{ route('register') }}">إنشاء حساب</a>
                         @endauth
                     </div>
                 </div>
@@ -299,22 +306,34 @@
 
         <div class="mobile-bottom-item">
             <a href="{{ route('login') }}" class="mobile-bottom-link {{ request()->routeIs('login') ? 'active' : '' }}">
-                <i class="bi bi-person-fill"></i>
+                <span class="mobile-bottom-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 13.75a5.25 5.25 0 1 0 0-10.5 5.25 5.25 0 0 0 0 10.5Zm0 2.25c-4.28 0-7.75 2.86-7.75 6.38 0 .2.16.37.37.37h14.76c.2 0 .37-.16.37-.37 0-3.52-3.47-6.38-7.75-6.38Z"/>
+                    </svg>
+                </span>
                 <span>{{ __('site.login') }}</span>
             </a>
         </div>
 
         <div class="mobile-bottom-item">
             <a href="{{ route('locale.switch', app()->getLocale() === 'ar' ? 'en' : 'ar') }}" class="mobile-bottom-link">
-                <i class="bi bi-translate"></i>
+                <span class="mobile-bottom-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4.5 5A1.5 1.5 0 0 0 3 6.5v10A1.5 1.5 0 0 0 4.5 18H11v-1.5H4.5v-10h9v5h1.5v-5A1.5 1.5 0 0 0 13.5 5h-9Zm10.93 5.5-.64 1.37h2.43l-1.79-3.87-1.8 3.87h.84Zm-4.87-2.1V9.9h2.64v1.03c-.35.75-.9 1.43-1.5 2.03l-.06.05-.08-.07a7.6 7.6 0 0 1-1.44-2.01h-1.1c.35.96.92 1.85 1.63 2.6l.1.1-.11.08c-.56.42-1.2.77-1.88 1.03v1.11c.95-.3 1.84-.78 2.61-1.4l.1-.08.1.08c.78.62 1.67 1.1 2.62 1.4v-1.11a6.9 6.9 0 0 1-1.9-1.04l-.1-.08.09-.1c.8-.82 1.44-1.8 1.8-2.84l.04-.12V8.4h-2.38V7h-1.18v1.4h-2.64Zm8.54 6.35h-1.72l-.7 1.5h-1.35l2.96-6.25h1.17l2.93 6.25h-1.35l-.67-1.5h-1.27Z"/>
+                    </svg>
+                </span>
                 <span>{{ app()->getLocale() === 'ar' ? 'EN' : 'AR' }}</span>
             </a>
         </div>
 
         <div class="mobile-bottom-item">
-            <a href="{{ route('register') }}" class="mobile-bottom-link {{ request()->routeIs('register') ? 'active' : '' }}">
-                <i class="bi bi-person-plus-fill"></i>
-                <span>{{ __('site.register') }}</span>
+            <a href="{{ route('pages.contact') }}" class="mobile-bottom-link mobile-bottom-widget {{ request()->routeIs('pages.contact') ? 'active' : '' }}">
+                <span class="mobile-bottom-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2.25a9.75 9.75 0 0 0-9.75 9.75v4.53a2.22 2.22 0 0 0 2.22 2.22h1.28a1.5 1.5 0 0 0 1.5-1.5v-4.5a1.5 1.5 0 0 0-1.5-1.5H3.82a8.25 8.25 0 0 1 16.36 0h-1.93a1.5 1.5 0 0 0-1.5 1.5v4.5a1.5 1.5 0 0 0 1.5 1.5h.93A3.57 3.57 0 0 1 15.75 21h-2.62a1.5 1.5 0 0 0 0 3h2.62a6.57 6.57 0 0 0 6.56-6.56V12A9.75 9.75 0 0 0 12 2.25Z"/>
+                    </svg>
+                </span>
+                <span>الدعم</span>
             </a>
         </div>
     @endauth

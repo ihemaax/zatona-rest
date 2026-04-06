@@ -55,6 +55,39 @@
             padding: 20px 22px 16px;
             border-bottom: 1px solid #efe8dc;
             background: linear-gradient(180deg, #fffdf9 0%, #f9f6f0 100%);
+            text-align:center;
+        }
+
+        .auth-logo-link{
+            width:82px;
+            height:82px;
+            margin:0 auto 10px;
+            border-radius:50%;
+            overflow:hidden;
+            border:1px solid #ebe3d6;
+            background:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 12px 24px rgba(60,52,40,.12);
+        }
+
+        .auth-logo-image{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        .auth-logo-fallback{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#f4efe6;
+            color:var(--auth-primary-dark);
+            font-size:1.8rem;
+            font-weight:900;
         }
 
         .auth-brand{
@@ -113,9 +146,21 @@
     </style>
 </head>
 <body>
+@php
+    $authSetting = \App\Models\Setting::query()->first();
+    $authLogo = $authSetting?->logo ? asset('storage/' . $authSetting->logo) : null;
+@endphp
+
 <div class="auth-shell">
     <div class="auth-card">
         <div class="auth-head">
+            <a href="{{ route('home') }}" class="auth-logo-link" aria-label="{{ __('site.brand') }}">
+                @if($authLogo)
+                    <img src="{{ $authLogo }}" alt="{{ __('site.brand') }}" class="auth-logo-image">
+                @else
+                    <span class="auth-logo-fallback">{{ mb_substr(__('site.brand'), 0, 1) }}</span>
+                @endif
+            </a>
             <a href="{{ route('home') }}" class="auth-brand">{{ __('site.brand') }}</a>
             <p class="auth-sub">{{ $subtitle ?? 'تجربة دخول وتسجيل مريحة ومتوافقة مع تصميم المنصة.' }}</p>
         </div>

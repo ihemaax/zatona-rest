@@ -1,19 +1,19 @@
 <?php
 
 return [
-    'shopping_cart' => 'سلة المشتريات',
-    'review_order_before_continue' => 'راجع طلبك قبل المتابعة',
+    'shopping_cart' => 'سلتك',
+    'review_order_before_continue' => 'راجع اللي اخترته بسرعة قبل ما تكمل',
     'product_singular' => 'منتج',
     'product_plural' => 'منتجات',
-    'inside_cart' => 'داخل السلة',
-    'continue_browsing' => 'متابعة التصفح',
-    'complete_order' => 'إتمام الطلب',
-    'cart_is_empty_now' => 'السلة فارغة حالياً',
-    'empty_cart_message' => 'يمكنك تصفح المنيو وإضافة الأصناف التي ترغب بها، ثم العودة هنا لإتمام الطلب.',
+    'inside_cart' => 'جوا السلة',
+    'continue_browsing' => 'رجوع للمنيو',
+    'complete_order' => 'كمّل الطلب',
+    'cart_is_empty_now' => 'السلة لسه فاضية',
+    'empty_cart_message' => 'لسه ما اخترتش حاجة.. لفة سريعة في المنيو وهتلاقي طلبك.',
     'browse_menu' => 'تصفح المنيو',
     'currency_egp' => 'ج.م',
-    'update_quantity' => 'تحديث الكمية',
+    'update_quantity' => 'حدّث الكمية',
     'total' => 'الإجمالي',
     'delete' => 'حذف',
-    'current_order_total' => 'إجمالي الطلب الحالي',
+    'current_order_total' => 'إجمالي طلبك',
 ];
