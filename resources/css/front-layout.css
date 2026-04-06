@@ -465,14 +465,49 @@
                 line-height:1;
             }
 
+            .mobile-bottom-icon{
+                width:34px;
+                height:34px;
+                border-radius:12px;
+                background: #fff;
+                border: 1px solid rgba(223, 215, 202, .9);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 6px 14px rgba(60, 52, 40, .08);
+            }
+
+            .mobile-bottom-icon svg{
+                width:18px;
+                height:18px;
+                fill: currentColor;
+            }
+
             .mobile-bottom-link.active{
                 background: linear-gradient(180deg, #f2f6ed 0%, #e9f0e2 100%);
                 color: var(--fb-primary-dark);
                 box-shadow: inset 0 0 0 1px rgba(111, 127, 95, .10);
             }
 
+            .mobile-bottom-link.active .mobile-bottom-icon{
+                background: linear-gradient(180deg, #ffffff 0%, #f4f8ee 100%);
+                border-color: rgba(111, 127, 95, .25);
+            }
+
             .mobile-bottom-link:hover{
                 color: var(--fb-primary-dark);
+            }
+
+            .mobile-bottom-widget{
+                background: linear-gradient(180deg, #f5f9ef 0%, #eaf1e1 100%);
+                color: var(--fb-primary-dark);
+                box-shadow: inset 0 0 0 1px rgba(111, 127, 95, .14);
+            }
+
+            .mobile-bottom-widget .mobile-bottom-icon{
+                background: linear-gradient(135deg, var(--fb-primary-dark) 0%, var(--fb-primary) 100%);
+                border-color: transparent;
+                color: #fff;
             }
 
             .mobile-bottom-badge{
