@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,16 +34,16 @@ class DashboardController extends Controller
         return $query;
     }
 
-    protected function applyDateRange($query, string $range): void
+    protected function applyDateRange($query, string $range, string $column = 'created_at'): void
     {
         if ($range === 'today') {
-            $query->whereDate('created_at', today());
+            $query->whereDate($column, today());
             return;
         }
 
         if (in_array($range, ['7d', '30d'], true)) {
             $days = (int) str_replace('d', '', $range);
-            $query->whereDate('created_at', '>=', today()->subDays($days - 1));
+            $query->whereDate($column, '>=', today()->subDays($days - 1));
         }
     }
 
@@ -119,6 +120,24 @@ class DashboardController extends Controller
             'completion_rate' => round(($delivered / $completedOrCancelled) * 100, 2),
         ];
 
+        $avgOrderValue = $ordersCount > 0 ? round($totalSales / $ordersCount, 2) : 0;
+        $shiftSummary = [
+            'orders_count' => $ordersCount,
+            'sales_total' => round($totalSales, 2),
+            'avg_order_value' => $avgOrderValue,
+        ];
+
+        $topProducts = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->selectRaw('order_items.product_name, SUM(order_items.quantity) as total_quantity')
+            ->groupBy('order_items.product_name')
+            ->orderByDesc('total_quantity')
+            ->limit(5);
+
+        $this->applyOrderScope($topProducts);
+        $this->applyDateRange($topProducts, $range, 'orders.created_at');
+        $topProducts = $topProducts->get();
+
         if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
         } elseif ($user->branch_id) {
@@ -146,6 +165,8 @@ class DashboardController extends Controller
             'statusBreakdown' => $statusBreakdown,
             'weeklyTrend' => $weeklyTrend,
             'kpis' => $kpis,
+            'shiftSummary' => $shiftSummary,
+            'topProducts' => $topProducts,
         ];
     }
 
@@ -184,6 +205,7 @@ class DashboardController extends Controller
             fputcsv($handle, ['avg_delivery_minutes', $data['kpis']['avg_delivery_minutes']]);
             fputcsv($handle, ['cancellation_rate', $data['kpis']['cancellation_rate']]);
             fputcsv($handle, ['completion_rate', $data['kpis']['completion_rate']]);
+            fputcsv($handle, ['avg_order_value', $data['shiftSummary']['avg_order_value']]);
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv']);
     }
@@ -211,6 +233,7 @@ class DashboardController extends Controller
                 'branches_count' => $data['branchesStats']->count(),
                 'status_breakdown' => $data['statusBreakdown'],
                 'kpis' => $data['kpis'],
+                'shift_summary' => $data['shiftSummary'],
             ],
             'range' => $data['range'],
             'new_orders_count' => $data['newOrders'],
@@ -267,6 +290,12 @@ class DashboardController extends Controller
                     'name' => $branch->name,
                     'address' => $branch->address,
                     'orders_count' => $branch->orders_count,
+                ];
+            })->values(),
+            'top_products' => collect($data['topProducts'])->map(function ($row) {
+                return [
+                    'product_name' => $row->product_name,
+                    'total_quantity' => (int) $row->total_quantity,
                 ];
             })->values(),
         ]);

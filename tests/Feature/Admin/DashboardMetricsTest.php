@@ -41,8 +41,9 @@ class DashboardMetricsTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonStructure([
-            'cards' => ['kpis', 'status_breakdown'],
+            'cards' => ['kpis', 'status_breakdown', 'shift_summary'],
             'weekly_trend',
+            'top_products',
         ]);
     }
 

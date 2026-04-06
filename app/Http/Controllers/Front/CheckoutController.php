@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Setting;
@@ -44,14 +45,38 @@ class CheckoutController extends Controller
             $selectedOrderType = 'delivery';
         }
 
+        $couponCode = $request->old('coupon_code', session('checkout_coupon_code'));
+        $subtotal = (float) collect($cart)->sum('total');
+        $couponPreview = $this->resolveCouponData($couponCode, $subtotal);
+
         return view('front.checkout', compact(
             'cart',
             'setting',
             'savedAddresses',
             'defaultAddress',
             'branches',
-            'selectedOrderType'
+            'selectedOrderType',
+            'couponPreview'
         ));
+    }
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|max:40',
+        ]);
+
+        $cart = session()->get('cart', []);
+        $subtotal = (float) collect($cart)->sum('total');
+        $couponData = $this->resolveCouponData($request->coupon_code, $subtotal);
+
+        if (!$couponData['coupon']) {
+            return back()->with('error', $couponData['message'] ?? 'كوبون الخصم غير صالح')->withInput();
+        }
+
+        session(['checkout_coupon_code' => $couponData['coupon']->code]);
+
+        return back()->with('success', 'تم تطبيق الكوبون بنجاح');
     }
 
     public function store(Request $request)
@@ -78,6 +103,7 @@ class CheckoutController extends Controller
             'save_address'   => 'nullable|boolean',
             'address_label'  => 'nullable|string|max:255',
             'make_default'   => 'nullable|boolean',
+            'coupon_code'    => 'nullable|string|max:40',
         ]);
 
         if ($request->order_type === 'delivery' && empty($request->address_line)) {
@@ -105,12 +131,17 @@ class CheckoutController extends Controller
         }
 
         $subtotal = collect($cart)->sum('total');
+        $couponData = $this->resolveCouponData($request->coupon_code ?: session('checkout_coupon_code'), (float) $subtotal);
+        if (($request->coupon_code || session('checkout_coupon_code')) && !$couponData['coupon']) {
+            return redirect()->back()->with('error', $couponData['message'] ?? 'كوبون الخصم غير صالح')->withInput();
+        }
 
         $deliveryFee = $request->order_type === 'delivery'
             ? ($setting?->delivery_fee ?? 25)
             : 0;
 
-        $total = $subtotal + $deliveryFee;
+        $discountAmount = (float) ($couponData['discount'] ?? 0);
+        $total = max(0, $subtotal + $deliveryFee - $discountAmount);
         $etaMinutes = $request->order_type === 'delivery' ? 45 : 20;
         $guestToken = auth()->check() ? null : Str::random(40);
 
@@ -143,7 +174,10 @@ class CheckoutController extends Controller
                     : $selectedBranch?->longitude,
 
                 'notes'                      => $request->notes,
+                'coupon_id'                  => $couponData['coupon']?->id,
+                'coupon_code'                => $couponData['coupon']?->code,
                 'subtotal'                   => $subtotal,
+                'discount_amount'            => $discountAmount,
                 'delivery_fee'               => $deliveryFee,
                 'total'                      => $total,
                 'payment_method'             => 'cash',
@@ -163,6 +197,10 @@ class CheckoutController extends Controller
                     'total'            => $item['total'],
                     'selected_options' => $item['selected_options'] ?? [],
                 ]);
+            }
+
+            if ($couponData['coupon']) {
+                $couponData['coupon']->increment('used_count');
             }
 
             if (
@@ -188,6 +226,7 @@ class CheckoutController extends Controller
             DB::commit();
 
             session()->forget('cart');
+            session()->forget('checkout_coupon_code');
 
             if ($guestToken) {
                 return redirect()->route('order.success', [$order->id, $guestToken])
@@ -224,5 +263,31 @@ class CheckoutController extends Controller
         }
 
         return view('front.success', compact('order'));
+    }
+
+    protected function resolveCouponData(?string $couponCode, float $subtotal): array
+    {
+        $code = strtoupper(trim((string) $couponCode));
+        if ($code === '') {
+            return ['coupon' => null, 'discount' => 0, 'message' => null];
+        }
+
+        $coupon = Coupon::query()
+            ->whereRaw('UPPER(code) = ?', [$code])
+            ->first();
+
+        if (!$coupon) {
+            return ['coupon' => null, 'discount' => 0, 'message' => 'كوبون الخصم غير موجود'];
+        }
+
+        if (!$coupon->isUsable($subtotal)) {
+            return ['coupon' => null, 'discount' => 0, 'message' => 'الكوبون غير متاح حاليًا أو لا يطابق شروط الطلب'];
+        }
+
+        return [
+            'coupon' => $coupon,
+            'discount' => $coupon->calculateDiscount($subtotal),
+            'message' => null,
+        ];
     }
 }

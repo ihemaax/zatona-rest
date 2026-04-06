@@ -1143,6 +1143,7 @@
         request()->routeIs('admin.branches.*') ||
         request()->routeIs('admin.categories.*') ||
         request()->routeIs('admin.products.*') ||
+        request()->routeIs('admin.coupons.*') ||
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
         request()->routeIs('admin.reports.*');
@@ -1270,6 +1271,11 @@
                             <span>المنتجات</span>
                         </a>
                     @endif
+
+                    <a href="{{ route('admin.coupons.index') }}" class="sb-sublink {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+                        <span class="sb-sublink-dot"></span>
+                        <span>كوبونات الخصم</span>
+                    </a>
 
                     @if($adminUser?->hasPermission('manage_settings') || $adminUser?->isSuperAdmin())
                         <a href="{{ route('admin.settings.edit') }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
