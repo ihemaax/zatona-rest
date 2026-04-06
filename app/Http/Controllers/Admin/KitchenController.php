@@ -128,20 +128,18 @@ class KitchenController extends Controller
 
         if ($order->order_type === 'delivery') {
             $order->update([
-                'status' => 'out_for_delivery',
-                'status_note' => 'تم إنهاء التحضير بالمطبخ وجاهز للتوصيل',
-                'out_for_delivery_at' => $order->out_for_delivery_at ?? now(),
+                'status' => 'preparing',
+                'status_note' => 'تم إنهاء التحضير بالمطبخ وجاهز لإسناد الدليفري',
             ]);
 
-            return back()->with('success', 'تم إنهاء الطلب وتحويله إلى التوصيل.');
+            return back()->with('success', 'الطلب جاهز للتوصيل. قم بإسناده للدليفري من شاشة الطلب.');
         }
 
         $order->update([
-            'status' => 'delivered',
-            'status_note' => 'تم إنهاء التحضير بالمطبخ وجاهز للتسليم',
-            'delivered_at' => $order->delivered_at ?? now(),
+            'status' => 'ready_for_pickup',
+            'status_note' => 'تم إنهاء التحضير بالمطبخ وجاهز للاستلام من الفرع',
         ]);
 
-        return back()->with('success', 'تم إنهاء الطلب وتجهيزه للتسليم.');
+        return back()->with('success', 'تم تجهيز الطلب وأصبح جاهزًا للاستلام.');
     }
 }

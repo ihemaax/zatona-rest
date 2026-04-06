@@ -9,6 +9,7 @@
         'confirmed' => 'ops-status status-confirmed',
         'preparing' => 'ops-status status-preparing',
         'out_for_delivery' => 'ops-status status-delivery',
+        'ready_for_pickup' => 'ops-status status-confirmed',
         'delivered' => 'ops-status status-delivered',
         default => 'ops-status status-cancelled',
     };
@@ -18,6 +19,7 @@
         'confirmed' => 'تم التأكيد',
         'preparing' => 'قيد التحضير',
         'out_for_delivery' => 'خرج للتوصيل',
+        'ready_for_pickup' => 'جاهز للاستلام',
         'delivered' => 'تم التسليم',
         default => 'تم الإلغاء',
     };
@@ -699,6 +701,7 @@
                         'confirmed' => 'تم التأكيد',
                         'preparing' => 'قيد التحضير',
                         'out_for_delivery' => 'خرج للتوصيل',
+                        'ready_for_pickup' => 'جاهز للاستلام',
                         'delivered' => 'تم التسليم',
                         'cancelled' => 'تم الإلغاء',
                     ];
@@ -709,7 +712,8 @@
                         'confirmed' => ['preparing', 'cancelled'],
                         'preparing' => $currentOrderType === 'delivery'
                             ? ['out_for_delivery', 'cancelled']
-                            : ['delivered', 'cancelled'],
+                            : ['ready_for_pickup', 'cancelled'],
+                        'ready_for_pickup' => ['delivered', 'cancelled'],
                         'out_for_delivery' => ['delivered', 'cancelled'],
                         'delivered' => [],
                         'cancelled' => [],
@@ -750,7 +754,7 @@
                             @endif
                         </select>
                         @unless($isDeliveryUser)
-                            <small class="text-muted d-block mt-1">الدورة المعتمدة: pending ← confirmed ← preparing ← (out_for_delivery أو delivered).</small>
+                            <small class="text-muted d-block mt-1">الدورة المعتمدة: pending ← confirmed ← preparing ← (ready_for_pickup أو out_for_delivery) ← delivered.</small>
                         @endunless
                     </div>
 

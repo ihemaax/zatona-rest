@@ -22,7 +22,8 @@ class OrderController extends Controller
             'confirmed' => ['preparing', 'cancelled'],
             'preparing' => $orderType === 'delivery'
                 ? ['out_for_delivery', 'cancelled']
-                : ['delivered', 'cancelled'],
+                : ['ready_for_pickup', 'cancelled'],
+            'ready_for_pickup' => ['delivered', 'cancelled'],
             'out_for_delivery' => ['delivered', 'cancelled'],
             'delivered' => [],
             'cancelled' => [],
@@ -219,7 +220,7 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,preparing,out_for_delivery,delivered,cancelled',
+            'status' => 'required|in:pending,confirmed,preparing,ready_for_pickup,out_for_delivery,delivered,cancelled',
             'order_type' => 'nullable|in:delivery,pickup',
             'status_note' => 'nullable|string',
             'estimated_delivery_minutes' => 'nullable|integer|min:1|max:300',
@@ -230,7 +231,7 @@ class OrderController extends Controller
         if (!$this->isAllowedTransition($order->status, $validated['status'], $nextOrderType)) {
             return redirect()
                 ->back()
-                ->with('error', 'تسلسل الحالة غير صحيح. الدورة المعتمدة: pending → confirmed → preparing → (out_for_delivery أو delivered).');
+                ->with('error', 'تسلسل الحالة غير صحيح. الدورة المعتمدة: pending → confirmed → preparing → ready_for_pickup/delivery.');
         }
 
         $minutes = $validated['estimated_delivery_minutes'] ?? null;
@@ -277,18 +278,18 @@ class OrderController extends Controller
 
         $wasAssignedToDifferentUser = (int) ($order->delivery_user_id ?? 0) !== (int) $deliveryUser->id;
 
+        if ($order->status !== 'preparing') {
+            return redirect()->back()->with('error', 'لا يمكن إسناد الطلب للدليفري إلا بعد انتهاء المطبخ وتجهيزه (Preparing).');
+        }
+
         $order->update([
             'order_type' => 'delivery',
             'delivery_user_id' => $deliveryUser->id,
             'assigned_to_delivery_at' => $wasAssignedToDifferentUser
                 ? now()
                 : ($order->assigned_to_delivery_at ?? now()),
-            'status' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
-                ? 'out_for_delivery'
-                : $order->status,
-            'out_for_delivery_at' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
-                ? now()
-                : $order->out_for_delivery_at,
+            'status' => 'out_for_delivery',
+            'out_for_delivery_at' => now(),
         ]);
 
         if ($wasAssignedToDifferentUser) {
