@@ -140,7 +140,9 @@ class DashboardController extends Controller
         $this->applyDateRange($topProducts, $range, 'orders.created_at');
         $topProducts = $topProducts->get();
 
-        if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if (!$user) {
+            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
+        } elseif ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
         } elseif ($user->branch_id) {
             $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
@@ -172,6 +174,59 @@ class DashboardController extends Controller
         ];
     }
 
+    protected function buildEmptyDashboardData(string $range = 'today'): array
+    {
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) {
+            $date = Carbon::today()->subDays($daysAgo);
+
+            return [
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->format('D'),
+                'orders' => 0,
+                'sales' => 0,
+            ];
+        })->values();
+
+        return [
+            'range' => $range,
+            'ordersCount' => 0,
+            'todayOrders' => 0,
+            'newOrders' => 0,
+            'pendingOrders' => 0,
+            'deliveryOrders' => 0,
+            'pickupOrders' => 0,
+            'todaySales' => 0,
+            'deliverySales' => 0,
+            'pickupSales' => 0,
+            'latestOrders' => collect(),
+            'deliveryLatest' => collect(),
+            'pickupLatest' => collect(),
+            'branchesStats' => collect(),
+            'notifications' => collect(),
+            'statusBreakdown' => [
+                'pending' => 0,
+                'confirmed' => 0,
+                'preparing' => 0,
+                'out_for_delivery' => 0,
+                'delivered' => 0,
+                'cancelled' => 0,
+            ],
+            'weeklyTrend' => $weeklyTrend,
+            'kpis' => [
+                'prep_sla_minutes' => 0,
+                'avg_delivery_minutes' => 0,
+                'cancellation_rate' => 0,
+                'completion_rate' => 0,
+            ],
+            'shiftSummary' => [
+                'orders_count' => 0,
+                'sales_total' => 0,
+                'avg_order_value' => 0,
+            ],
+            'topProducts' => collect(),
+        ];
+    }
+
     public function index(Request $request)
     {
         $range = $request->query('range', 'today');
@@ -179,7 +234,33 @@ class DashboardController extends Controller
             $range = 'today';
         }
 
-        return view('admin.dashboard', $this->buildDashboardData($range));
+        return view('admin.dashboard', array_merge(
+            $this->buildDashboardData($range),
+            [
+                'dashboardBaseRoute' => 'admin.dashboard',
+                'dashboardPollRoute' => 'admin.dashboard.poll',
+                'dashboardExportRoute' => 'admin.dashboard.export-snapshot',
+                'isDemoDashboard' => false,
+            ]
+        ));
+    }
+
+    public function demo(Request $request)
+    {
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        return view('admin.dashboard', array_merge(
+            $this->buildEmptyDashboardData($range),
+            [
+                'dashboardBaseRoute' => 'admin.dashboard.demo',
+                'dashboardPollRoute' => null,
+                'dashboardExportRoute' => null,
+                'isDemoDashboard' => true,
+            ]
+        ));
     }
 
     public function exportSnapshot(Request $request): StreamedResponse
