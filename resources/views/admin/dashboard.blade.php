@@ -70,6 +70,36 @@
         align-items:start;
     }
 
+
+    .ops-insights-grid{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:18px;
+    }
+
+    .ops-status-list{
+        display:grid;
+        gap:10px;
+    }
+
+    .ops-status-row{
+        display:grid;
+        grid-template-columns: 130px 1fr auto;
+        align-items:center;
+        gap:10px;
+    }
+
+    .ops-status-name{font-size:.8rem;font-weight:800;color:#6f6a61;}
+    .ops-status-bar{height:10px;background:#f0e9de;border-radius:999px;overflow:hidden;}
+    .ops-status-bar > span{display:block;height:100%;background:linear-gradient(90deg,#6f7f5f,#8d9d7c);}
+    .ops-status-value{font-size:.78rem;font-weight:900;color:#231f1b;}
+
+    .ops-trend-list{display:grid;gap:8px;}
+    .ops-trend-row{display:grid;grid-template-columns:50px 1fr auto;align-items:center;gap:10px;}
+    .ops-trend-bar{height:10px;background:#efe7da;border-radius:999px;overflow:hidden;}
+    .ops-trend-bar > span{display:block;height:100%;background:linear-gradient(90deg,#5d7a9a,#87a7c9);}
+    .ops-trend-note{font-size:.75rem;color:#8a847a;font-weight:700;}
+
     .ops-card{
         background: var(--admin-surface);
         border: 1px solid var(--admin-border);
@@ -354,6 +384,12 @@
         white-space:nowrap;
     }
 
+    .ops-mini-btn.active{
+        background: var(--admin-primary);
+        color:#fff;
+        border-color:var(--admin-primary);
+    }
+
     .ops-mini-btn:hover{
         background:#ebe4da;
         color:#302821;
@@ -571,6 +607,43 @@
 
 <div class="ops-dashboard">
 
+
+    <section class="ops-card" style="padding:14px 18px;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.dashboard', ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route('admin.dashboard', ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
+                <a href="{{ route('admin.dashboard', ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+            </div>
+            <a href="{{ route('admin.dashboard.export-snapshot', ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+        </div>
+    </section>
+
+    <section class="ops-strip">
+        <div class="ops-strip-grid">
+            <div class="ops-strip-item info">
+                <div class="ops-strip-label">SLA التحضير (دقيقة)</div>
+                <div class="ops-strip-value" id="kpiPrepSla">{{ number_format($kpis['prep_sla_minutes'], 1) }}</div>
+                <div class="ops-strip-note">من إنشاء الطلب حتى الخروج للتوصيل</div>
+            </div>
+            <div class="ops-strip-item primary">
+                <div class="ops-strip-label">متوسط التوصيل (دقيقة)</div>
+                <div class="ops-strip-value" id="kpiAvgDelivery">{{ number_format($kpis['avg_delivery_minutes'], 1) }}</div>
+                <div class="ops-strip-note">من الخروج للتوصيل حتى التسليم</div>
+            </div>
+            <div class="ops-strip-item warn">
+                <div class="ops-strip-label">Cancellation Rate</div>
+                <div class="ops-strip-value" id="kpiCancellationRate">{{ number_format($kpis['cancellation_rate'], 2) }}%</div>
+                <div class="ops-strip-note">نسبة الطلبات الملغاة من الإجمالي</div>
+            </div>
+            <div class="ops-strip-item success">
+                <div class="ops-strip-label">Completion Rate</div>
+                <div class="ops-strip-value" id="kpiCompletionRate">{{ number_format($kpis['completion_rate'], 2) }}%</div>
+                <div class="ops-strip-note">نسبة الطلبات المكتملة مقابل (المكتمل+الملغي)</div>
+            </div>
+        </div>
+    </section>
+
     {{-- شريط المؤشرات الرئيسي --}}
     <section class="ops-strip">
         <div class="ops-strip-grid">
@@ -672,6 +745,63 @@
             </div>
         </div>
     </section>
+
+
+    <section class="ops-insights-grid">
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">توزيع حالات الطلبات</h2>
+                    <p class="ops-card-subtitle">رؤية سريعة لأماكن الضغط التشغيلي</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                @php
+                    $statusTotal = max(1, array_sum($statusBreakdown));
+                    $statusLabels = [
+                        'pending' => 'قيد الانتظار',
+                        'confirmed' => 'مؤكد',
+                        'preparing' => 'قيد التحضير',
+                        'out_for_delivery' => 'خرج للتوصيل',
+                        'delivered' => 'تم التسليم',
+                        'cancelled' => 'ملغي',
+                    ];
+                @endphp
+                <div class="ops-status-list" id="statusBreakdownBox">
+                    @foreach($statusBreakdown as $key => $value)
+                        <div class="ops-status-row">
+                            <div class="ops-status-name">{{ $statusLabels[$key] ?? $key }}</div>
+                            <div class="ops-status-bar"><span style="width: {{ ($value / $statusTotal) * 100 }}%"></span></div>
+                            <div class="ops-status-value">{{ $value }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">اتجاه الطلبات (7 أيام)</h2>
+                    <p class="ops-card-subtitle">متابعة تطور الطلبات يوميًا</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                @php $trendMax = max(1, collect($weeklyTrend)->max('orders')); @endphp
+                <div class="ops-trend-list" id="weeklyTrendBox">
+                    @foreach($weeklyTrend as $row)
+                        <div class="ops-trend-row">
+                            <div class="ops-status-name">{{ $row['label'] }}</div>
+                            <div class="ops-trend-bar"><span style="width: {{ ($row['orders'] / $trendMax) * 100 }}%"></span></div>
+                            <div class="ops-status-value">{{ $row['orders'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="ops-trend-note mt-2">يتم التحديث تلقائيًا مع تحديث لوحة التحكم.</div>
+            </div>
+        </div>
+    </section>
+
 
     <section class="ops-grid">
         <div class="ops-card">
@@ -852,6 +982,52 @@
         </div>
     </section>
 
+    <section class="ops-grid">
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">ملخص الشيفت</h2>
+                    <p class="ops-card-subtitle">مؤشرات سريعة لإجمالي الطلبات والمبيعات ومتوسط قيمة الطلب</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                <div class="ops-focus-grid">
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">طلبات الشيفت</div>
+                        <div class="ops-focus-value" id="shiftOrdersCount">{{ $shiftSummary['orders_count'] }}</div>
+                    </div>
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">إجمالي الشيفت</div>
+                        <div class="ops-focus-value" id="shiftSalesTotal">{{ number_format($shiftSummary['sales_total'], 2) }} ج.م</div>
+                    </div>
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">متوسط الطلب</div>
+                        <div class="ops-focus-value" id="shiftAvgOrderValue">{{ number_format($shiftSummary['avg_order_value'], 2) }} ج.م</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">Top 5 منتجات</h2>
+                    <p class="ops-card-subtitle">الأصناف الأعلى بيعًا حسب الفترة المختارة</p>
+                </div>
+            </div>
+            <div class="ops-card-body" id="topProductsBox">
+                @forelse($topProducts as $product)
+                    <div class="ops-branch">
+                        <div class="ops-branch-name">{{ $product->product_name }}</div>
+                        <span class="ops-branch-count">{{ (int) $product->total_quantity }} وحدة</span>
+                    </div>
+                @empty
+                    <div class="ops-empty">لا توجد بيانات مبيعات لهذه الفترة</div>
+                @endforelse
+            </div>
+        </div>
+    </section>
+
     <section class="ops-table-card">
         <div class="ops-table-head">
             <div>
@@ -953,10 +1129,19 @@ document.addEventListener('DOMContentLoaded', function () {
         deliveryBody:   $('deliveryLatestTableBody'),
         pickupBody:     $('pickupLatestTableBody'),
         branches:       $('branchesSummaryBox'),
+        kpiPrepSla:     $('kpiPrepSla'),
+        kpiAvgDelivery: $('kpiAvgDelivery'),
+        kpiCancelRate:  $('kpiCancellationRate'),
+        kpiCompletion:  $('kpiCompletionRate'),
+        shiftOrders:    $('shiftOrdersCount'),
+        shiftSales:     $('shiftSalesTotal'),
+        shiftAvgOrder:  $('shiftAvgOrderValue'),
+        topProducts:    $('topProductsBox'),
     };
 
     let lastCount = parseInt(els.newOrders?.textContent || '0', 10);
     let fetching  = false;
+    const range = @json($range ?? 'today');
 
     const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const money = v => `${Number(v).toFixed(2)} ج.م`;
@@ -1059,6 +1244,47 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     };
 
+
+    const renderStatusBreakdown = (status = {}) => {
+        const el = $('statusBreakdownBox');
+        if (!el) return;
+
+        const labels = {
+            pending:'قيد الانتظار',
+            confirmed:'مؤكد',
+            preparing:'قيد التحضير',
+            out_for_delivery:'خرج للتوصيل',
+            delivered:'تم التسليم',
+            cancelled:'ملغي'
+        };
+
+        const entries = Object.entries(labels).map(([k, label]) => ({ key:k, label, value: Number(status[k] || 0) }));
+        const total = Math.max(1, entries.reduce((sum, r) => sum + r.value, 0));
+
+        el.innerHTML = entries.map(r => `
+            <div class="ops-status-row">
+                <div class="ops-status-name">${r.label}</div>
+                <div class="ops-status-bar"><span style="width:${(r.value / total) * 100}%"></span></div>
+                <div class="ops-status-value">${r.value}</div>
+            </div>
+        `).join('');
+    };
+
+    const renderWeeklyTrend = (items = []) => {
+        const el = $('weeklyTrendBox');
+        if (!el) return;
+        const max = Math.max(1, ...items.map(i => Number(i.orders || 0)));
+
+        el.innerHTML = items.map(i => `
+            <div class="ops-trend-row">
+                <div class="ops-status-name">${esc(i.label || '')}</div>
+                <div class="ops-trend-bar"><span style="width:${(Number(i.orders || 0) / max) * 100}%"></span></div>
+                <div class="ops-status-value">${Number(i.orders || 0)}</div>
+            </div>
+        `).join('');
+    };
+
+
     const renderBranches = items => {
         if (!els.branches) return;
         if (!items.length) {
@@ -1077,12 +1303,27 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     };
 
+    const renderTopProducts = (items = []) => {
+        if (!els.topProducts) return;
+        if (!items.length) {
+            els.topProducts.innerHTML = '<div class="ops-empty">لا توجد بيانات مبيعات لهذه الفترة</div>';
+            return;
+        }
+
+        els.topProducts.innerHTML = items.map(item => `
+            <div class="ops-branch">
+                <div class="ops-branch-name">${esc(item.product_name || '')}</div>
+                <span class="ops-branch-count">${Number(item.total_quantity || 0)} وحدة</span>
+            </div>
+        `).join('');
+    };
+
     async function poll() {
         if (fetching) return;
         fetching = true;
 
         try {
-            const res = await fetch("{{ secure_url('/admin/dashboard/poll') }}", {
+            const res = await fetch(`{{ secure_url('/admin/dashboard/poll') }}?range=${encodeURIComponent(range)}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'
@@ -1114,11 +1355,22 @@ document.addEventListener('DOMContentLoaded', function () {
             set(els.needAttention, +(c.new_orders ?? 0) + +(c.pending_orders ?? 0));
             set(els.sidebarBadge, cur);
 
+            set(els.kpiPrepSla, Number(c.kpis?.prep_sla_minutes ?? 0).toFixed(1));
+            set(els.kpiAvgDelivery, Number(c.kpis?.avg_delivery_minutes ?? 0).toFixed(1));
+            set(els.kpiCancelRate, Number(c.kpis?.cancellation_rate ?? 0).toFixed(2) + '%');
+            set(els.kpiCompletion, Number(c.kpis?.completion_rate ?? 0).toFixed(2) + '%');
+            set(els.shiftOrders, c.shift_summary?.orders_count ?? 0);
+            set(els.shiftSales, money(c.shift_summary?.sales_total ?? 0));
+            set(els.shiftAvgOrder, money(c.shift_summary?.avg_order_value ?? 0));
+
             renderNotifs(data.notifications || []);
             renderLatest(data.latest_orders || []);
             renderDelivery(data.delivery_latest || []);
             renderPickup(data.pickup_latest || []);
             renderBranches(data.branches_stats || []);
+            renderTopProducts(data.top_products || []);
+            renderStatusBreakdown(c.status_breakdown || {});
+            renderWeeklyTrend(data.weekly_trend || []);
         } catch (e) {
             console.log('Poll error:', e);
         } finally {
