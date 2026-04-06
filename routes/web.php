@@ -197,6 +197,7 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])->name('admin.kitchen.start');
     Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])->name('admin.kitchen.ready');
     Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
+    Route::get('/ready-orders/poll', [ReadyOrderController::class, 'poll'])->name('admin.orders.ready.poll');
 
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
