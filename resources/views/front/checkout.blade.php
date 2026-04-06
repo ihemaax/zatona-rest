@@ -4,158 +4,169 @@
 @php
     $title = __('site.brand');
     $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
-@endphp
 
-<h2 class="section-title mb-4">{{ __('checkout.complete_order') }}</h2>
-
-@php
     $subtotal = collect($cart)->sum('total');
     $delivery = $setting->delivery_fee ?? 25;
     $couponCode = old('coupon_code', $couponPreview['coupon']?->code ?? session('checkout_coupon_code'));
     $discountValue = (float) ($couponPreview['discount'] ?? 0);
+    $activeOrderType = old('order_type', $selectedOrderType ?? 'delivery');
 @endphp
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    #map {
-        height: 380px;
-        border-radius: 20px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-    }
+    .checknova-wrap{max-width:1260px;margin:0 auto;padding-bottom:110px}
+    .checknova-grid{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:22px;align-items:start}
 
-    .delivery-fields, .pickup-fields {
-        display: none;
-    }
+    .checknova-form{background:#ffffff;border:1px solid #e2e8f0;border-radius:30px;overflow:hidden;box-shadow:0 20px 48px rgba(15,23,42,.1)}
+    .checknova-hero{padding:24px;background:radial-gradient(circle at top left,#0f172a,#111827 40%,#1e293b);color:#e2e8f0}
+    .checknova-hero h1{margin:0;font-size:1.9rem;font-weight:900;color:#fff}
+    .checknova-hero p{margin:8px 0 0;font-size:.92rem;font-weight:700;color:#cbd5e1}
+    .checknova-method{margin-top:12px;display:inline-flex;align-items:center;gap:8px;border:1px solid #334155;background:#0b1220;padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:900}
+    .checknova-method.delivery{color:#fcd34d}.checknova-method.pickup{color:#93c5fd}
+
+    .checknova-body{padding:20px;display:grid;gap:18px}
+    .checknova-block{background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:16px}
+    .checknova-block h3{margin:0 0 12px;font-size:1rem;font-weight:900;color:#0f172a}
+    .checknova-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .checknova-three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .checknova-label{display:block;margin:0 0 6px;font-size:.8rem;font-weight:800;color:#334155}
+    .checknova-note{font-size:.78rem;color:#64748b;font-weight:700;margin-top:6px}
+
+    #map{height:340px;border-radius:14px;border:1px solid #dbe5f1;overflow:hidden}
+    .delivery-fields,.pickup-fields{display:none}
+
+    .checknova-summary{position:sticky;top:90px;background:#0b1220;border:1px solid #24324a;border-radius:24px;padding:18px;color:#dbeafe;box-shadow:0 16px 34px rgba(2,6,23,.35)}
+    .checknova-summary h3{margin:0;color:#f8fafc;font-size:1.05rem;font-weight:900}
+    .checknova-items{margin-top:12px;display:grid;gap:8px;max-height:260px;overflow:auto;padding-right:4px}
+    .checknova-item{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;font-weight:800;color:#cbd5e1}
+    .checknova-calc{margin-top:14px;padding-top:12px;border-top:1px dashed #334155;display:grid;gap:9px}
+    .checknova-row{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;font-weight:800}
+    .checknova-row.total{font-size:1rem;color:#fff}
+    .checknova-change{margin-top:12px;display:block;text-align:center;text-decoration:none;border-radius:12px;padding:10px;background:#1e293b;border:1px solid #334155;color:#dbeafe;font-weight:900}
+
+    @media (max-width:991.98px){.checknova-grid{grid-template-columns:1fr}.checknova-summary{position:static}}
+    @media (max-width:767.98px){.checknova-wrap{padding-bottom:92px}.checknova-form{border-radius:20px}.checknova-hero{padding:16px}.checknova-hero h1{font-size:1.24rem}.checknova-body{padding:14px}.checknova-two,.checknova-three{grid-template-columns:1fr}}
 </style>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card-shell p-4">
-            <form action="{{ route('checkout.store') }}" method="POST">
+<div class="checknova-wrap">
+    <div class="checknova-grid">
+        <section class="checknova-form">
+            <header class="checknova-hero">
+                <h1>{{ __('checkout.complete_order') }}</h1>
+                <p>{{ __('checkout.receiving_method_label') }}</p>
+                <div class="checknova-method {{ $activeOrderType }}">
+                    @if($activeOrderType === 'pickup')
+                        🏬 {{ __('checkout.pickup_from_restaurant') }}
+                    @else
+                        🚚 {{ __('checkout.delivery_to_address') }}
+                    @endif
+                </div>
+            </header>
+
+            <form action="{{ route('checkout.store') }}" method="POST" class="checknova-body">
                 @csrf
+                <input type="hidden" name="order_type" id="orderTypeSelect" value="{{ $activeOrderType }}">
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ __('checkout.customer_name') }}</label>
-                        <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', auth()->check() ? auth()->user()->name : '') }}" required>
+                <div class="checknova-block">
+                    <h3>{{ __('checkout.customer_name') }} & {{ __('checkout.phone_number') }}</h3>
+                    <div class="checknova-two">
+                        <div>
+                            <label class="checknova-label">{{ __('checkout.customer_name') }}</label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', auth()->check() ? auth()->user()->name : '') }}" required>
+                        </div>
+                        <div>
+                            <label class="checknova-label">{{ __('checkout.phone_number') }}</label>
+                            <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">{{ __('checkout.phone_number') }}</label>
-                        <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
-                    </div>
+                <div class="checknova-block pickup-fields" id="pickupFields">
+                    <h3>{{ __('checkout.choose_branch') }}</h3>
+                    <select name="branch_id" class="form-select">
+                        <option value="">{{ __('checkout.choose_branch_placeholder') }}</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" @selected(old('branch_id') == $branch->id)>
+                                {{ $branch->name }} - {{ $branch->address }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <input type="hidden" name="order_type" id="orderTypeSelect" value="{{ old('order_type', $selectedOrderType ?? 'delivery') }}">
+                <div class="checknova-block delivery-fields" id="deliveryFields">
+                    <h3>{{ __('checkout.delivery_to_address') }}</h3>
 
-                    <div class="card-shell p-3">
-                        <strong>{{ __('checkout.receiving_method_label') }}</strong>
-                        @if(old('order_type', $selectedOrderType ?? 'delivery') === 'pickup')
-                            {{ __('checkout.pickup_from_restaurant') }}
-                        @else
-                            {{ __('checkout.delivery_to_address') }}
-                        @endif
-                    </div>
-
-                    <div class="col-12 pickup-fields" id="pickupFields">
-                        <label class="form-label">{{ __('checkout.choose_branch') }}</label>
-                        <select name="branch_id" class="form-select">
-                            <option value="">{{ __('checkout.choose_branch_placeholder') }}</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}" @selected(old('branch_id') == $branch->id)>
-                                    {{ $branch->name }} - {{ $branch->address }}
+                    @if($savedAddresses->count())
+                        <label class="checknova-label">{{ __('checkout.choose_saved_address') }}</label>
+                        <select id="savedAddressSelect" class="form-select mb-3">
+                            <option value="">{{ __('checkout.choose_saved_address_placeholder') }}</option>
+                            @foreach($savedAddresses as $address)
+                                <option
+                                    value="{{ $address->id }}"
+                                    data-address="{{ $address->address_line }}"
+                                    data-area="{{ $address->area }}"
+                                    data-lat="{{ $address->latitude }}"
+                                    data-lng="{{ $address->longitude }}"
+                                >
+                                    {{ $address->label }} - {{ $address->address_line }}
                                 </option>
                             @endforeach
                         </select>
-                    </div>
+                    @endif
 
-                    <div class="delivery-fields" id="deliveryFields">
-                        @if($savedAddresses->count())
-                            <div class="col-12 mb-3">
-                                <label class="form-label">{{ __('checkout.choose_saved_address') }}</label>
-                                <select id="savedAddressSelect" class="form-select">
-                                    <option value="">{{ __('checkout.choose_saved_address_placeholder') }}</option>
-                                    @foreach($savedAddresses as $address)
-                                        <option
-                                            value="{{ $address->id }}"
-                                            data-address="{{ $address->address_line }}"
-                                            data-area="{{ $address->area }}"
-                                            data-lat="{{ $address->latitude }}"
-                                            data-lng="{{ $address->longitude }}"
-                                        >
-                                            {{ $address->label }} - {{ $address->address_line }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-
-                        <div class="col-12">
-                            <label class="form-label">{{ __('checkout.detailed_address') }}</label>
+                    <div class="checknova-two">
+                        <div>
+                            <label class="checknova-label">{{ __('checkout.detailed_address') }}</label>
                             <input type="text" name="address_line" id="address_line" class="form-control" value="{{ old('address_line') }}">
                         </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">{{ __('checkout.area') }}</label>
+                        <div>
+                            <label class="checknova-label">{{ __('checkout.area') }}</label>
                             <input type="text" name="area" id="area" class="form-control" value="{{ old('area') }}">
                         </div>
+                    </div>
 
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button type="button" id="useCurrentLocationBtn" class="btn btn-brand w-100">
-                                {{ __('checkout.use_current_location') }}
-                            </button>
+                    <div class="checknova-two mt-3">
+                        <button type="button" id="useCurrentLocationBtn" class="btn btn-brand w-100">{{ __('checkout.use_current_location') }}</button>
+                        <div class="checknova-note" id="locationStatus"></div>
+                    </div>
+                    <div class="checknova-note">{{ __('checkout.network_issue_hint') }}</div>
+
+                    <div class="mt-3">
+                        <label class="checknova-label">{{ __('checkout.select_location_on_map') }}</label>
+                        <div id="map"></div>
+                    </div>
+
+                    <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
+                    <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
+
+                    <div class="checknova-three mt-3">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" value="1" id="save_address" name="save_address">
+                            <label class="form-check-label" for="save_address">{{ __('checkout.save_this_address') }}</label>
                         </div>
-
-                        <div class="col-12">
-                            <div id="locationStatus" class="small text-muted"></div>
-                            <div class="small text-muted mt-1">{{ __('checkout.network_issue_hint') }}</div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" value="1" id="make_default" name="make_default">
+                            <label class="form-check-label" for="make_default">{{ __('checkout.make_default_address') }}</label>
                         </div>
-
-                        <div class="col-12">
-                            <label class="form-label">{{ __('checkout.select_location_on_map') }}</label>
-                            <div id="map"></div>
-                        </div>
-
-                        <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
-                        <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
-
-                        <div class="col-md-6">
-                            <div class="form-check mt-2">
-                                <input class="form-check-input" type="checkbox" value="1" id="save_address" name="save_address">
-                                <label class="form-check-label" for="save_address">
-                                    {{ __('checkout.save_this_address') }}
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-check mt-2">
-                                <input class="form-check-input" type="checkbox" value="1" id="make_default" name="make_default">
-                                <label class="form-check-label" for="make_default">
-                                    {{ __('checkout.make_default_address') }}
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">{{ __('checkout.address_name') }}</label>
+                        <div>
+                            <label class="checknova-label">{{ __('checkout.address_name') }}</label>
                             <input type="text" name="address_label" class="form-control" placeholder="{{ __('checkout.address_name_placeholder') }}">
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <label class="form-label">{{ __('checkout.notes') }}</label>
-                    <textarea name="notes" class="form-control" rows="4">{{ old('notes') }}</textarea>
+                <div class="checknova-block">
+                    <h3>{{ __('checkout.notes') }}</h3>
+                    <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
                 </div>
 
-                <div class="mt-3">
-                    <label class="form-label">{{ __('checkout.payment_method') }}</label>
+                <div class="checknova-block">
+                    <h3>{{ __('checkout.payment_method') }}</h3>
                     <input type="text" class="form-control" value="{{ __('checkout.cash_on_delivery') }}" disabled>
                 </div>
 
-                <div class="mt-3">
-                    <label class="form-label">{{ __('checkout.coupon_code') }}</label>
+                <div class="checknova-block">
+                    <h3>{{ __('checkout.coupon_code') }}</h3>
                     <div class="input-group">
                         <input type="text" name="coupon_code" id="couponCodeInput" class="form-control" value="{{ $couponCode }}" placeholder="{{ __('checkout.coupon_code_placeholder') }}">
                         @if(Route::has('checkout.apply-coupon'))
@@ -164,49 +175,33 @@
                             <button type="button" class="btn btn-outline-secondary" disabled title="Coupon endpoint unavailable">{{ __('checkout.apply_coupon') }}</button>
                         @endif
                     </div>
-                    <div class="small text-muted mt-1">{{ __('checkout.coupon_hint') }}</div>
+                    <div class="checknova-note">{{ __('checkout.coupon_hint') }}</div>
                 </div>
 
-                <button class="btn btn-brand btn-lg w-100 mt-4">{{ __('checkout.confirm_order') }}</button>
+                <button class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
             </form>
-        </div>
-    </div>
+        </section>
 
-    <div class="col-lg-5">
-        <div class="card-shell p-4">
-            <h5 class="fw-bold mb-3">{{ __('checkout.order_summary') }}</h5>
-
-            @foreach($cart as $item)
-                <div class="d-flex justify-content-between mb-2">
-                    <span>{{ $item['name'] }} × {{ $item['quantity'] }}</span>
-                    <span>{{ number_format($item['total'], 2) }} {{ __('checkout.currency_egp') }}</span>
-                </div>
-            @endforeach
-
-            <hr>
-
-            <div class="d-flex justify-content-between mb-2">
-                <span>{{ __('checkout.subtotal') }}</span>
-                <span>{{ number_format($subtotal, 2) }} {{ __('checkout.currency_egp') }}</span>
+        <aside class="checknova-summary">
+            <h3>{{ __('checkout.order_summary') }}</h3>
+            <div class="checknova-items">
+                @foreach($cart as $item)
+                    <div class="checknova-item">
+                        <span>{{ $item['name'] }} × {{ $item['quantity'] }}</span>
+                        <span>{{ number_format($item['total'], 2) }} {{ __('checkout.currency_egp') }}</span>
+                    </div>
+                @endforeach
             </div>
 
-            <div class="d-flex justify-content-between mb-2">
-                <span>{{ __('checkout.delivery_fee') }}</span>
-                <span id="deliveryFeeText">{{ number_format($delivery, 2) }} {{ __('checkout.currency_egp') }}</span>
+            <div class="checknova-calc">
+                <div class="checknova-row"><span>{{ __('checkout.subtotal') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checknova-row"><span>{{ __('checkout.delivery_fee') }}</span><span id="deliveryFeeText">{{ number_format($delivery, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checknova-row" id="discountRow" style="{{ $discountValue > 0 ? '' : 'display:none;' }}"><span>{{ __('checkout.discount') }}</span><span id="discountText">-{{ number_format($discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checknova-row total"><span>{{ __('checkout.final_total') }}</span><span id="finalTotalText">{{ number_format($subtotal + $delivery - $discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
             </div>
 
-            <div class="d-flex justify-content-between mb-2" id="discountRow" style="{{ $discountValue > 0 ? '' : 'display:none;' }}">
-                <span>{{ __('checkout.discount') }}</span>
-                <span id="discountText">-{{ number_format($discountValue, 2) }} {{ __('checkout.currency_egp') }}</span>
-            </div>
-
-            <hr>
-
-            <div class="d-flex justify-content-between fw-bold">
-                <span>{{ __('checkout.final_total') }}</span>
-                <span id="finalTotalText">{{ number_format($subtotal + $delivery - $discountValue, 2) }} {{ __('checkout.currency_egp') }}</span>
-            </div>
-        </div>
+            <a href="{{ route('checkout.method') }}" class="checknova-change">{{ __('checkout.receiving_method_label') }}</a>
+        </aside>
     </div>
 </div>
 
@@ -265,7 +260,7 @@
             }
             finalTotalText.textContent = Math.max(0, subtotal - discountAmount).toFixed(2) + ' ' + currencyText;
         } else {
-            deliveryFields.style.display = 'contents';
+            deliveryFields.style.display = 'block';
             pickupFields.style.display = 'none';
             deliveryFeeText.textContent = deliveryFee.toFixed(2) + ' ' + currencyText;
             if (discountAmount > 0 && discountText && discountRow) {
@@ -277,12 +272,9 @@
     }
 
     toggleOrderTypeFields();
-    if (orderTypeSelect) {
-        toggleOrderTypeFields();
-    }
 
     function setStatus(message, type = 'muted') {
-        locationStatus.className = 'small';
+        locationStatus.className = 'checknova-note';
         if (type === 'success') locationStatus.classList.add('text-success');
         else if (type === 'error') locationStatus.classList.add('text-danger');
         else locationStatus.classList.add('text-muted');
