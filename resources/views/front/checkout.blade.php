@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $title = __('site.brand');
+    $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
+@endphp
+
 <h2 class="section-title mb-4">{{ __('checkout.complete_order') }}</h2>
 
 @php
@@ -101,6 +106,7 @@
 
                         <div class="col-12">
                             <div id="locationStatus" class="small text-muted"></div>
+                            <div class="small text-muted mt-1">{{ __('checkout.network_issue_hint') }}</div>
                         </div>
 
                         <div class="col-12">
@@ -194,6 +200,9 @@
     const textZeroDelivery = `0.00 ${currencyText}`;
     const textDetecting = @json(__('checkout.detecting_location'));
     const textLocationUnavailable = @json(__('checkout.unable_to_detect_location'));
+    const textLocationPermissionDenied = @json(__('checkout.location_permission_denied'));
+    const textLocationTimeout = @json(__('checkout.location_timeout'));
+    const textLocationServiceUnavailable = @json(__('checkout.location_unavailable'));
     const textLocationDetected = @json(__('checkout.location_detected_successfully'));
     const textAddressAutoFilled = @json(__('checkout.address_auto_filled'));
     const textAddressAutoFailed = @json(__('checkout.unable_to_fetch_address'));
@@ -319,8 +328,16 @@
                     await moveMarkerAndFill(lat, lng);
                     setStatus(textLocationDetected, 'success');
                 },
-                function() {
-                    setStatus(textLocationUnavailable, 'error');
+                function(error) {
+                    if (error && error.code === error.PERMISSION_DENIED) {
+                        setStatus(textLocationPermissionDenied, 'error');
+                    } else if (error && error.code === error.TIMEOUT) {
+                        setStatus(textLocationTimeout, 'error');
+                    } else if (error && error.code === error.POSITION_UNAVAILABLE) {
+                        setStatus(textLocationServiceUnavailable, 'error');
+                    } else {
+                        setStatus(textLocationUnavailable, 'error');
+                    }
                 },
                 {
                     enableHighAccuracy: true,
@@ -330,6 +347,14 @@
             );
         });
     }
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+        event: 'begin_checkout',
+        order_type: orderTypeSelect?.value || 'delivery',
+        value: Number((subtotal + deliveryFee).toFixed(2)),
+        currency: currencyText
+    });
 
     if (savedAddressSelect) {
         savedAddressSelect.addEventListener('change', async function () {

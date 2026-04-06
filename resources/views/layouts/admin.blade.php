@@ -1127,13 +1127,7 @@
 @php
     $adminUser = auth()->user();
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
-    $newOrdersCount = \App\Models\Order::where('is_seen_by_admin', false)->count();
-
-    if ($adminUser && !$adminUser->isSuperAdmin() && !$adminUser->hasPermission('view_all_branches_orders') && $adminUser->branch_id) {
-        $newOrdersCount = \App\Models\Order::where('is_seen_by_admin', false)
-            ->where('branch_id', $adminUser->branch_id)
-            ->count();
-    }
+    $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
 
     $dashboardGroupOpen =
         request()->routeIs('admin.dashboard') ||

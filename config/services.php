@@ -48,4 +48,8 @@ return [
         ],
     ],
 
+
+    'analytics' => [
+        'measurement_id' => env('ANALYTICS_MEASUREMENT_ID'),
+    ],
 ];
