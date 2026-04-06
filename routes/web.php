@@ -58,7 +58,7 @@ Route::get('/locale/{locale}', function ($locale) {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('cart')->group(function () {
+Route::prefix('cart')->middleware('throttle:cart')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::post('/add/{product}', [CartController::class, 'add'])->name('cart.add');
     Route::post('/update/{cartKey}', [CartController::class, 'update'])->name('cart.update');
@@ -73,8 +73,12 @@ Route::prefix('cart')->group(function () {
 
 Route::get('/checkout/method', [CheckoutController::class, 'method'])->name('checkout.method');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+    ->middleware('throttle:checkout-coupon')
+    ->name('checkout.apply-coupon');
+Route::post('/checkout', [CheckoutController::class, 'store'])
+    ->middleware('throttle:checkout-store')
+    ->name('checkout.store');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
 
 /*
@@ -115,11 +119,6 @@ Route::get('/demo/admin/{path?}', [AdminDemoController::class, 'show'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('permission:view_reports')->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
-    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
-    Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
-});
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
@@ -136,15 +135,23 @@ Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name
     Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
     Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
     Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
-Route::middleware('permission:manage_staff')->group(function () {
-    Route::get('/staff', [StaffController::class, 'index'])->name('admin.staff.index');
-    Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
-    Route::post('/staff', [StaffController::class, 'store'])->name('admin.staff.store');
-    Route::get('/staff/{staff}/edit', [StaffController::class, 'edit'])->name('admin.staff.edit');
-    Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('admin.staff.update');
-    Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('admin.staff.destroy');
-});Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('admin.ai.index');
-Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('admin.ai.ask');
+    Route::middleware('permission:view_reports')->group(function () {
+        Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
+        Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
+    });
+
+    Route::middleware('permission:manage_staff')->group(function () {
+        Route::get('/staff', [StaffController::class, 'index'])->name('admin.staff.index');
+        Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
+        Route::post('/staff', [StaffController::class, 'store'])->name('admin.staff.store');
+        Route::get('/staff/{staff}/edit', [StaffController::class, 'edit'])->name('admin.staff.edit');
+        Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('admin.staff.update');
+        Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('admin.staff.destroy');
+    });
+
+    Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('admin.ai.index');
+    Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('admin.ai.ask');
     /*
     |--------------------------------------------------------------------------
     | Digital Menu Admin
