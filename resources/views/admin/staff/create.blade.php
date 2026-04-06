@@ -2,7 +2,12 @@
 
 @php
     $pageTitle = 'إضافة موظف';
-    $pageSubtitle = 'إنشاء حساب جديد وتحديد الدور والصلاحيات';
+    $pageSubtitle = 'إنشاء حساب جديد وتحديد الدور، والصلاحيات تُضبط تلقائياً حسب الوظيفة';
+    $rolePermissionsMap = collect(\App\Models\User::availableRoles())
+        ->keys()
+        ->mapWithKeys(fn ($role) => [$role => \App\Models\User::defaultPermissionsByRole($role)])
+        ->all();
+    $permissionLabels = \App\Models\User::permissionLabels();
 @endphp
 
 @section('content')
@@ -56,17 +61,12 @@
         </div>
 
         <div class="col-12">
-            <label class="form-label fw-bold">الصلاحيات</label>
-            <div class="row g-2">
-                @foreach($permissionLabels as $key => $label)
-                    <div class="col-12 col-md-6">
-                        <div class="form-check border rounded-3 p-3 bg-white">
-                            <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $key }}" id="perm_{{ $key }}"
-                                {{ in_array($key, old('permissions', []), true) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="perm_{{ $key }}">{{ $label }}</label>
-                        </div>
-                    </div>
-                @endforeach
+            <label class="form-label fw-bold">الصلاحيات (تلقائي)</label>
+            <div class="border rounded-3 p-3 bg-white">
+                <div class="small text-muted mb-2">
+                    الصلاحيات بتتحدد تلقائيًا حسب الدور الوظيفي، ومش محتاجة تعديل يدوي.
+                </div>
+                <ul class="mb-0 ps-3" id="auto-permissions-list"></ul>
             </div>
         </div>
 
@@ -76,4 +76,32 @@
         </div>
     </form>
 </div>
+
+<script>
+    (() => {
+        const roleSelect = document.querySelector('select[name="role"]');
+        const list = document.getElementById('auto-permissions-list');
+        if (!roleSelect || !list) return;
+
+        const permissionLabels = @json($permissionLabels);
+        const rolePermissionsMap = @json($rolePermissionsMap);
+
+        const renderPermissions = () => {
+            const selectedRole = roleSelect.value;
+            const permissions = rolePermissionsMap[selectedRole] || [];
+
+            if (!permissions.length) {
+                list.innerHTML = '<li class="text-muted">لا توجد صلاحيات لهذا الدور.</li>';
+                return;
+            }
+
+            list.innerHTML = permissions
+                .map((permission) => `<li>${permissionLabels[permission] || permission}</li>`)
+                .join('');
+        };
+
+        roleSelect.addEventListener('change', renderPermissions);
+        renderPermissions();
+    })();
+</script>
 @endsection
