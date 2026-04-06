@@ -1217,7 +1217,9 @@
 
 @php
     $adminUser = auth()->user();
-    $isDemoDashboard = ($isDemoDashboard ?? false) && request()->routeIs('admin.dashboard.demo');
+    $isDemoDashboard = ($isDemoDashboard ?? false)
+        || request()->routeIs('admin.dashboard.demo')
+        || request()->routeIs('admin.demo.module');
     $dashboardHomeRoute = $isDemoDashboard ? 'admin.dashboard.demo' : 'admin.dashboard';
     $hasAdminPermission = function (string $permission) use ($isDemoDashboard, $adminUser) {
         return $isDemoDashboard || $adminUser?->isSuperAdmin() || $adminUser?->hasPermission($permission);
