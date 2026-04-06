@@ -184,6 +184,7 @@
         <div class="branch-create-body">
             <form action="{{ route('admin.branches.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="is_active" value="1">
 
                 <div class="branch-form-grid">
                     <div class="field-card field-col-6">
