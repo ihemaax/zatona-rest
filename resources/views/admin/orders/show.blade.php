@@ -477,7 +477,7 @@
             <div class="order-panel-header">
                 <div>
                     <h2 class="order-panel-title">ملخص الطلب {{ $order->order_number }}</h2>
-                    <p class="order-panel-subtitle">عرض شامل لبيانات الطلب والعميل ونوع الخدمة ومعلومات التنفيذ</p>
+                    <p class="order-panel-subtitle">بيانات أساسية واضحة للتنفيذ السريع</p>
                 </div>
             </div>
 
@@ -538,11 +538,6 @@
                         <div class="order-info-value">{{ $order->branch?->name ?? 'غير محدد' }}</div>
                     </div>
 
-                    <div class="order-info-card">
-                        <div class="order-info-label">عنوان الفرع</div>
-                        <div class="order-info-value">{{ $order->branch?->address ?? 'غير متوفر' }}</div>
-                    </div>
-
                     <div class="order-info-card full">
                         <div class="order-info-label">
                             @if($order->order_type === 'delivery')
@@ -571,7 +566,7 @@
             <div class="order-panel-header">
                 <div>
                     <h3 class="order-panel-title">عناصر الطلب</h3>
-                    <p class="order-panel-subtitle">مراجعة الأصناف المضافة والكميات والأسعار والتفاصيل الإضافية</p>
+                    <p class="order-panel-subtitle">الأصناف والكميات والتكلفة</p>
                 </div>
             </div>
 
@@ -689,7 +684,7 @@
             <div class="order-panel-header">
                 <div>
                     <h3 class="order-panel-title">إدارة حالة الطلب</h3>
-                    <p class="order-panel-subtitle">تحديث الحالة الحالية والوقت المتوقع وإضافة ملاحظات تشغيلية واضحة</p>
+                    <p class="order-panel-subtitle">تحديث سريع للحالة والوقت المتوقع</p>
                 </div>
             </div>
 
@@ -797,35 +792,6 @@
                     <button type="submit" class="btn-save-order">حفظ التحديثات</button>
                     <a href="{{ route('admin.orders.index') }}" class="btn-back-order">الرجوع إلى قائمة الطلبات</a>
                 </form>
-
-                @unless($isDeliveryUser)
-                    <div class="admin-card p-4 mt-4">
-                        <h5 class="fw-bold mb-3">إدارة الدليفري</h5>
-
-                        <form action="{{ url('/admin/orders/' . $order->id . '/assign-delivery') }}" method="POST" class="d-flex flex-wrap gap-2 mb-3">
-                            @csrf
-                            @method('PATCH')
-
-                            <select name="delivery_user_id" class="form-select" style="max-width: 320px;" required>
-                                <option value="">اختر الدليفري</option>
-                                @foreach($deliveryUsers as $deliveryUser)
-                                    <option value="{{ $deliveryUser->id }}" {{ $order->delivery_user_id == $deliveryUser->id ? 'selected' : '' }}>
-                                        {{ $deliveryUser->name }} - {{ $deliveryUser->email }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <button type="submit" class="btn-admin">إسناد للدليفري</button>
-                        </form>
-
-                        @if($order->deliveryUser)
-                            <div class="mb-0">
-                                <strong>الدليفري الحالي:</strong>
-                                {{ $order->deliveryUser->name }} - {{ $order->deliveryUser->email }}
-                            </div>
-                        @endif
-                    </div>
-                @endunless
             </div>
         </div>
     </div>
