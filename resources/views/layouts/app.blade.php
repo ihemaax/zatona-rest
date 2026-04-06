@@ -11,6 +11,9 @@
     <x-seo-meta :title="$title ?? __('site.brand')" :description="$metaDescription ?? null" :image="$metaImage ?? null" :site-name="$layoutSetting?->restaurant_name" :site-phone="$layoutSetting?->restaurant_phone" :site-address="$layoutSetting?->restaurant_address" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap{{ app()->getLocale() === 'ar' ? '.rtl' : '' }}.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <x-analytics />
 
     @php
@@ -41,7 +44,12 @@
 <nav class="navbar navbar-expand-lg main-navbar" id="mainNavbar">
     <div class="container py-2">
         <a class="navbar-brand brand-logo" href="{{ route('home') }}">
-            <span>{{ __('site.brand') }}</span>
+            @if(($layoutSetting?->logo))
+                <img src="{{ asset('storage/' . $layoutSetting->logo) }}" alt="{{ $layoutSetting->restaurant_name ?? __('site.brand') }}" class="brand-logo-image">
+            @else
+                <span class="brand-badge">ZZ</span>
+            @endif
+            <span>{{ $layoutSetting->restaurant_name ?? __('site.brand') }}</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarContent" aria-controls="mainNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -160,7 +168,6 @@
                             @endif
                         @else
                             <a href="{{ route('login') }}">تسجيل الدخول</a>
-                            <a href="{{ route('register') }}">إنشاء حساب</a>
                         @endauth
                     </div>
                 </div>

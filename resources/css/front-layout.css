@@ -1,12 +1,12 @@
 :root{
-            --fb-bg: #f6f3ee;
+            --fb-bg: #f2eee4;
             --fb-card: #fffdf9;
             --fb-border: #e9e3d8;
             --fb-text: #222222;
             --fb-muted: #6f6a61;
 
-            --fb-primary: #6f7f5f;
-            --fb-primary-dark: #5c6a4f;
+            --fb-primary: #1d5a4c;
+            --fb-primary-dark: #123e34;
             --fb-soft: #eef2e8;
 
             --fb-success: #4e7a57;
@@ -34,8 +34,8 @@
         }
 
         body{
-            font-family:'Cairo', Tahoma, Arial, sans-serif !important;
-            background: linear-gradient(180deg, #f7f4ef 0%, #fbf9f5 52%, #f2eee7 100%);
+            font-family:'Instrument Sans','Cairo', Tahoma, Arial, sans-serif !important;
+            background: linear-gradient(180deg, #f6f1e7 0%, #faf7f1 50%, #efe6d8 100%);
             color: var(--fb-text);
         }
 
@@ -73,7 +73,19 @@
             white-space: nowrap;
         }
 
-        .brand-badge{
+        
+
+        .brand-logo-image{
+            width:46px;
+            height:46px;
+            border-radius:14px;
+            object-fit:cover;
+            border:1px solid rgba(0,0,0,.06);
+            box-shadow:0 8px 18px rgba(18,62,52,.16);
+            flex-shrink:0;
+            background:#fff;
+        }
+.brand-badge{
             width: 46px;
             height: 46px;
             border-radius: 16px;
