@@ -6,11 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function index()
     {
+
+        // Hotfix: remove any stale cached serialized model entries from previous deployments.
+        Cache::forget('front.home.setting');
+        Cache::forget('front.home.products');
+
         $setting = Setting::first();
 
         $products = Product::with([
@@ -19,13 +25,13 @@ class HomeController extends Controller
                 $query->orderBy('sort_order')->with([
                     'items' => function ($q) {
                         $q->where('is_active', 1)->orderBy('sort_order');
-                    }
+                    },
                 ]);
-            }
+            },
         ])
-        ->where('is_available', 1)
-        ->orderBy('id', 'desc')
-        ->get();
+            ->where('is_available', 1)
+            ->orderBy('id', 'desc')
+            ->get();
 
         $popupCampaign = PopupCampaign::query()
             ->where('is_active', true)

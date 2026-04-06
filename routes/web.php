@@ -110,9 +110,6 @@ Route::middleware('permission:view_reports')->group(function () {
     Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
     Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
 });
-Route::middleware('permission:view_reports')->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
-});
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
