@@ -1272,10 +1272,12 @@
                         </a>
                     @endif
 
-                    <a href="{{ route('admin.coupons.index') }}" class="sb-sublink {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
-                        <span class="sb-sublink-dot"></span>
-                        <span>كوبونات الخصم</span>
-                    </a>
+                    @if(Route::has('admin.coupons.index'))
+                        <a href="{{ route('admin.coupons.index') }}" class="sb-sublink {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>كوبونات الخصم</span>
+                        </a>
+                    @endif
 
                     @if($adminUser?->hasPermission('manage_settings') || $adminUser?->isSuperAdmin())
                         <a href="{{ route('admin.settings.edit') }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
