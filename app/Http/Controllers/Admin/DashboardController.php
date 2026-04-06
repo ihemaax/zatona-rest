@@ -140,7 +140,9 @@ class DashboardController extends Controller
         $this->applyDateRange($topProducts, $range, 'orders.created_at');
         $topProducts = $topProducts->get();
 
-        if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
+        if (!$user) {
+            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
+        } elseif ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
         } elseif ($user->branch_id) {
             $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
@@ -179,7 +181,33 @@ class DashboardController extends Controller
             $range = 'today';
         }
 
-        return view('admin.dashboard', $this->buildDashboardData($range));
+        return view('admin.dashboard', array_merge(
+            $this->buildDashboardData($range),
+            [
+                'dashboardBaseRoute' => 'admin.dashboard',
+                'dashboardPollRoute' => 'admin.dashboard.poll',
+                'dashboardExportRoute' => 'admin.dashboard.export-snapshot',
+                'isDemoDashboard' => false,
+            ]
+        ));
+    }
+
+    public function demo(Request $request)
+    {
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        return view('admin.dashboard', array_merge(
+            $this->buildDashboardData($range),
+            [
+                'dashboardBaseRoute' => 'admin.dashboard.demo',
+                'dashboardPollRoute' => null,
+                'dashboardExportRoute' => null,
+                'isDemoDashboard' => true,
+            ]
+        ));
     }
 
     public function exportSnapshot(Request $request): StreamedResponse
