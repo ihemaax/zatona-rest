@@ -25,7 +25,6 @@ class StaffController extends Controller
         return view('admin.staff.index', [
             'staff' => $staff,
             'roles' => User::availableRoles(),
-            'permissionLabels' => User::permissionLabels(),
         ]);
     }
 
@@ -38,7 +37,6 @@ class StaffController extends Controller
         return view('admin.staff.create', [
             'branches' => Branch::orderBy('name')->get(),
             'roles' => User::availableRoles(),
-            'permissionLabels' => User::permissionLabels(),
         ]);
     }
 
@@ -54,12 +52,8 @@ class StaffController extends Controller
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', Rule::in(array_keys(User::availableRoles()))],
             'branch_id' => ['nullable', 'exists:branches,id'],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
-
-        $permissions = $request->input('permissions', User::defaultPermissionsByRole($validated['role']));
 
         User::create([
             'name' => $validated['name'],
@@ -68,7 +62,7 @@ class StaffController extends Controller
             'user_type' => User::TYPE_STAFF,
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'] ?? null,
-            'permissions' => array_values(array_unique($permissions)),
+            'permissions' => User::defaultPermissionsByRole($validated['role']),
             'is_active' => $request->boolean('is_active', true),
         ]);
 
@@ -87,7 +81,6 @@ class StaffController extends Controller
             'staff' => $staff,
             'branches' => Branch::orderBy('name')->get(),
             'roles' => User::availableRoles(),
-            'permissionLabels' => User::permissionLabels(),
         ]);
     }
 
@@ -105,12 +98,8 @@ class StaffController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
             'role' => ['required', Rule::in(array_keys(User::availableRoles()))],
             'branch_id' => ['nullable', 'exists:branches,id'],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
-
-        $permissions = $request->input('permissions', User::defaultPermissionsByRole($validated['role']));
 
         $data = [
             'name' => $validated['name'],
@@ -118,7 +107,7 @@ class StaffController extends Controller
             'user_type' => User::TYPE_STAFF,
             'role' => $validated['role'],
             'branch_id' => $validated['branch_id'] ?? null,
-            'permissions' => array_values(array_unique($permissions)),
+            'permissions' => User::defaultPermissionsByRole($validated['role']),
             'is_active' => $request->boolean('is_active', true),
         ];
 

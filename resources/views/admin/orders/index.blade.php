@@ -16,6 +16,7 @@
         'confirmed' => 'تم التأكيد',
         'preparing' => 'قيد التحضير',
         'out_for_delivery' => 'خرج للتوصيل',
+        'ready_for_pickup' => 'جاهز للاستلام',
         'delivered' => 'تم التسليم',
         'cancelled' => 'تم الإلغاء',
     ];
@@ -521,6 +522,7 @@
                                         'confirmed' => 'ops-status status-confirmed',
                                         'preparing' => 'ops-status status-preparing',
                                         'out_for_delivery' => 'ops-status status-delivery',
+                                        'ready_for_pickup' => 'ops-status status-confirmed',
                                         'delivered' => 'ops-status status-delivered',
                                         default => 'ops-status status-cancelled',
                                     };
@@ -573,6 +575,7 @@
                             'confirmed' => 'ops-status status-confirmed',
                             'preparing' => 'ops-status status-preparing',
                             'out_for_delivery' => 'ops-status status-delivery',
+                            'ready_for_pickup' => 'ops-status status-confirmed',
                             'delivered' => 'ops-status status-delivered',
                             default => 'ops-status status-cancelled',
                         };
@@ -662,6 +665,7 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmed: 'تم التأكيد',
         preparing: 'قيد التحضير',
         out_for_delivery: 'خرج للتوصيل',
+        ready_for_pickup: 'جاهز للاستلام',
         delivered: 'تم التسليم',
         cancelled: 'تم الإلغاء',
     };
@@ -681,6 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
             confirmed: 'ops-status status-confirmed',
             preparing: 'ops-status status-preparing',
             out_for_delivery: 'ops-status status-delivery',
+            ready_for_pickup: 'ops-status status-confirmed',
             delivered: 'ops-status status-delivered',
             cancelled: 'ops-status status-cancelled',
         };

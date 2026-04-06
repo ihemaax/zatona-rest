@@ -11,6 +11,27 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    protected function isAllowedTransition(string $from, string $to, string $orderType): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['preparing', 'cancelled'],
+            'preparing' => $orderType === 'delivery'
+                ? ['out_for_delivery', 'cancelled']
+                : ['ready_for_pickup', 'cancelled'],
+            'ready_for_pickup' => ['delivered', 'cancelled'],
+            'out_for_delivery' => ['delivered', 'cancelled'],
+            'delivered' => [],
+            'cancelled' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
     protected function applyUserOrderScope($query)
     {
         $user = auth()->user();
@@ -88,6 +109,12 @@ class OrderController extends Controller
         $order->load('branch', 'items', 'deliveryUser');
         $user = auth()->user();
 
+        if ($user->role === User::ROLE_KITCHEN) {
+            return redirect()
+                ->route('admin.kitchen.index')
+                ->with('info', 'متابعة طلبات المطبخ تتم من شاشة المطبخ المخصصة.');
+        }
+
         if ($user->role === User::ROLE_DELIVERY) {
             abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لعرض هذا الطلب.');
 
@@ -140,6 +167,12 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
+        if ($user->role === User::ROLE_KITCHEN) {
+            return redirect()
+                ->route('admin.kitchen.index')
+                ->with('error', 'تحديث حالات المطبخ يتم من شاشة المطبخ فقط.');
+        }
+
         if ($user->role === User::ROLE_DELIVERY) {
             abort_if((int) $order->delivery_user_id !== (int) $user->id, 403, 'ليس لديك صلاحية لتحديث هذا الطلب.');
 
@@ -187,17 +220,25 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|string',
+            'status' => 'required|in:pending,confirmed,preparing,ready_for_pickup,out_for_delivery,delivered,cancelled',
             'order_type' => 'nullable|in:delivery,pickup',
             'status_note' => 'nullable|string',
             'estimated_delivery_minutes' => 'nullable|integer|min:1|max:300',
         ]);
 
+        $nextOrderType = $validated['order_type'] ?? $order->order_type;
+
+        if (!$this->isAllowedTransition($order->status, $validated['status'], $nextOrderType)) {
+            return redirect()
+                ->back()
+                ->with('error', 'تسلسل الحالة غير صحيح. الدورة المعتمدة: pending → confirmed → preparing → ready_for_pickup/delivery.');
+        }
+
         $minutes = $validated['estimated_delivery_minutes'] ?? null;
 
         $order->update([
             'status' => $validated['status'],
-            'order_type' => $validated['order_type'] ?? $order->order_type,
+            'order_type' => $nextOrderType,
             'status_note' => $validated['status_note'] ?? null,
             'estimated_delivery_minutes' => $minutes,
             'estimated_delivery_at' => $minutes
@@ -237,18 +278,18 @@ class OrderController extends Controller
 
         $wasAssignedToDifferentUser = (int) ($order->delivery_user_id ?? 0) !== (int) $deliveryUser->id;
 
+        if ($order->status !== 'preparing') {
+            return redirect()->back()->with('error', 'لا يمكن إسناد الطلب للدليفري إلا بعد انتهاء المطبخ وتجهيزه (Preparing).');
+        }
+
         $order->update([
             'order_type' => 'delivery',
             'delivery_user_id' => $deliveryUser->id,
             'assigned_to_delivery_at' => $wasAssignedToDifferentUser
                 ? now()
                 : ($order->assigned_to_delivery_at ?? now()),
-            'status' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
-                ? 'out_for_delivery'
-                : $order->status,
-            'out_for_delivery_at' => in_array($order->status, ['pending', 'confirmed', 'preparing'], true)
-                ? now()
-                : $order->out_for_delivery_at,
+            'status' => 'out_for_delivery',
+            'out_for_delivery_at' => now(),
         ]);
 
         if ($wasAssignedToDifferentUser) {
