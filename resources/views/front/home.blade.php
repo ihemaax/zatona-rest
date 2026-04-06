@@ -7,7 +7,6 @@
     }
 
     $restaurantName = $setting->restaurant_name ?? __('site.brand');
-    $restaurantPhone = $setting->restaurant_phone ?? null;
     $deliveryFee = $setting->delivery_fee ?? 0;
     $isOpen = ($setting && $setting->is_open);
 
@@ -123,12 +122,13 @@
     .elite-card-body{ padding:18px; }
     .elite-card-title,.elite-section-title{ margin:0; font-size:1.02rem; font-weight:900; }
 
-    .elite-message{ border-radius:18px; padding:17px; color:#fff; background:linear-gradient(130deg,#5f6f40,#8da066); box-shadow:0 16px 28px rgba(85,105,56,.24); }
-    .elite-message strong{ line-height:1.8; font-size:.97rem; }
+    .elite-message{ border-radius:20px; padding:18px; color:#fff; background:linear-gradient(132deg,#41502f,#6f874a); box-shadow:0 18px 30px rgba(65,80,47,.32); border:1px solid rgba(255,255,255,.14); }
+    .elite-message strong{ line-height:1.85; font-size:.95rem; display:block; }
 
-    .elite-info-list{ display:grid; gap:10px; margin-top:14px; }
-    .elite-info-item{ display:flex; gap:10px; align-items:flex-start; font-size:.9rem; color:#544d43; font-weight:700; }
-    .elite-info-icon{ width:34px; height:34px; border-radius:11px; background:#f1ecdf; color:var(--zaatar-dark); display:inline-flex; align-items:center; justify-content:center; }
+    .elite-info-list{ display:grid; gap:12px; margin-top:14px; }
+    .elite-info-item{ display:flex; gap:10px; align-items:flex-start; font-size:.88rem; color:#4f483e; font-weight:800; border:1px solid #ece2d4; border-radius:14px; padding:10px; background:#fffaf2; }
+    .elite-info-icon{ width:34px; height:34px; border-radius:11px; background:linear-gradient(145deg,#eff5e4,#dde9c8); color:#465b2f; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; box-shadow:0 6px 12px rgba(70,91,47,.18); }
+    .elite-info-icon i{ font-size:.92rem; line-height:1; }
 
     .elite-search-wrap{ padding:14px; }
     .elite-search{ position:relative; }
@@ -233,7 +233,7 @@
         .elite-product{ grid-template-columns:84px minmax(0,1fr); gap:10px; padding:8px; border-radius:16px; }
         .elite-product-media,.elite-product-image{ border-radius:11px; overflow:hidden; }
         .elite-product-image{ min-height:auto; height:84px; }
-        .elite-product-badge{ top:auto; bottom:6px; inset-inline-start:6px; font-size:.56rem; padding:4px 7px; }
+        .elite-product-badge{ display:none; }
         .elite-product-body{ padding:0; gap:7px; }
         .elite-product-name{ font-size:.87rem; }
         .elite-product-category{ font-size:.58rem; padding:4px 6px; }
@@ -277,14 +277,7 @@
 
                             <h1 class="elite-title">{{ $restaurantName }}</h1>
 
-                            <p class="elite-subtitle">
-                                @if($restaurantPhone)
-                                    {{ $restaurantPhone }}
-                                @else
-                                    {{ __('home.fast_ordering_experience') }}
-                                @endif
-                            </p>
-                            <p class="elite-subtitle">نكهة زعتر وزيتونة بتجربة هادئة وسريعة تساعدك تختار وجبتك بسهولة.</p>
+                            <p class="elite-subtitle">تجربة طلب احترافية بتصميم واضح وسريع تساعدك تختار وجبتك وتكمل طلبك بثقة في أقل وقت.</p>
                         </div>
 
                         <div class="elite-actions">
@@ -323,40 +316,34 @@
             <div class="elite-card">
                 <div class="elite-card-body">
                     <div class="elite-message">
-                        <strong>{{ __('home.choose_items_and_complete_order') }}</strong>
+                        <strong>اختر من الأصناف المتاحة وأكمل طلبك بسهولة من خلال منيو منظم وتجربة استخدام واضحة وسريعة.</strong>
                     </div>
                 </div>
             </div>
 
             <div class="elite-card">
                 <div class="elite-card-body">
-                    <h3 class="elite-card-title">{{ __('home.restaurant_info') }}</h3>
+                    <h3 class="elite-card-title">دليل الطلب السريع</h3>
 
                     <div class="elite-info-list">
                         <div class="elite-info-item">
-                            <span class="elite-info-icon">🍽️</span>
-                            <div>{{ __('home.organized_menu_display') }}</div>
+                            <span class="elite-info-icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                            <div>منيو مصمم بطريقة منظمة لسهولة الوصول للأصناف والتفاصيل والإضافة للسلة.</div>
                         </div>
 
                         <div class="elite-info-item">
-                            <span class="elite-info-icon">🛵</span>
-                            <div>{{ __('home.order_options_depend_on_settings') }}</div>
+                            <span class="elite-info-icon"><i class="bi bi-truck"></i></span>
+                            <div>خيارات الطلب مرنة حسب إعدادات الفرع المتاحة للتوصيل أو الاستلام.</div>
                         </div>
 
-                        @if($restaurantPhone)
-                            <div class="elite-info-item">
-                                <span class="elite-info-icon">📞</span>
-                                <div>
-                                    <a href="tel:{{ $restaurantPhone }}" style="color:inherit;text-decoration:none;">
-                                        {{ $restaurantPhone }}
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
+                        <div class="elite-info-item">
+                            <span class="elite-info-icon"><i class="bi bi-shield-check"></i></span>
+                            <div>تحديث حالة الطلب بشكل مستمر مع تجربة متابعة سلسة حتى إتمام الاستلام.</div>
+                        </div>
 
                         <div class="elite-info-item">
-                            <span class="elite-info-icon">💵</span>
-                            <div>{{ __('home.current_payment_method_cash_on_delivery') }}</div>
+                            <span class="elite-info-icon"><i class="bi bi-cash-coin"></i></span>
+                            <div>وسيلة الدفع الحالية: الدفع النقدي عند الاستلام.</div>
                         </div>
                     </div>
                 </div>
