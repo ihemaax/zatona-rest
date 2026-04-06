@@ -6,26 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $setting = Setting::first();
+        $setting = Cache::remember('front.home.setting', now()->addMinutes(5), function () {
+            return Setting::first();
+        });
 
-        $products = Product::with([
-            'category',
-            'optionGroups' => function ($query) {
-                $query->orderBy('sort_order')->with([
-                    'items' => function ($q) {
-                        $q->where('is_active', 1)->orderBy('sort_order');
-                    }
-                ]);
-            }
-        ])
-        ->where('is_available', 1)
-        ->orderBy('id', 'desc')
-        ->get();
+        $products = Cache::remember('front.home.products', now()->addMinutes(3), function () {
+            return Product::with([
+                'category',
+                'optionGroups' => function ($query) {
+                    $query->orderBy('sort_order')->with([
+                        'items' => function ($q) {
+                            $q->where('is_active', 1)->orderBy('sort_order');
+                        },
+                    ]);
+                },
+            ])
+                ->where('is_available', 1)
+                ->orderBy('id', 'desc')
+                ->get();
+        });
 
         $popupCampaign = PopupCampaign::query()
             ->where('is_active', true)
