@@ -101,6 +101,14 @@
     .elite-floating-cart-value{font-size:.9rem;font-weight:900;color:#fff}
     .elite-floating-cart-btn{color:#18302a !important;text-decoration:none;border-radius:14px;padding:11px 15px;background:#f6e8d0 !important;border:1px solid #e4cfab;font-weight:900}
     .offer-popup-btn{ display:block; width:100%; border:none; text-decoration:none; border-radius:14px; padding:12px 15px; color:#fff !important; background:linear-gradient(135deg,#0b2c24,#2f6f5f); font-weight:900; margin-bottom:10px; }
+    .offer-popup-overlay{position:fixed;inset:0;background:rgba(8,12,10,.64);display:none;align-items:center;justify-content:center;padding:16px;z-index:999999}
+    .offer-popup-overlay.show{display:flex}
+    .offer-popup-card{max-width:440px;width:100%;background:#fff;border:1px solid #e5d7c4;border-radius:22px;overflow:hidden;box-shadow:0 28px 64px rgba(0,0,0,.3)}
+    .offer-popup-image{width:100%;height:300px;object-fit:cover;background:#efe6d7}
+    .offer-popup-body{padding:18px;text-align:center}
+    .offer-popup-title{margin:0 0 8px;font-size:1.18rem;font-weight:900;color:#1a2723}
+    .offer-popup-desc{margin:0 0 14px;color:#666056;line-height:1.8;font-size:.9rem;font-weight:700}
+    .offer-popup-close{width:100%;border:none;border-radius:12px;padding:11px 14px;background:#f2f3f5;font-weight:800}
     @media (max-width: 991.98px){.elite-layout{grid-template-columns:1fr}.elite-sidebar{order:2}.elite-main{order:1}.elite-identity-top{grid-template-columns:auto minmax(0,1fr)}.elite-actions{grid-column:1/-1;justify-content:flex-start}}
     @media (max-width:767.98px){.elite-home{padding-bottom:112px}.elite-cover{min-height:220px}.elite-hero-content{margin-top:-36px;padding:0 12px 14px}.elite-identity-card{padding:14px;border-radius:20px}.elite-identity-top{grid-template-columns:1fr;gap:14px}.elite-logo-frame{width:84px;height:84px}.elite-title{font-size:1.12rem}.elite-subtitle{font-size:.8rem}.elite-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}.elite-card-body,.elite-search-wrap{padding:12px}.elite-product{grid-template-columns:84px minmax(0,1fr);gap:10px;padding:8px}.elite-product-image{height:84px;min-height:auto}.elite-product-badge{display:none}.elite-product-body{padding:0}.elite-add-btn{min-width:auto;font-size:.71rem;padding:9px 12px}}
 </style>
