@@ -277,7 +277,7 @@
 
                             <h1 class="elite-title">{{ $restaurantName }}</h1>
 
-                            <p class="elite-subtitle">تجربة طلب احترافية بتصميم واضح وسريع تساعدك تختار وجبتك وتكمل طلبك بثقة في أقل وقت.</p>
+                            <p class="elite-subtitle">جعان؟ اختار أكلك بسرعة من منيو واضح.. وخلال دقائق طلبك يكون متظبط في السلة.</p>
                         </div>
 
                         <div class="elite-actions">
@@ -316,34 +316,34 @@
             <div class="elite-card">
                 <div class="elite-card-body">
                     <div class="elite-message">
-                        <strong>اختر من الأصناف المتاحة وأكمل طلبك بسهولة من خلال منيو منظم وتجربة استخدام واضحة وسريعة.</strong>
+                        <strong>اختار اللي نفسك فيه بسرعة.. كل حاجة قدامك مرتبة عشان تكمل الطلب من غير تفكير كتير.</strong>
                     </div>
                 </div>
             </div>
 
             <div class="elite-card">
                 <div class="elite-card-body">
-                    <h3 class="elite-card-title">دليل الطلب السريع</h3>
+                    <h3 class="elite-card-title">اطلبها صح وفي سكة سريعة</h3>
 
                     <div class="elite-info-list">
                         <div class="elite-info-item">
                             <span class="elite-info-icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-                            <div>منيو مصمم بطريقة منظمة لسهولة الوصول للأصناف والتفاصيل والإضافة للسلة.</div>
+                            <div>الأصناف متقسمة بوضوح.. تدوس وتضيف للسلة فورًا.</div>
                         </div>
 
                         <div class="elite-info-item">
                             <span class="elite-info-icon"><i class="bi bi-truck"></i></span>
-                            <div>خيارات الطلب مرنة حسب إعدادات الفرع المتاحة للتوصيل أو الاستلام.</div>
+                            <div>توصيل أو استلام؟ اختار الأنسب ليك على طول.</div>
                         </div>
 
                         <div class="elite-info-item">
                             <span class="elite-info-icon"><i class="bi bi-shield-check"></i></span>
-                            <div>تحديث حالة الطلب بشكل مستمر مع تجربة متابعة سلسة حتى إتمام الاستلام.</div>
+                            <div>هتتابع حالة الطلب خطوة بخطوة لحد ما يوصل لك.</div>
                         </div>
 
                         <div class="elite-info-item">
                             <span class="elite-info-icon"><i class="bi bi-cash-coin"></i></span>
-                            <div>وسيلة الدفع الحالية: الدفع النقدي عند الاستلام.</div>
+                            <div>الدفع الحالي: كاش وقت الاستلام.</div>
                         </div>
                     </div>
                 </div>
