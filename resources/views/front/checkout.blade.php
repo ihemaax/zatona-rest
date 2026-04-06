@@ -1,11 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $title = __('site.brand');
+    $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
+@endphp
+
 <h2 class="section-title mb-4">{{ __('checkout.complete_order') }}</h2>
 
 @php
     $subtotal = collect($cart)->sum('total');
     $delivery = $setting->delivery_fee ?? 25;
+    $couponCode = old('coupon_code', $couponPreview['coupon']?->code ?? session('checkout_coupon_code'));
+    $discountValue = (float) ($couponPreview['discount'] ?? 0);
 @endphp
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -101,6 +108,7 @@
 
                         <div class="col-12">
                             <div id="locationStatus" class="small text-muted"></div>
+                            <div class="small text-muted mt-1">{{ __('checkout.network_issue_hint') }}</div>
                         </div>
 
                         <div class="col-12">
@@ -146,6 +154,19 @@
                     <input type="text" class="form-control" value="{{ __('checkout.cash_on_delivery') }}" disabled>
                 </div>
 
+                <div class="mt-3">
+                    <label class="form-label">{{ __('checkout.coupon_code') }}</label>
+                    <div class="input-group">
+                        <input type="text" name="coupon_code" id="couponCodeInput" class="form-control" value="{{ $couponCode }}" placeholder="{{ __('checkout.coupon_code_placeholder') }}">
+                        @if(Route::has('checkout.apply-coupon'))
+                            <button type="submit" formaction="{{ route('checkout.apply-coupon') }}" class="btn btn-outline-secondary">{{ __('checkout.apply_coupon') }}</button>
+                        @else
+                            <button type="button" class="btn btn-outline-secondary" disabled title="Coupon endpoint unavailable">{{ __('checkout.apply_coupon') }}</button>
+                        @endif
+                    </div>
+                    <div class="small text-muted mt-1">{{ __('checkout.coupon_hint') }}</div>
+                </div>
+
                 <button class="btn btn-brand btn-lg w-100 mt-4">{{ __('checkout.confirm_order') }}</button>
             </form>
         </div>
@@ -174,11 +195,16 @@
                 <span id="deliveryFeeText">{{ number_format($delivery, 2) }} {{ __('checkout.currency_egp') }}</span>
             </div>
 
+            <div class="d-flex justify-content-between mb-2" id="discountRow" style="{{ $discountValue > 0 ? '' : 'display:none;' }}">
+                <span>{{ __('checkout.discount') }}</span>
+                <span id="discountText">-{{ number_format($discountValue, 2) }} {{ __('checkout.currency_egp') }}</span>
+            </div>
+
             <hr>
 
             <div class="d-flex justify-content-between fw-bold">
                 <span>{{ __('checkout.final_total') }}</span>
-                <span id="finalTotalText">{{ number_format($subtotal + $delivery, 2) }} {{ __('checkout.currency_egp') }}</span>
+                <span id="finalTotalText">{{ number_format($subtotal + $delivery - $discountValue, 2) }} {{ __('checkout.currency_egp') }}</span>
             </div>
         </div>
     </div>
@@ -190,10 +216,14 @@
     const defaultLng = 29.9187;
     const deliveryFee = {{ (float)($setting->delivery_fee ?? 0) }};
     const subtotal = {{ (float)$subtotal }};
+    const discountAmount = {{ $discountValue }};
     const currencyText = @json(__('checkout.currency_egp'));
     const textZeroDelivery = `0.00 ${currencyText}`;
     const textDetecting = @json(__('checkout.detecting_location'));
     const textLocationUnavailable = @json(__('checkout.unable_to_detect_location'));
+    const textLocationPermissionDenied = @json(__('checkout.location_permission_denied'));
+    const textLocationTimeout = @json(__('checkout.location_timeout'));
+    const textLocationServiceUnavailable = @json(__('checkout.location_unavailable'));
     const textLocationDetected = @json(__('checkout.location_detected_successfully'));
     const textAddressAutoFilled = @json(__('checkout.address_auto_filled'));
     const textAddressAutoFailed = @json(__('checkout.unable_to_fetch_address'));
@@ -218,6 +248,8 @@
     const pickupFields = document.getElementById('pickupFields');
     const deliveryFeeText = document.getElementById('deliveryFeeText');
     const finalTotalText = document.getElementById('finalTotalText');
+    const discountText = document.getElementById('discountText');
+    const discountRow = document.getElementById('discountRow');
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
@@ -227,12 +259,20 @@
             deliveryFields.style.display = 'none';
             pickupFields.style.display = 'block';
             deliveryFeeText.textContent = textZeroDelivery;
-            finalTotalText.textContent = subtotal.toFixed(2) + ' ' + currencyText;
+            if (discountAmount > 0 && discountText && discountRow) {
+                discountRow.style.display = '';
+                discountText.textContent = '-' + discountAmount.toFixed(2) + ' ' + currencyText;
+            }
+            finalTotalText.textContent = Math.max(0, subtotal - discountAmount).toFixed(2) + ' ' + currencyText;
         } else {
             deliveryFields.style.display = 'contents';
             pickupFields.style.display = 'none';
             deliveryFeeText.textContent = deliveryFee.toFixed(2) + ' ' + currencyText;
-            finalTotalText.textContent = (subtotal + deliveryFee).toFixed(2) + ' ' + currencyText;
+            if (discountAmount > 0 && discountText && discountRow) {
+                discountRow.style.display = '';
+                discountText.textContent = '-' + discountAmount.toFixed(2) + ' ' + currencyText;
+            }
+            finalTotalText.textContent = Math.max(0, subtotal + deliveryFee - discountAmount).toFixed(2) + ' ' + currencyText;
         }
     }
 
@@ -319,8 +359,16 @@
                     await moveMarkerAndFill(lat, lng);
                     setStatus(textLocationDetected, 'success');
                 },
-                function() {
-                    setStatus(textLocationUnavailable, 'error');
+                function(error) {
+                    if (error && error.code === error.PERMISSION_DENIED) {
+                        setStatus(textLocationPermissionDenied, 'error');
+                    } else if (error && error.code === error.TIMEOUT) {
+                        setStatus(textLocationTimeout, 'error');
+                    } else if (error && error.code === error.POSITION_UNAVAILABLE) {
+                        setStatus(textLocationServiceUnavailable, 'error');
+                    } else {
+                        setStatus(textLocationUnavailable, 'error');
+                    }
                 },
                 {
                     enableHighAccuracy: true,
@@ -330,6 +378,14 @@
             );
         });
     }
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+        event: 'begin_checkout',
+        order_type: orderTypeSelect?.value || 'delivery',
+        value: Number((subtotal + deliveryFee).toFixed(2)),
+        currency: currencyText
+    });
 
     if (savedAddressSelect) {
         savedAddressSelect.addEventListener('change', async function () {

@@ -1127,13 +1127,7 @@
 @php
     $adminUser = auth()->user();
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
-    $newOrdersCount = \App\Models\Order::where('is_seen_by_admin', false)->count();
-
-    if ($adminUser && !$adminUser->isSuperAdmin() && !$adminUser->hasPermission('view_all_branches_orders') && $adminUser->branch_id) {
-        $newOrdersCount = \App\Models\Order::where('is_seen_by_admin', false)
-            ->where('branch_id', $adminUser->branch_id)
-            ->count();
-    }
+    $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
 
     $dashboardGroupOpen =
         request()->routeIs('admin.dashboard') ||
@@ -1149,6 +1143,7 @@
         request()->routeIs('admin.branches.*') ||
         request()->routeIs('admin.categories.*') ||
         request()->routeIs('admin.products.*') ||
+        request()->routeIs('admin.coupons.*') ||
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
         request()->routeIs('admin.reports.*');
@@ -1274,6 +1269,13 @@
                         <a href="{{ route('admin.products.index') }}" class="sb-sublink {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>المنتجات</span>
+                        </a>
+                    @endif
+
+                    @if(Route::has('admin.coupons.index'))
+                        <a href="{{ route('admin.coupons.index') }}" class="sb-sublink {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>كوبونات الخصم</span>
                         </a>
                     @endif
 

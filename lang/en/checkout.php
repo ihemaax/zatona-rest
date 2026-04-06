@@ -22,6 +22,11 @@ return [
     'notes' => 'Notes',
     'payment_method' => 'Payment Method',
     'cash_on_delivery' => 'Cash on Delivery',
+    'coupon_code' => 'Coupon Code',
+    'coupon_code_placeholder' => 'Enter discount code',
+    'apply_coupon' => 'Apply',
+    'coupon_hint' => 'Enter your coupon code and click Apply to deduct it from your total.',
+    'discount' => 'Discount',
     'confirm_order' => 'Confirm Order',
     'order_summary' => 'Order Summary',
     'subtotal' => 'Subtotal',
@@ -33,4 +38,9 @@ return [
     'location_detected_successfully' => 'Location detected successfully',
     'address_auto_filled' => 'The address has been filled automatically',
     'unable_to_fetch_address' => 'Unable to fetch the address automatically',
+
+    'location_permission_denied' => 'Location permission was denied. You can enter the address manually or pick it from the map.',
+    'location_timeout' => 'Location detection took too long. Please try again.',
+    'location_unavailable' => 'Location service is currently unavailable on this device.',
+    'network_issue_hint' => 'If your network is weak, complete the order with manual address and we can confirm location by phone if needed.',
 ];

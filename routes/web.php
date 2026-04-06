@@ -23,6 +23,7 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
 
@@ -69,6 +70,7 @@ Route::prefix('cart')->group(function () {
 
 Route::get('/checkout/method', [CheckoutController::class, 'method'])->name('checkout.method');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
 
@@ -110,12 +112,10 @@ Route::middleware('permission:view_reports')->group(function () {
     Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
     Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
 });
-Route::middleware('permission:view_reports')->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
-});
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
+    Route::get('/dashboard/export-snapshot', [DashboardController::class, 'exportSnapshot'])->name('admin.dashboard.export-snapshot');
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
     Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
@@ -124,6 +124,10 @@ Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name
     Route::resource('branches', BranchController::class)->names('admin.branches');
     Route::resource('categories', CategoryController::class)->names('admin.categories');
     Route::resource('products', ProductController::class)->names('admin.products');
+    Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
+    Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
+    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
 Route::middleware('permission:manage_staff')->group(function () {
     Route::get('/staff', [StaffController::class, 'index'])->name('admin.staff.index');
     Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
