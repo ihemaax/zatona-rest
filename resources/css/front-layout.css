@@ -463,6 +463,30 @@
             .mobile-bottom-link i{
                 font-size:1.22rem;
                 line-height:1;
+                color: currentColor;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 1;
+            }
+
+            .mobile-bottom-icon{
+                width:34px;
+                height:34px;
+                border-radius:12px;
+                background: #fff;
+                border: 1px solid rgba(223, 215, 202, .9);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 6px 14px rgba(60, 52, 40, .08);
+            }
+
+            .mobile-bottom-icon svg{
+                width:18px;
+                height:18px;
+                fill: currentColor;
+                display:block;
             }
 
             .mobile-bottom-icon{
@@ -487,6 +511,10 @@
                 background: linear-gradient(180deg, #f2f6ed 0%, #e9f0e2 100%);
                 color: var(--fb-primary-dark);
                 box-shadow: inset 0 0 0 1px rgba(111, 127, 95, .10);
+            }
+
+            .mobile-bottom-link{
+                color: #5f5a53;
             }
 
             .mobile-bottom-link.active .mobile-bottom-icon{
