@@ -1053,11 +1053,6 @@
                 display:none;
             }
 
-            .admin-table-wrap table,
-            .table{
-                min-width:650px;
-            }
-
             .row{
                 --bs-gutter-x:.75rem;
                 --bs-gutter-y:.75rem;
@@ -1091,6 +1086,62 @@
                 bottom:84px;
                 {{ app()->getLocale() === 'ar' ? 'left:8px;' : 'right:8px;' }}
                 max-width:calc(100vw - 16px);
+            }
+
+            .table-mobile-stack{
+                min-width:100% !important;
+                border-collapse:separate;
+                border-spacing:0 10px;
+            }
+
+            .table-mobile-stack thead{
+                display:none;
+            }
+
+            .table-mobile-stack tbody tr{
+                display:block;
+                background:#fffdfa;
+                border:1px solid #e9dfd2;
+                border-radius:16px;
+                box-shadow:0 10px 20px rgba(35,31,27,.05);
+                margin-bottom:10px;
+                overflow:hidden;
+            }
+
+            .table-mobile-stack tbody td{
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:10px;
+                width:100%;
+                border-bottom:1px dashed #eee4d8;
+                padding:10px 12px;
+                background:transparent !important;
+                text-align:start;
+                white-space:normal;
+            }
+
+            .table-mobile-stack tbody td:last-child{
+                border-bottom:none;
+            }
+
+            .table-mobile-stack tbody td::before{
+                content:attr(data-label);
+                color:#7c7369;
+                font-size:.72rem;
+                font-weight:900;
+                flex-shrink:0;
+                min-width:96px;
+            }
+
+            .table-mobile-stack tbody td > *{
+                max-width:100%;
+            }
+
+            .table-mobile-stack .d-flex{
+                width:100%;
+                justify-content:flex-end;
+                flex-wrap:wrap;
             }
         }
 
@@ -1717,6 +1768,27 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => popup.remove(), 3100);
     }
 
+    function enhanceMobileTables() {
+        if (window.innerWidth > 767) return;
+
+        document.querySelectorAll('.admin-table-wrap table').forEach((table) => {
+            const headers = Array.from(table.querySelectorAll('thead th')).map((th) => th.textContent.trim());
+            if (!headers.length) return;
+
+            table.classList.add('table-mobile-stack');
+
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                Array.from(row.children).forEach((cell, index) => {
+                    if (cell.tagName !== 'TD') return;
+                    if (!cell.getAttribute('data-label')) {
+                        cell.setAttribute('data-label', headers[index] || 'بيانات');
+                    }
+                });
+            });
+
+        });
+    }
+
     menuBtn?.addEventListener('click', () => {
         sidebar?.classList.contains('show') ? closeSidebar() : openSidebar();
     });
@@ -1772,6 +1844,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('resize', () => {
         if (!isMobile()) closeSidebar();
+        enhanceMobileTables();
     });
 
     window.addEventListener('message', function (event) {
@@ -1809,6 +1882,16 @@ document.addEventListener('DOMContentLoaded', function () {
             aiPopup?.classList.add('show');
             aiOverlay?.classList.add('show');
             aiPopup?.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    enhanceMobileTables();
+
+    if (window.innerWidth <= 767) {
+        const contentRoot = document.querySelector('.admin-content');
+        if (contentRoot) {
+            const mobileTablesObserver = new MutationObserver(() => enhanceMobileTables());
+            mobileTablesObserver.observe(contentRoot, { childList: true, subtree: true });
         }
     }
 
