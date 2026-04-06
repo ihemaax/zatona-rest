@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Setting;
 use App\Models\Order;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryOrderController;
 use App\Http\Controllers\Admin\CouponController;
