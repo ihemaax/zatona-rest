@@ -28,7 +28,11 @@ class KitchenController extends Controller
         }
 
         if ($user->branch_id) {
-            return $query->where('branch_id', $user->branch_id);
+            return $query->where(function ($branchScopedQuery) use ($user) {
+                $branchScopedQuery
+                    ->where('branch_id', $user->branch_id)
+                    ->orWhereNull('branch_id');
+            });
         }
 
         return $query;
@@ -56,7 +60,11 @@ class KitchenController extends Controller
             return true;
         }
 
-        return $user->branch_id && (int) $user->branch_id === (int) $order->branch_id;
+        if (!$user->branch_id) {
+            return true;
+        }
+
+        return $order->branch_id === null || (int) $user->branch_id === (int) $order->branch_id;
     }
 
     public function index()

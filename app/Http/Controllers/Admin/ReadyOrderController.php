@@ -18,7 +18,11 @@ class ReadyOrderController extends Controller
         }
 
         if ($user->branch_id) {
-            return $query->where('branch_id', $user->branch_id);
+            return $query->where(function ($branchScopedQuery) use ($user) {
+                $branchScopedQuery
+                    ->where('branch_id', $user->branch_id)
+                    ->orWhereNull('branch_id');
+            });
         }
 
         return $query;

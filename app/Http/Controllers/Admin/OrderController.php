@@ -51,7 +51,11 @@ class OrderController extends Controller
         }
 
         if ($user->branch_id) {
-            $query->where('branch_id', $user->branch_id);
+            $query->where(function ($branchScopedQuery) use ($user) {
+                $branchScopedQuery
+                    ->where('branch_id', $user->branch_id)
+                    ->orWhereNull('branch_id');
+            });
         }
 
         return $query;
@@ -134,6 +138,7 @@ class OrderController extends Controller
             !$user->isSuperAdmin()
             && !$user->hasPermission('view_all_branches_orders')
             && $user->branch_id
+            && $order->branch_id !== null
             && (int) $order->branch_id !== (int) $user->branch_id
         ) {
             abort(403, 'ليس لديك صلاحية لعرض هذا الطلب.');
@@ -204,6 +209,7 @@ class OrderController extends Controller
             !$user->isSuperAdmin()
             && !$user->hasPermission('view_all_branches_orders')
             && $user->branch_id
+            && $order->branch_id !== null
             && (int) $order->branch_id !== (int) $user->branch_id
         ) {
             abort(403, 'ليس لديك صلاحية لتحديث هذا الطلب.');

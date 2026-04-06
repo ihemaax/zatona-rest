@@ -51,7 +51,11 @@ class AppServiceProvider extends ServiceProvider
                 $query = Order::where('is_seen_by_admin', false);
 
                 if (!$adminUser->isSuperAdmin() && !$adminUser->hasPermission('view_all_branches_orders') && $adminUser->branch_id) {
-                    $query->where('branch_id', $adminUser->branch_id);
+                    $query->where(function ($branchScopedQuery) use ($adminUser) {
+                        $branchScopedQuery
+                            ->where('branch_id', $adminUser->branch_id)
+                            ->orWhereNull('branch_id');
+                    });
                 }
 
                 $newOrdersCount = $query->count();
