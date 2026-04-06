@@ -37,6 +37,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $user): void {
+            if ($user->user_type !== self::TYPE_STAFF || empty($user->role)) {
+                $user->permissions = [];
+                return;
+            }
+
+            $user->permissions = self::defaultPermissionsByRole($user->role);
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -192,7 +204,7 @@ class User extends Authenticatable
     }
 
     public function addresses()
-{
-    return $this->hasMany(\App\Models\Address::class);
-}
+    {
+        return $this->hasMany(\App\Models\Address::class);
+    }
 }
