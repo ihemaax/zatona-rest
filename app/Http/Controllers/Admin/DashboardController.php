@@ -7,6 +7,8 @@ use App\Models\Branch;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
@@ -31,21 +33,34 @@ class DashboardController extends Controller
         return $query;
     }
 
-    protected function buildDashboardData(): array
+    protected function applyDateRange($query, string $range): void
+    {
+        if ($range === 'today') {
+            $query->whereDate('created_at', today());
+            return;
+        }
+
+        if (in_array($range, ['7d', '30d'], true)) {
+            $days = (int) str_replace('d', '', $range);
+            $query->whereDate('created_at', '>=', today()->subDays($days - 1));
+        }
+    }
+
+    protected function buildDashboardData(string $range = 'today'): array
     {
         $user = auth()->user();
 
         $ordersBase = Order::query();
         $this->applyOrderScope($ordersBase);
+        $this->applyDateRange($ordersBase, $range);
 
         $ordersCount = (clone $ordersBase)->count();
-        $todayOrders = (clone $ordersBase)->whereDate('created_at', today())->count();
         $newOrders = (clone $ordersBase)->where('is_seen_by_admin', false)->count();
         $pendingOrders = (clone $ordersBase)->where('status', 'pending')->count();
         $deliveryOrders = (clone $ordersBase)->where('order_type', 'delivery')->count();
         $pickupOrders = (clone $ordersBase)->where('order_type', 'pickup')->count();
 
-        $todaySales = (float) (clone $ordersBase)->whereDate('created_at', today())->sum('total');
+        $totalSales = (float) (clone $ordersBase)->sum('total');
         $deliverySales = (float) (clone $ordersBase)->where('order_type', 'delivery')->sum('total');
         $pickupSales = (float) (clone $ordersBase)->where('order_type', 'pickup')->sum('total');
 
@@ -63,15 +78,46 @@ class DashboardController extends Controller
             'cancelled' => (clone $ordersBase)->where('status', 'cancelled')->count(),
         ];
 
-        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($ordersBase) {
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($range) {
             $date = Carbon::today()->subDays($daysAgo);
+
+            $dailyQuery = Order::query();
+            $this->applyOrderScope($dailyQuery);
+
+            if ($range === '30d') {
+                $dailyQuery->whereDate('created_at', '>=', today()->subDays(29));
+            }
+
             return [
                 'date' => $date->format('Y-m-d'),
                 'label' => $date->format('D'),
-                'orders' => (int) (clone $ordersBase)->whereDate('created_at', $date)->count(),
-                'sales' => (float) (clone $ordersBase)->whereDate('created_at', $date)->sum('total'),
+                'orders' => (int) (clone $dailyQuery)->whereDate('created_at', $date)->count(),
+                'sales' => (float) (clone $dailyQuery)->whereDate('created_at', $date)->sum('total'),
             ];
         })->values();
+
+        $cancelled = $statusBreakdown['cancelled'];
+        $delivered = $statusBreakdown['delivered'];
+        $completedOrCancelled = max(1, $delivered + $cancelled);
+
+        $avgPrepMinutes = (float) (clone $ordersBase)
+            ->whereNotNull('out_for_delivery_at')
+            ->whereNotNull('created_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, out_for_delivery_at)) as avg_minutes')
+            ->value('avg_minutes');
+
+        $avgDeliveryMinutes = (float) (clone $ordersBase)
+            ->whereNotNull('delivered_at')
+            ->whereNotNull('out_for_delivery_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, out_for_delivery_at, delivered_at)) as avg_minutes')
+            ->value('avg_minutes');
+
+        $kpis = [
+            'prep_sla_minutes' => round($avgPrepMinutes ?: 0, 1),
+            'avg_delivery_minutes' => round($avgDeliveryMinutes ?: 0, 1),
+            'cancellation_rate' => round(($cancelled / max(1, $ordersCount)) * 100, 2),
+            'completion_rate' => round(($delivered / $completedOrCancelled) * 100, 2),
+        ];
 
         if ($user->isSuperAdmin() || $user->hasPermission('view_all_branches_orders')) {
             $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
@@ -82,13 +128,14 @@ class DashboardController extends Controller
         }
 
         return [
+            'range' => $range,
             'ordersCount' => $ordersCount,
-            'todayOrders' => $todayOrders,
+            'todayOrders' => $ordersCount,
             'newOrders' => $newOrders,
             'pendingOrders' => $pendingOrders,
             'deliveryOrders' => $deliveryOrders,
             'pickupOrders' => $pickupOrders,
-            'todaySales' => $todaySales,
+            'todaySales' => $totalSales,
             'deliverySales' => $deliverySales,
             'pickupSales' => $pickupSales,
             'latestOrders' => $latestOrders,
@@ -98,17 +145,57 @@ class DashboardController extends Controller
             'notifications' => $notifications,
             'statusBreakdown' => $statusBreakdown,
             'weeklyTrend' => $weeklyTrend,
+            'kpis' => $kpis,
         ];
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.dashboard', $this->buildDashboardData());
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        return view('admin.dashboard', $this->buildDashboardData($range));
     }
 
-    public function poll(): JsonResponse
+    public function exportSnapshot(Request $request): StreamedResponse
     {
-        $data = $this->buildDashboardData();
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        $data = $this->buildDashboardData($range);
+
+        $filename = 'dashboard-snapshot-' . $range . '-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['metric', 'value']);
+            fputcsv($handle, ['range', $data['range']]);
+            fputcsv($handle, ['orders_count', $data['ordersCount']]);
+            fputcsv($handle, ['new_orders', $data['newOrders']]);
+            fputcsv($handle, ['pending_orders', $data['pendingOrders']]);
+            fputcsv($handle, ['delivery_orders', $data['deliveryOrders']]);
+            fputcsv($handle, ['pickup_orders', $data['pickupOrders']]);
+            fputcsv($handle, ['sales_total', $data['todaySales']]);
+            fputcsv($handle, ['prep_sla_minutes', $data['kpis']['prep_sla_minutes']]);
+            fputcsv($handle, ['avg_delivery_minutes', $data['kpis']['avg_delivery_minutes']]);
+            fputcsv($handle, ['cancellation_rate', $data['kpis']['cancellation_rate']]);
+            fputcsv($handle, ['completion_rate', $data['kpis']['completion_rate']]);
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    public function poll(Request $request): JsonResponse
+    {
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        $data = $this->buildDashboardData($range);
 
         return response()->json([
             'cards' => [
@@ -123,7 +210,9 @@ class DashboardController extends Controller
                 'pickup_sales' => $data['pickupSales'],
                 'branches_count' => $data['branchesStats']->count(),
                 'status_breakdown' => $data['statusBreakdown'],
+                'kpis' => $data['kpis'],
             ],
+            'range' => $data['range'],
             'new_orders_count' => $data['newOrders'],
             'notifications' => $data['notifications']->map(function ($order) {
                 return [
@@ -136,7 +225,6 @@ class DashboardController extends Controller
                     'show_url' => route('admin.orders.show', $order->id),
                 ];
             })->values(),
-
             'latest_orders' => $data['latestOrders']->map(function ($order) {
                 return [
                     'id' => $order->id,
@@ -151,7 +239,6 @@ class DashboardController extends Controller
                     'show_url' => route('admin.orders.show', $order->id),
                 ];
             })->values(),
-
             'delivery_latest' => $data['deliveryLatest']->map(function ($order) {
                 return [
                     'id' => $order->id,
@@ -163,7 +250,6 @@ class DashboardController extends Controller
                     'show_url' => route('admin.orders.show', $order->id),
                 ];
             })->values(),
-
             'pickup_latest' => $data['pickupLatest']->map(function ($order) {
                 return [
                     'id' => $order->id,
@@ -174,9 +260,7 @@ class DashboardController extends Controller
                     'show_url' => route('admin.orders.show', $order->id),
                 ];
             })->values(),
-
             'weekly_trend' => $data['weeklyTrend'],
-
             'branches_stats' => collect($data['branchesStats'])->map(function ($branch) {
                 return [
                     'id' => $branch->id,

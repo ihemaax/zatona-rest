@@ -22,11 +22,6 @@
 
     $coverImage = $setting->cover_image ?? null;
     $logoImage = $setting->logo ?? null;
-
-    $popupCampaign = \App\Models\PopupCampaign::query()
-        ->where('is_active', true)
-        ->latest()
-        ->first();
 @endphp
 
 <style>

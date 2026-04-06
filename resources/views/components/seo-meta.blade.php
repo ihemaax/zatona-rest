@@ -2,6 +2,9 @@
     'title' => null,
     'description' => null,
     'image' => null,
+    'siteName' => null,
+    'sitePhone' => null,
+    'siteAddress' => null,
 ])
 
 @php
@@ -11,8 +14,7 @@
     $resolvedImage = $image ?: asset('favicon.ico');
     $canonical = url()->current();
     $locale = app()->getLocale() === 'ar' ? 'ar_EG' : 'en_US';
-    $seoSetting = \App\Models\Setting::query()->first();
-    $restaurantName = $seoSetting->restaurant_name ?? $appName;
+    $restaurantName = $siteName ?: $appName;
 @endphp
 
 <title>{{ $resolvedTitle }}</title>
@@ -38,8 +40,8 @@
     '@context' => 'https://schema.org',
     '@type' => 'Restaurant',
     'name' => $restaurantName,
-    'telephone' => $seoSetting->restaurant_phone ?? null,
-    'address' => $seoSetting->restaurant_address ?? null,
+    'telephone' => $sitePhone,
+    'address' => $siteAddress,
     'url' => config('app.url'),
 ], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}
 </script>

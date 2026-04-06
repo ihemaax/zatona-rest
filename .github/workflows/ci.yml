@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  laravel-tests:
+  quality-and-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,13 +19,47 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - name: Install dependencies
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install PHP dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Install JS dependencies
+        run: npm ci
 
       - name: Prepare environment
         run: |
           cp .env.example .env || true
           php artisan key:generate
 
+      - name: Front-end build
+        run: npm run build
+
+      - name: Coding style (Laravel Pint)
+        run: |
+          if [ -f vendor/bin/pint ]; then
+            vendor/bin/pint --test
+          else
+            echo "Pint not installed, skipping";
+          fi
+
+      - name: Static analysis (PHPStan/Larastan)
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse --memory-limit=1G
+          else
+            echo "PHPStan not installed, skipping";
+          fi
+
+      - name: Security scan
+        run: composer audit || true
+
       - name: Run tests
         run: php artisan test
+
+      - name: Smoke check routes
+        run: php artisan route:list > /dev/null

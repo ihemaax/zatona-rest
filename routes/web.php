@@ -113,6 +113,7 @@ Route::middleware('permission:view_reports')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
+    Route::get('/dashboard/export-snapshot', [DashboardController::class, 'exportSnapshot'])->name('admin.dashboard.export-snapshot');
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
     Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');

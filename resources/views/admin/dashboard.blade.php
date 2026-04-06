@@ -384,6 +384,12 @@
         white-space:nowrap;
     }
 
+    .ops-mini-btn.active{
+        background: var(--admin-primary);
+        color:#fff;
+        border-color:var(--admin-primary);
+    }
+
     .ops-mini-btn:hover{
         background:#ebe4da;
         color:#302821;
@@ -600,6 +606,43 @@
 </style>
 
 <div class="ops-dashboard">
+
+
+    <section class="ops-card" style="padding:14px 18px;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.dashboard', ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route('admin.dashboard', ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
+                <a href="{{ route('admin.dashboard', ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+            </div>
+            <a href="{{ route('admin.dashboard.export-snapshot', ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+        </div>
+    </section>
+
+    <section class="ops-strip">
+        <div class="ops-strip-grid">
+            <div class="ops-strip-item info">
+                <div class="ops-strip-label">SLA التحضير (دقيقة)</div>
+                <div class="ops-strip-value" id="kpiPrepSla">{{ number_format($kpis['prep_sla_minutes'], 1) }}</div>
+                <div class="ops-strip-note">من إنشاء الطلب حتى الخروج للتوصيل</div>
+            </div>
+            <div class="ops-strip-item primary">
+                <div class="ops-strip-label">متوسط التوصيل (دقيقة)</div>
+                <div class="ops-strip-value" id="kpiAvgDelivery">{{ number_format($kpis['avg_delivery_minutes'], 1) }}</div>
+                <div class="ops-strip-note">من الخروج للتوصيل حتى التسليم</div>
+            </div>
+            <div class="ops-strip-item warn">
+                <div class="ops-strip-label">Cancellation Rate</div>
+                <div class="ops-strip-value" id="kpiCancellationRate">{{ number_format($kpis['cancellation_rate'], 2) }}%</div>
+                <div class="ops-strip-note">نسبة الطلبات الملغاة من الإجمالي</div>
+            </div>
+            <div class="ops-strip-item success">
+                <div class="ops-strip-label">Completion Rate</div>
+                <div class="ops-strip-value" id="kpiCompletionRate">{{ number_format($kpis['completion_rate'], 2) }}%</div>
+                <div class="ops-strip-note">نسبة الطلبات المكتملة مقابل (المكتمل+الملغي)</div>
+            </div>
+        </div>
+    </section>
 
     {{-- شريط المؤشرات الرئيسي --}}
     <section class="ops-strip">
@@ -1040,10 +1083,15 @@ document.addEventListener('DOMContentLoaded', function () {
         deliveryBody:   $('deliveryLatestTableBody'),
         pickupBody:     $('pickupLatestTableBody'),
         branches:       $('branchesSummaryBox'),
+        kpiPrepSla:     $('kpiPrepSla'),
+        kpiAvgDelivery: $('kpiAvgDelivery'),
+        kpiCancelRate:  $('kpiCancellationRate'),
+        kpiCompletion:  $('kpiCompletionRate'),
     };
 
     let lastCount = parseInt(els.newOrders?.textContent || '0', 10);
     let fetching  = false;
+    const range = @json($range ?? 'today');
 
     const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const money = v => `${Number(v).toFixed(2)} ج.م`;
@@ -1210,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetching = true;
 
         try {
-            const res = await fetch("{{ secure_url('/admin/dashboard/poll') }}", {
+            const res = await fetch(`{{ secure_url('/admin/dashboard/poll') }}?range=${encodeURIComponent(range)}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'
@@ -1241,6 +1289,11 @@ document.addEventListener('DOMContentLoaded', function () {
             set(els.pickupSales, money(c.pickup_sales ?? 0));
             set(els.needAttention, +(c.new_orders ?? 0) + +(c.pending_orders ?? 0));
             set(els.sidebarBadge, cur);
+
+            set(els.kpiPrepSla, Number(c.kpis?.prep_sla_minutes ?? 0).toFixed(1));
+            set(els.kpiAvgDelivery, Number(c.kpis?.avg_delivery_minutes ?? 0).toFixed(1));
+            set(els.kpiCancelRate, Number(c.kpis?.cancellation_rate ?? 0).toFixed(2) + '%');
+            set(els.kpiCompletion, Number(c.kpis?.completion_rate ?? 0).toFixed(2) + '%');
 
             renderNotifs(data.notifications || []);
             renderLatest(data.latest_orders || []);
