@@ -9,8 +9,8 @@ return [
     'quantity' => 'الكمية',
     'final_price' => 'السعر النهائي',
     'add_to_cart' => 'إضافة إلى السلة',
-    'product_added_successfully' => 'تمت إضافة المنتج إلى السلة بنجاح',
-    'add_more_products' => 'إضافة منتجات أخرى',
-    'go_to_cart' => 'الذهاب إلى السلة',
-    'max_selection_reached' => 'وصلت للحد الأقصى من الاختيارات في هذه المجموعة',
+    'product_added_successfully' => 'الصنف اتضاف للسلة ✅',
+    'add_more_products' => 'كمّل اختيار',
+    'go_to_cart' => 'روح للسلة',
+    'max_selection_reached' => 'وصلت للحد الأقصى للاختيارات في الجزء ده',
 ];
