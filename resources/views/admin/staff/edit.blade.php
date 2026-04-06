@@ -3,7 +3,11 @@
 @php
     $pageTitle = 'تعديل بيانات الموظف';
     $pageSubtitle = $staff->name;
-    $currentPermissions = old('permissions', $staff->permissions ?? []);
+    $rolePermissionsMap = collect(\App\Models\User::availableRoles())
+        ->keys()
+        ->mapWithKeys(fn ($role) => [$role => \App\Models\User::defaultPermissionsByRole($role)])
+        ->all();
+    $permissionLabels = \App\Models\User::permissionLabels();
 @endphp
 
 @section('content')
@@ -126,36 +130,6 @@
         font-weight:800;
     }
 
-    .permissions-wrap{
-        display:grid;
-        grid-template-columns:repeat(2, minmax(0,1fr));
-        gap:12px;
-    }
-
-    .permission-card{
-        background:#fffdfa;
-        border:1px solid #ebe3d7;
-        border-radius:16px;
-        padding:14px;
-        display:flex;
-        align-items:center;
-        gap:10px;
-        min-width:0;
-        transition:.18s ease;
-    }
-
-    .permission-card:hover{
-        background:#fcf8f3;
-        border-color:#e1d6c8;
-    }
-
-    .permission-label{
-        color:#443b33;
-        font-size:.84rem;
-        font-weight:800;
-        line-height:1.6;
-    }
-
     .section-block-title{
         margin:0 0 6px;
         font-size:.95rem;
@@ -223,10 +197,6 @@
     @media (max-width: 991.98px){
         .field-col-6{
             grid-column:span 12;
-        }
-
-        .permissions-wrap{
-            grid-template-columns:1fr;
         }
     }
 
@@ -343,24 +313,9 @@
                     </div>
 
                     <div class="field-card field-col-12">
-                        <h3 class="section-block-title">الصلاحيات</h3>
-                        <p class="section-block-subtitle">حدد الصلاحيات التي يمكن للموظف الوصول إليها بما يتوافق مع مسؤولياته داخل النظام.</p>
-
-                        <div class="permissions-wrap">
-                            @foreach($permissionLabels as $key => $label)
-                                <label class="permission-card" for="perm_{{ $key }}">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        name="permissions[]"
-                                        value="{{ $key }}"
-                                        id="perm_{{ $key }}"
-                                        {{ in_array($key, $currentPermissions, true) ? 'checked' : '' }}
-                                    >
-                                    <span class="permission-label">{{ $label }}</span>
-                                </label>
-                            @endforeach
-                        </div>
+                        <h3 class="section-block-title">الصلاحيات (تلقائي)</h3>
+                        <p class="section-block-subtitle">النظام بيضبط الصلاحيات تلقائيًا على حسب الدور الوظيفي المختار.</p>
+                        <ul class="mb-0 ps-3" id="auto-permissions-list"></ul>
                     </div>
                 </div>
 
@@ -372,4 +327,32 @@
         </div>
     </section>
 </div>
+
+<script>
+    (() => {
+        const roleSelect = document.querySelector('select[name="role"]');
+        const list = document.getElementById('auto-permissions-list');
+        if (!roleSelect || !list) return;
+
+        const permissionLabels = @json($permissionLabels);
+        const rolePermissionsMap = @json($rolePermissionsMap);
+
+        const renderPermissions = () => {
+            const selectedRole = roleSelect.value;
+            const permissions = rolePermissionsMap[selectedRole] || [];
+
+            if (!permissions.length) {
+                list.innerHTML = '<li class="text-muted">لا توجد صلاحيات لهذا الدور.</li>';
+                return;
+            }
+
+            list.innerHTML = permissions
+                .map((permission) => `<li>${permissionLabels[permission] || permission}</li>`)
+                .join('');
+        };
+
+        roleSelect.addEventListener('change', renderPermissions);
+        renderPermissions();
+    })();
+</script>
 @endsection

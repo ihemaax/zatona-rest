@@ -1127,6 +1127,7 @@
 @php
     $adminUser = auth()->user();
     $isDeliveryUser = $adminUser?->role === \App\Models\User::ROLE_DELIVERY;
+    $isKitchenUser = $adminUser?->role === \App\Models\User::ROLE_KITCHEN;
     $newOrdersCount = $layoutAdminNewOrdersCount ?? 0;
 
     $dashboardGroupOpen =
@@ -1137,7 +1138,8 @@
         request()->routeIs('admin.orders.index') ||
         request()->routeIs('admin.orders.show') ||
         request()->routeIs('admin.orders.delivery') ||
-        request()->routeIs('admin.orders.pickup');
+        request()->routeIs('admin.orders.pickup') ||
+        request()->routeIs('admin.kitchen.*');
 
     $operationsGroupOpen =
         request()->routeIs('admin.branches.*') ||
@@ -1205,6 +1207,13 @@
                             <span class="sb-sublink-dot"></span>
                             <span>طلباتي (الدليفري)</span>
                         </a>
+                    @elseif($isKitchenUser)
+                        @if($adminUser?->isSuperAdmin() || $adminUser?->isOwner() || $adminUser?->role === \App\Models\User::ROLE_MANAGER || $adminUser?->role === \App\Models\User::ROLE_KITCHEN)
+                            <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>شاشة المطبخ</span>
+                            </a>
+                        @endif
                     @else
                         <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
@@ -1227,6 +1236,11 @@
                             <span>طلبات الاستلام</span>
                         </a>
 
+                        <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>شاشة المطبخ</span>
+                        </a>
+
                         @if($adminUser?->isSuperAdmin() || $adminUser?->hasPermission('manage_delivery'))
                             <a href="{{ route('admin.delivery.management') }}" class="sb-sublink {{ request()->routeIs('admin.delivery.management') ? 'active' : '' }}">
                                 <span class="sb-sublink-dot"></span>
@@ -1237,7 +1251,7 @@
                 </div>
             </div>
 
-            @unless($isDeliveryUser)
+            @unless($isDeliveryUser || $isKitchenUser)
             <div class="sb-group {{ $operationsGroupOpen ? 'active' : '' }}" data-group>
                 <button type="button" class="sb-group-toggle" data-group-toggle>
                     <svg class="sb-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8">
@@ -1303,7 +1317,7 @@
             </div>
             @endunless
 
-            @unless($isDeliveryUser)
+            @unless($isDeliveryUser || $isKitchenUser)
             @if(($adminUser?->hasPermission('manage_digital_menu') || $adminUser?->isSuperAdmin()) && Route::has('admin.digital-menu.settings'))
                 <div class="sb-group {{ $digitalMenuGroupOpen ? 'active' : '' }}" data-group>
                     <button type="button" class="sb-group-toggle" data-group-toggle>
