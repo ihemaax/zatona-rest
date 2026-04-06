@@ -26,9 +26,11 @@ class DashboardController extends Controller
         }
 
         if ($user->branch_id) {
-            $query->where('branch_id', $user->branch_id);
-        } else {
-            $query->whereRaw('1 = 0');
+            $query->where(function ($branchScopedQuery) use ($user) {
+                $branchScopedQuery
+                    ->where('branch_id', $user->branch_id)
+                    ->orWhereNull('branch_id');
+            });
         }
 
         return $query;

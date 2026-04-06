@@ -909,6 +909,7 @@
             flex:1;
             min-height:0;
             background:#fffdfa;
+            position:relative;
         }
 
         .admin-ai-popup.minimized .admin-ai-popup-body{
@@ -921,6 +922,45 @@
             border:0;
             display:block;
             background:#fff;
+        }
+
+        .admin-ai-fallback{
+            position:absolute;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            padding:18px;
+            background:#fffdfa;
+        }
+
+        .admin-ai-fallback.show{
+            display:flex;
+        }
+
+        .admin-ai-fallback-card{
+            width:min(360px, 100%);
+            border:1px solid #e6ddd1;
+            border-radius:16px;
+            padding:16px;
+            background:#fff;
+            box-shadow:0 10px 24px rgba(35,31,27,.08);
+        }
+
+        .admin-ai-fallback-title{
+            margin:0 0 6px;
+            font-size:.95rem;
+            font-weight:900;
+            color:#2a241f;
+        }
+
+        .admin-ai-fallback-text{
+            margin:0 0 12px;
+            font-size:.8rem;
+            font-weight:700;
+            color:#756d64;
+            line-height:1.8;
         }
 
         .admin-ai-toast{
@@ -1053,11 +1093,6 @@
                 display:none;
             }
 
-            .admin-table-wrap table,
-            .table{
-                min-width:650px;
-            }
-
             .row{
                 --bs-gutter-x:.75rem;
                 --bs-gutter-y:.75rem;
@@ -1091,6 +1126,62 @@
                 bottom:84px;
                 {{ app()->getLocale() === 'ar' ? 'left:8px;' : 'right:8px;' }}
                 max-width:calc(100vw - 16px);
+            }
+
+            .table-mobile-stack{
+                min-width:100% !important;
+                border-collapse:separate;
+                border-spacing:0 10px;
+            }
+
+            .table-mobile-stack thead{
+                display:none;
+            }
+
+            .table-mobile-stack tbody tr{
+                display:block;
+                background:#fffdfa;
+                border:1px solid #e9dfd2;
+                border-radius:16px;
+                box-shadow:0 10px 20px rgba(35,31,27,.05);
+                margin-bottom:10px;
+                overflow:hidden;
+            }
+
+            .table-mobile-stack tbody td{
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:10px;
+                width:100%;
+                border-bottom:1px dashed #eee4d8;
+                padding:10px 12px;
+                background:transparent !important;
+                text-align:start;
+                white-space:normal;
+            }
+
+            .table-mobile-stack tbody td:last-child{
+                border-bottom:none;
+            }
+
+            .table-mobile-stack tbody td::before{
+                content:attr(data-label);
+                color:#7c7369;
+                font-size:.72rem;
+                font-weight:900;
+                flex-shrink:0;
+                min-width:96px;
+            }
+
+            .table-mobile-stack tbody td > *{
+                max-width:100%;
+            }
+
+            .table-mobile-stack .d-flex{
+                width:100%;
+                justify-content:flex-end;
+                flex-wrap:wrap;
             }
         }
 
@@ -1505,6 +1596,13 @@
                 loading="lazy"
                 referrerpolicy="same-origin"
             ></iframe>
+            <div class="admin-ai-fallback" id="adminAiFallback">
+                <div class="admin-ai-fallback-card">
+                    <p class="admin-ai-fallback-title">تعذر تحميل نافذة المساعد داخل الودجت</p>
+                    <p class="admin-ai-fallback-text">استخدم فتح الصفحة الكاملة للمساعد وسيعمل بشكل طبيعي.</p>
+                    <a href="{{ url('/admin/ai-assistant') }}" class="btn-admin-soft">فتح صفحة المساعد الكاملة</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1539,12 +1637,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const aiClose = document.getElementById('adminAiClose');
     const aiMinimize = document.getElementById('adminAiMinimize');
     const aiToast = document.getElementById('adminAiToast');
+    const aiFallback = document.getElementById('adminAiFallback');
 
     const AI_STORAGE_KEY = 'admin_ai_widget_state_v1';
     const AI_NOTIFY_KEY = 'admin_ai_unread_v1';
+    const currentStaffRole = @json(auth()->user()?->role);
+    const isReadyOrdersPage = @json(request()->routeIs('admin.orders.ready'));
+    const readyOrdersPollUrl = @json(route('admin.orders.ready.poll', absolute: false));
 
     let toastTimer = null;
     let audioCtx = null;
+    let aiLoadGuardTimer = null;
 
     const isMobile = () => window.innerWidth < BP;
 
@@ -1592,7 +1695,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function lazyLoadAiFrame() {
         if (aiFrame && (!aiFrame.getAttribute('src') || aiFrame.getAttribute('src') === 'about:blank')) {
+            aiFallback?.classList.remove('show');
+            aiFrame.style.display = 'block';
             aiFrame.setAttribute('src', aiFrame.dataset.src || '/admin/ai-assistant?embed=1');
+
+            if (aiLoadGuardTimer) {
+                clearTimeout(aiLoadGuardTimer);
+            }
+
+            aiLoadGuardTimer = setTimeout(() => {
+                if (aiFallback?.classList.contains('show')) return;
+                showAiFallback();
+            }, 5000);
+        }
+    }
+
+    function showAiFallback() {
+        aiFrame.style.display = 'none';
+        aiFallback?.classList.add('show');
+    }
+
+    function inspectAiFrame() {
+        if (!aiFrame) return;
+
+        try {
+            const frameDoc = aiFrame.contentDocument;
+            const textLength = (frameDoc?.body?.innerText || '').trim().length;
+            const hasRenderableNodes = (frameDoc?.body?.children?.length || 0) > 0;
+
+            if (!frameDoc || (!hasRenderableNodes && textLength === 0)) {
+                showAiFallback();
+            } else {
+                aiFallback?.classList.remove('show');
+                aiFrame.style.display = 'block';
+            }
+        } catch (e) {
+            showAiFallback();
+        } finally {
+            if (aiLoadGuardTimer) {
+                clearTimeout(aiLoadGuardTimer);
+                aiLoadGuardTimer = null;
+            }
         }
     }
 
@@ -1700,6 +1843,41 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
     }
 
+    function showCashierReadyToast(text) {
+        const popup = document.createElement('div');
+        popup.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#166534;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.2);font-weight:800;font-size:.85rem;';
+        popup.textContent = text;
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.transition = 'opacity .35s ease';
+        }, 2600);
+
+        setTimeout(() => popup.remove(), 3100);
+    }
+
+    function enhanceMobileTables() {
+        if (window.innerWidth > 767) return;
+
+        document.querySelectorAll('.admin-table-wrap table').forEach((table) => {
+            const headers = Array.from(table.querySelectorAll('thead th')).map((th) => th.textContent.trim());
+            if (!headers.length) return;
+
+            table.classList.add('table-mobile-stack');
+
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                Array.from(row.children).forEach((cell, index) => {
+                    if (cell.tagName !== 'TD') return;
+                    if (!cell.getAttribute('data-label')) {
+                        cell.setAttribute('data-label', headers[index] || 'بيانات');
+                    }
+                });
+            });
+
+        });
+    }
+
     menuBtn?.addEventListener('click', () => {
         sidebar?.classList.contains('show') ? closeSidebar() : openSidebar();
     });
@@ -1742,6 +1920,7 @@ document.addEventListener('DOMContentLoaded', function () {
     aiOverlay?.addEventListener('click', closeAiPopup);
     aiMinimize?.addEventListener('click', minimizeAiPopup);
     aiToast?.addEventListener('click', openAiPopup);
+    aiFrame?.addEventListener('load', inspectAiFrame);
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
@@ -1755,6 +1934,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('resize', () => {
         if (!isMobile()) closeSidebar();
+        enhanceMobileTables();
     });
 
     window.addEventListener('message', function (event) {
@@ -1793,6 +1973,66 @@ document.addEventListener('DOMContentLoaded', function () {
             aiOverlay?.classList.add('show');
             aiPopup?.setAttribute('aria-hidden', 'false');
         }
+    }
+
+    enhanceMobileTables();
+
+    if (window.innerWidth <= 767) {
+        const contentRoot = document.querySelector('.admin-content');
+        if (contentRoot) {
+            const mobileTablesObserver = new MutationObserver(() => enhanceMobileTables());
+            mobileTablesObserver.observe(contentRoot, { childList: true, subtree: true });
+        }
+    }
+
+    if (currentStaffRole === 'cashier' && !isReadyOrdersPage) {
+        let seenReadyOrderIds = new Set();
+        let readyPollInitialized = false;
+
+        const notifyCashierReadyOrders = async () => {
+            try {
+                const response = await fetch(readyOrdersPollUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const allReadyOrders = [
+                    ...(data.delivery_orders || []),
+                    ...(data.pickup_orders || []),
+                ];
+
+                const currentIds = new Set(
+                    allReadyOrders.map((order) => Number(order.id)).filter(Boolean)
+                );
+
+                if (readyPollInitialized) {
+                    const newReadyCount = allReadyOrders.filter((order) => !seenReadyOrderIds.has(Number(order.id))).length;
+
+                    if (newReadyCount > 0) {
+                        showCashierReadyToast(`تم تجهيز ${newReadyCount} طلب جديد وجاهز للاستلام.`);
+                        beepAiNotification();
+                    }
+                }
+
+                seenReadyOrderIds = currentIds;
+                readyPollInitialized = true;
+            } catch (_) {
+                // تجاهل أخطاء الشبكة المؤقتة
+            }
+        };
+
+        notifyCashierReadyOrders();
+        setInterval(notifyCashierReadyOrders, 3000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                notifyCashierReadyOrders();
+            }
+        });
     }
 });
 </script>
