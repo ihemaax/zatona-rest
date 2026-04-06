@@ -22,6 +22,11 @@ return [
     'notes' => 'ملاحظات',
     'payment_method' => 'طريقة الدفع',
     'cash_on_delivery' => 'كاش عند الاستلام',
+    'coupon_code' => 'كوبون الخصم',
+    'coupon_code_placeholder' => 'ادخل كود الخصم',
+    'apply_coupon' => 'تطبيق',
+    'coupon_hint' => 'أدخل الكود ثم اضغط تطبيق، وسيتم خصم القيمة من إجمالي الطلب.',
+    'discount' => 'الخصم',
     'confirm_order' => 'تأكيد الطلب',
     'order_summary' => 'ملخص الطلب',
     'subtotal' => 'الإجمالي الفرعي',
@@ -33,4 +38,9 @@ return [
     'location_detected_successfully' => 'تم تحديد الموقع بنجاح',
     'address_auto_filled' => 'تم تعبئة العنوان تلقائيًا',
     'unable_to_fetch_address' => 'تعذر جلب العنوان تلقائيًا',
+
+    'location_permission_denied' => 'تم رفض إذن الموقع. يمكنك تحديد العنوان يدويًا أو اختياره من الخريطة.',
+    'location_timeout' => 'استغرق تحديد الموقع وقتًا أطول من المتوقع. حاول مرة أخرى.',
+    'location_unavailable' => 'خدمة الموقع غير متاحة على هذا الجهاز حاليًا.',
+    'network_issue_hint' => 'في حالة ضعف الشبكة، أكمل الطلب بالعنوان اليدوي ثم سنؤكد موقعك عبر الهاتف عند الحاجة.',
 ];
