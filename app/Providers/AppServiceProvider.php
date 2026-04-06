@@ -68,53 +68,56 @@ class AppServiceProvider extends ServiceProvider
 
 
         // Fallback registration in case route cache is stale in production/local.
-        if (!Route::has('admin.orders.assign-delivery')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->patch('/admin/orders/{order}/assign-delivery', [\App\Http\Controllers\Admin\OrderController::class, 'assignDelivery'])
-                ->name('admin.orders.assign-delivery');
-        }
+        // Important: register after all providers boot so cached routes are already loaded.
+        $this->app->booted(function () {
+            if (!Route::has('admin.orders.assign-delivery')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->patch('/admin/orders/{order}/assign-delivery', [\App\Http\Controllers\Admin\OrderController::class, 'assignDelivery'])
+                    ->name('admin.orders.assign-delivery');
+            }
 
-        if (!Route::has('admin.delivery.dashboard')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->get('/admin/delivery-dashboard', [\App\Http\Controllers\Admin\DeliveryDashboardController::class, 'index'])
-                ->name('admin.delivery.dashboard');
-        }
+            if (!Route::has('admin.delivery.dashboard')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->get('/admin/delivery-dashboard', [\App\Http\Controllers\Admin\DeliveryDashboardController::class, 'index'])
+                    ->name('admin.delivery.dashboard');
+            }
 
-        if (!Route::has('delivery.orders.index')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->get('/delivery', [\App\Http\Controllers\Admin\DeliveryOrderController::class, 'index'])
-                ->name('delivery.orders.index');
-        }
+            if (!Route::has('delivery.orders.index')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->get('/delivery', [\App\Http\Controllers\Admin\DeliveryOrderController::class, 'index'])
+                    ->name('delivery.orders.index');
+            }
 
-        if (!Route::has('admin.coupons.index')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->get('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])
-                ->name('admin.coupons.index');
-        }
+            if (!Route::has('admin.coupons.index')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->get('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])
+                    ->name('admin.coupons.index');
+            }
 
-        if (!Route::has('admin.coupons.store')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->post('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])
-                ->name('admin.coupons.store');
-        }
+            if (!Route::has('admin.coupons.store')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->post('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])
+                    ->name('admin.coupons.store');
+            }
 
-        if (!Route::has('admin.coupons.update')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->put('/admin/coupons/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'update'])
-                ->name('admin.coupons.update');
-        }
+            if (!Route::has('admin.coupons.update')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->put('/admin/coupons/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'update'])
+                    ->name('admin.coupons.update');
+            }
 
-        if (!Route::has('admin.coupons.destroy')) {
-            Route::middleware(['web', 'auth', 'admin'])
-                ->delete('/admin/coupons/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])
-                ->name('admin.coupons.destroy');
-        }
+            if (!Route::has('admin.coupons.destroy')) {
+                Route::middleware(['web', 'auth', 'admin'])
+                    ->delete('/admin/coupons/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])
+                    ->name('admin.coupons.destroy');
+            }
 
-        if (!Route::has('checkout.apply-coupon')) {
-            Route::middleware('web')
-                ->post('/checkout/apply-coupon', [\App\Http\Controllers\Front\CheckoutController::class, 'applyCoupon'])
-                ->name('checkout.apply-coupon');
-        }
+            if (!Route::has('checkout.apply-coupon')) {
+                Route::middleware('web')
+                    ->post('/checkout/apply-coupon', [\App\Http\Controllers\Front\CheckoutController::class, 'applyCoupon'])
+                    ->name('checkout.apply-coupon');
+            }
+        });
 
     }
 }
