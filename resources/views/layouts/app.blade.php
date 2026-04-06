@@ -17,7 +17,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <x-analytics />
 
+    @php
+        $manifestPath = public_path('build/manifest.json');
+        $hasFrontLayoutEntry = false;
+
+        if (file_exists($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true) ?: [];
+            $hasFrontLayoutEntry = isset($manifest['resources/css/front-layout.css']);
+        }
+    @endphp
+
+    @if($hasFrontLayoutEntry)
         @vite(['resources/css/front-layout.css', 'resources/js/app.js'])
+    @else
+        <style>{!! file_get_contents(resource_path('css/front-layout.css')) !!}</style>
+    @endif
 
 </head>
 <body>
