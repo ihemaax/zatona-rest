@@ -11,8 +11,10 @@ use App\Models\Category;
 use App\Models\Setting;
 use App\Models\Order;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryOrderController;
+use App\Http\Controllers\Front\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -87,6 +89,36 @@ class AppServiceProvider extends ServiceProvider
             Route::middleware(['web', 'auth', 'admin'])
                 ->get('/delivery', [DeliveryOrderController::class, 'index'])
                 ->name('delivery.orders.index');
+        }
+
+        if (!Route::has('admin.coupons.index')) {
+            Route::middleware(['web', 'auth', 'admin'])
+                ->get('/admin/coupons', [CouponController::class, 'index'])
+                ->name('admin.coupons.index');
+        }
+
+        if (!Route::has('admin.coupons.store')) {
+            Route::middleware(['web', 'auth', 'admin'])
+                ->post('/admin/coupons', [CouponController::class, 'store'])
+                ->name('admin.coupons.store');
+        }
+
+        if (!Route::has('admin.coupons.update')) {
+            Route::middleware(['web', 'auth', 'admin'])
+                ->put('/admin/coupons/{coupon}', [CouponController::class, 'update'])
+                ->name('admin.coupons.update');
+        }
+
+        if (!Route::has('admin.coupons.destroy')) {
+            Route::middleware(['web', 'auth', 'admin'])
+                ->delete('/admin/coupons/{coupon}', [CouponController::class, 'destroy'])
+                ->name('admin.coupons.destroy');
+        }
+
+        if (!Route::has('checkout.apply-coupon')) {
+            Route::middleware(['web'])
+                ->post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+                ->name('checkout.apply-coupon');
         }
     }
 }
