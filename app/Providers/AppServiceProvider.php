@@ -92,31 +92,38 @@ class AppServiceProvider extends ServiceProvider
                 ->name('delivery.orders.index');
         }
 
-        if (!Route::has('admin.coupons.index')) {
+        $hasRouteByMethodAndUri = function (string $method, string $uri): bool {
+            return collect(Route::getRoutes()->getRoutes())->contains(function ($route) use ($method, $uri) {
+                return in_array(strtoupper($method), $route->methods(), true)
+                    && $route->uri() === ltrim($uri, '/');
+            });
+        };
+
+        if (!Route::has('admin.coupons.index') && !$hasRouteByMethodAndUri('GET', '/admin/coupons')) {
             Route::middleware(['web', 'auth', 'admin'])
                 ->get('/admin/coupons', [CouponController::class, 'index'])
                 ->name('admin.coupons.index');
         }
 
-        if (!Route::has('admin.coupons.store')) {
+        if (!Route::has('admin.coupons.store') && !$hasRouteByMethodAndUri('POST', '/admin/coupons')) {
             Route::middleware(['web', 'auth', 'admin'])
                 ->post('/admin/coupons', [CouponController::class, 'store'])
                 ->name('admin.coupons.store');
         }
 
-        if (!Route::has('admin.coupons.update')) {
+        if (!Route::has('admin.coupons.update') && !$hasRouteByMethodAndUri('PUT', '/admin/coupons/{coupon}')) {
             Route::middleware(['web', 'auth', 'admin'])
                 ->put('/admin/coupons/{coupon}', [CouponController::class, 'update'])
                 ->name('admin.coupons.update');
         }
 
-        if (!Route::has('admin.coupons.destroy')) {
+        if (!Route::has('admin.coupons.destroy') && !$hasRouteByMethodAndUri('DELETE', '/admin/coupons/{coupon}')) {
             Route::middleware(['web', 'auth', 'admin'])
                 ->delete('/admin/coupons/{coupon}', [CouponController::class, 'destroy'])
                 ->name('admin.coupons.destroy');
         }
 
-        if (!Route::has('checkout.apply-coupon')) {
+        if (!Route::has('checkout.apply-coupon') && !$hasRouteByMethodAndUri('POST', '/checkout/apply-coupon')) {
             Route::middleware('web')
                 ->post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
                 ->name('checkout.apply-coupon');

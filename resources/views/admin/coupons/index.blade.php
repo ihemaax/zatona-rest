@@ -12,7 +12,7 @@
             <div class="section-title">إنشاء كوبون</div>
             <div class="section-subtitle">أضف كود خصم جديد لاستخدامه في صفحة الشيك أوت</div>
 
-            <form action="{{ route('admin.coupons.store') }}" method="POST" class="row g-3">
+            <form action="{{ url('/admin/coupons') }}" method="POST" class="row g-3">
                 @csrf
                 <div class="col-12">
                     <label class="form-label fw-bold">الكود</label>
@@ -95,7 +95,7 @@
                                 @endif
                             </td>
                             <td style="min-width: 280px;">
-                                <form action="{{ route('admin.coupons.update', $coupon) }}" method="POST" class="row g-2">
+                                <form action="{{ url('/admin/coupons/' . $coupon->id) }}" method="POST" class="row g-2">
                                     @csrf
                                     @method('PUT')
                                     <div class="col-4">
@@ -115,7 +115,7 @@
                                         <button class="btn btn-sm btn-outline-secondary w-100" type="submit">حفظ</button>
                                     </div>
                                 </form>
-                                <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" class="mt-2" onsubmit="return confirm('حذف الكوبون؟')">
+                                <form action="{{ url('/admin/coupons/' . $coupon->id) }}" method="POST" class="mt-2" onsubmit="return confirm('حذف الكوبون؟')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">حذف</button>
