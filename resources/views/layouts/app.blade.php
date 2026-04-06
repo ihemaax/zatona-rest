@@ -62,7 +62,7 @@
                 </div>
 
                 @auth
-                    @if(auth()->user()->is_admin)
+                    @if(auth()->user()->canAccessAdminPanel())
                         <a href="{{ route('admin.dashboard') }}" class="btn-soft">{{ __('site.admin_panel') }}</a>
                         <a href="{{ route('admin.settings.edit') }}" class="btn-soft">الإعدادات</a>
                         <a href="{{ route('admin.categories.index') }}" class="btn-soft">{{ __('site.categories') }}</a>
@@ -160,7 +160,7 @@
                         <a href="{{ route('pages.privacy') }}">سياسة الخصوصية</a>
 
                         @auth
-                            @if(!auth()->user()->is_admin && Route::has('my.orders'))
+                            @if(!auth()->user()->canAccessAdminPanel() && Route::has('my.orders'))
                                 <a href="{{ route('my.orders') }}">طلباتي</a>
                             @endif
                         @else
@@ -199,7 +199,7 @@
 {{-- Mobile Bottom Bar --}}
 <div class="mobile-bottom-bar mobile-only">
     @auth
-        @if(auth()->user()->is_admin)
+        @if(auth()->user()->canAccessAdminPanel())
             <div class="mobile-bottom-item">
                 <a href="{{ route('admin.dashboard') }}" class="mobile-bottom-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="bi bi-grid-1x2-fill"></i>
