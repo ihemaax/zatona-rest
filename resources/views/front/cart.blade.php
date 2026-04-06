@@ -7,83 +7,83 @@
 
     $restaurantName = $setting->restaurant_name ?? __('site.brand');
     $cartCount = count($cart ?? []);
-    $subtotal = collect($cart ?? [])->sum(function ($item) {
-        return $item['total'] ?? 0;
-    });
+    $subtotal = collect($cart ?? [])->sum(fn ($item) => $item['total'] ?? 0);
 @endphp
 
 <style>
-    .cartx-page{max-width:1160px;margin:0 auto;padding-bottom:110px}
-    .cartx-hero{background:linear-gradient(135deg,#0d352b,#1f5f4f);border-radius:30px;padding:24px;border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 40px rgba(8,28,23,.22);color:#fff;margin-bottom:18px}
-    .cartx-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);padding:7px 12px;border-radius:999px;font-size:.74rem;font-weight:800}
-    .cartx-kicker .dot{width:7px;height:7px;border-radius:50%;background:#f9ddb1}
-    .cartx-title{font-size:2rem;font-weight:900;margin:10px 0 8px;letter-spacing:-.03em}
-    .cartx-sub{margin:0;color:rgba(255,255,255,.92);font-weight:600;line-height:1.9}
-    .cartx-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .cartx-btn{min-height:46px;padding:11px 16px;border-radius:14px;text-decoration:none;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
-    .cartx-btn-soft{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28)}
-    .cartx-btn-main{background:#f5dfba;color:#173029;box-shadow:0 10px 18px rgba(0,0,0,.15)}
-    .cartx-grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px;align-items:start}
-    .cartx-card{background:var(--fb-card);border:1px solid var(--fb-border);border-radius:24px;box-shadow:var(--fb-shadow)}
-    .cartx-list{padding:14px;display:grid;gap:12px}
-    .cartx-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;border:1px solid #e8ddcb;background:linear-gradient(180deg,#fffdf9,#f9f4ea);border-radius:18px;padding:14px}
-    .cartx-name{margin:0 0 6px;font-size:1.02rem;font-weight:900;color:#1b2723}
-    .cartx-price{color:#1e5e50;font-weight:900;font-size:.92rem;white-space:nowrap}
-    .cartx-options{background:#f8f2e7;border:1px solid #eadfcd;border-radius:12px;padding:10px;margin-bottom:10px}
-    .cartx-option{font-size:.8rem;color:#5f5a52;font-weight:700;line-height:1.7}
-    .cartx-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    .cartx-qty{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .cartx-qty input{width:90px;border:1px solid #d9ccba;background:#fff;border-radius:12px;padding:9px 10px;text-align:center;font-weight:800}
-    .cartx-update,.cartx-delete{border:none;border-radius:12px;padding:9px 12px;font-size:.8rem;font-weight:900}
-    .cartx-update{background:#efe4d2;color:#26332f}
-    .cartx-delete{background:#fff2f2;color:#a12020}
-    .cartx-total{font-weight:900;color:#1d2d28}
-    .cartx-total span{color:#1e5e50}
-    .cartx-summary{position:sticky;top:86px;padding:16px}
-    .cartx-summary h3{margin:0 0 12px;font-size:1.05rem;font-weight:900;color:#1b2723}
-    .cartx-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed #e9dfd2;font-size:.9rem;color:#5e5a52;font-weight:700}
-    .cartx-row strong{color:#162620;font-size:1rem}
-    .cartx-checkout{margin-top:14px;display:block;text-align:center;background:linear-gradient(135deg,#0f3a2f,#2f6f5f);color:#fff;padding:13px 14px;border-radius:14px;text-decoration:none;font-weight:900;box-shadow:0 10px 18px rgba(16,58,47,.26)}
-    .cartx-empty{padding:36px 18px;text-align:center}
-    .cartx-empty i{font-size:2.2rem;color:#1f5f4f}
-    .cartx-empty h2{margin:12px 0 6px;font-size:1.16rem;font-weight:900}
-    .cartx-empty p{margin:0 0 16px;color:#6a645a;font-weight:700}
-    @media (max-width:991.98px){.cartx-grid{grid-template-columns:1fr}.cartx-summary{position:static}}
-    @media (max-width:767.98px){.cartx-page{padding-bottom:94px}.cartx-hero{border-radius:22px;padding:16px}.cartx-title{font-size:1.26rem}.cartx-sub{font-size:.84rem}.cartx-actions{display:grid;grid-template-columns:1fr 1fr}.cartx-btn{width:100%;min-height:42px;font-size:.8rem}.cartx-item{grid-template-columns:1fr;padding:12px}}
-    @media (max-width:390px){.cartx-actions{grid-template-columns:1fr}}
+    .cartnova-wrap{max-width:1240px;margin:0 auto;padding-bottom:110px}
+    .cartnova-shell{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+    .cartnova-main{background:#0f172a;border-radius:30px;padding:24px;border:1px solid #1e293b;box-shadow:0 24px 60px rgba(15,23,42,.35);color:#e2e8f0}
+    .cartnova-head{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(148,163,184,.28);margin-bottom:18px}
+    .cartnova-title h1{margin:0;font-size:2rem;font-weight:900;letter-spacing:-.02em;color:#fff}
+    .cartnova-title p{margin:8px 0 0;font-size:.92rem;color:#cbd5e1;font-weight:700}
+    .cartnova-pills{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+    .cartnova-pill{background:#111827;border:1px solid #334155;border-radius:999px;padding:8px 12px;font-size:.75rem;font-weight:800;color:#cbd5e1}
+    .cartnova-list{display:grid;gap:12px}
+    .cartnova-item{background:linear-gradient(180deg,#0b1220,#0a101d);border:1px solid #24324a;border-radius:22px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px}
+    .cartnova-name{margin:0 0 6px;font-size:1.08rem;font-weight:900;color:#f8fafc}
+    .cartnova-base{font-size:.82rem;font-weight:800;color:#93c5fd}
+    .cartnova-options{margin-top:12px;background:#10192d;border:1px solid #2d3d5b;border-radius:12px;padding:10px;display:grid;gap:6px}
+    .cartnova-option{font-size:.8rem;color:#dbeafe;font-weight:700}
+    .cartnova-controls{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .cartnova-controls input{width:88px;border-radius:11px;border:1px solid #334155;background:#0b1324;color:#f8fafc;padding:8px 10px;text-align:center;font-weight:900}
+    .cartnova-btn{border:none;border-radius:11px;padding:9px 12px;font-size:.78rem;font-weight:900}
+    .cartnova-update{background:#dbeafe;color:#102040}
+    .cartnova-delete{background:#fee2e2;color:#7f1d1d}
+    .cartnova-prices{display:grid;gap:8px;align-content:start;justify-items:end;text-align:end}
+    .cartnova-price{font-size:.82rem;font-weight:800;color:#bfdbfe}
+    .cartnova-total{font-size:.95rem;font-weight:900;color:#f8fafc;background:#111b2f;border:1px solid #324566;border-radius:10px;padding:8px 12px}
+
+    .cartnova-side{position:sticky;top:90px;background:#f8fafc;border:1px solid #dbe5f1;border-radius:24px;padding:18px;box-shadow:0 12px 30px rgba(15,23,42,.12)}
+    .cartnova-side h3{margin:0;font-size:1.05rem;font-weight:900;color:#0f172a}
+    .cartnova-rows{margin-top:14px;display:grid;gap:10px}
+    .cartnova-row{display:flex;justify-content:space-between;gap:10px;font-size:.86rem;font-weight:800;color:#334155;padding-bottom:8px;border-bottom:1px dashed #cbd5e1}
+    .cartnova-row strong{font-size:1rem;color:#0f172a}
+    .cartnova-action{margin-top:12px;display:block;text-decoration:none;text-align:center;padding:12px;border-radius:13px;font-weight:900;background:#2563eb;color:#fff}
+    .cartnova-secondary{margin-top:8px;display:block;text-decoration:none;text-align:center;padding:11px;border-radius:13px;font-weight:900;background:#eef2ff;color:#312e81;border:1px solid #c7d2fe}
+
+    .cartnova-empty{background:#fff;border:1px solid #e2e8f0;border-radius:26px;padding:40px 20px;text-align:center;box-shadow:0 14px 32px rgba(15,23,42,.08)}
+    .cartnova-empty h2{margin:10px 0 8px;font-size:1.2rem;font-weight:900;color:#0f172a}
+    .cartnova-empty p{margin:0 0 14px;color:#64748b;font-weight:700}
+
+    @media (max-width:991.98px){.cartnova-shell{grid-template-columns:1fr}.cartnova-side{position:static}}
+    @media (max-width:767.98px){.cartnova-wrap{padding-bottom:95px}.cartnova-main{padding:16px;border-radius:22px}.cartnova-title h1{font-size:1.3rem}.cartnova-item{grid-template-columns:1fr;padding:12px}.cartnova-prices{justify-items:start;text-align:start}}
 </style>
 
-<div class="cartx-page">
-    <section class="cartx-hero">
-        <span class="cartx-kicker"><span class="dot"></span>{{ __('cart.shopping_cart') }}</span>
-        <h1 class="cartx-title">{{ __('cart.review_order_before_continue') }}</h1>
-        <p class="cartx-sub">{{ $restaurantName }} • {{ $cartCount }} {{ $cartCount == 1 ? __('cart.product_singular') : __('cart.product_plural') }} {{ __('cart.inside_cart') }}</p>
-        <div class="cartx-actions">
-            <a href="{{ url()->previous() }}" class="cartx-btn cartx-btn-soft">{{ __('cart.continue_browsing') }}</a>
-            <a href="{{ route('checkout.method') }}" class="cartx-btn cartx-btn-main">{{ __('cart.complete_order') }}</a>
-        </div>
-    </section>
-
+<div class="cartnova-wrap">
     @if(empty($cart))
-        <div class="cartx-card cartx-empty">
-            <i class="bi bi-bag-x"></i>
+        <div class="cartnova-empty">
+            <div style="font-size:2.4rem">🛍️</div>
             <h2>{{ __('cart.cart_is_empty_now') }}</h2>
             <p>{{ __('cart.empty_cart_message') }}</p>
-            <a href="{{ url('/') }}" class="cartx-checkout" style="max-width:260px;margin:0 auto">{{ __('cart.browse_menu') }}</a>
+            <a href="{{ url('/') }}" class="cartnova-action" style="max-width:260px;margin:0 auto">{{ __('cart.browse_menu') }}</a>
         </div>
     @else
-        <div class="cartx-grid">
-            <div class="cartx-card">
-                <div class="cartx-list">
+        <div class="cartnova-shell">
+            <section class="cartnova-main">
+                <header class="cartnova-head">
+                    <div class="cartnova-title">
+                        <h1>{{ __('cart.shopping_cart') }}</h1>
+                        <p>{{ $restaurantName }} · {{ $cartCount }} {{ $cartCount == 1 ? __('cart.product_singular') : __('cart.product_plural') }}</p>
+                    </div>
+                    <div class="cartnova-pills">
+                        <span class="cartnova-pill">{{ __('cart.review_order_before_continue') }}</span>
+                        <span class="cartnova-pill">{{ __('cart.total') }}: {{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</span>
+                    </div>
+                </header>
+
+                <div class="cartnova-list">
                     @foreach($cart as $item)
-                        <article class="cartx-item">
+                        <article class="cartnova-item">
                             <div>
-                                <h3 class="cartx-name">{{ $item['name'] }}</h3>
+                                <h3 class="cartnova-name">{{ $item['name'] }}</h3>
+                                <div class="cartnova-base">{{ number_format($item['price'], 2) }} {{ __('cart.currency_egp') }} / {{ __('cart.product_singular') }}</div>
+
                                 @if(!empty($item['selected_options']))
-                                    <div class="cartx-options">
+                                    <div class="cartnova-options">
                                         @foreach($item['selected_options'] as $option)
-                                            <div class="cartx-option">
-                                                {{ $option['group_name'] }}: {{ $option['item_name'] }}
+                                            <div class="cartnova-option">
+                                                • {{ $option['group_name'] }}: {{ $option['item_name'] }}
                                                 @if(($option['price'] ?? 0) > 0)
                                                     (+{{ number_format($option['price'], 2) }} {{ __('cart.currency_egp') }})
                                                 @endif
@@ -92,36 +92,39 @@
                                     </div>
                                 @endif
 
-                                <div class="cartx-meta">
-                                    <form action="{{ route('cart.update', $item['cart_key']) }}" method="POST" class="cartx-qty">
+                                <div class="cartnova-controls">
+                                    <form action="{{ route('cart.update', $item['cart_key']) }}" method="POST" style="display:flex;gap:8px;flex-wrap:wrap">
                                         @csrf
                                         <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1">
-                                        <button type="submit" class="cartx-update">{{ __('cart.update_quantity') }}</button>
+                                        <button type="submit" class="cartnova-btn cartnova-update">{{ __('cart.update_quantity') }}</button>
                                     </form>
 
                                     <form action="{{ route('cart.remove', $item['cart_key']) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="cartx-delete">{{ __('cart.delete') }}</button>
+                                        <button type="submit" class="cartnova-btn cartnova-delete">{{ __('cart.delete') }}</button>
                                     </form>
                                 </div>
                             </div>
 
-                            <div>
-                                <div class="cartx-price">{{ number_format($item['price'], 2) }} {{ __('cart.currency_egp') }}</div>
-                                <div class="cartx-total mt-3">{{ __('cart.total') }}: <span>{{ number_format($item['total'], 2) }} {{ __('cart.currency_egp') }}</span></div>
+                            <div class="cartnova-prices">
+                                <div class="cartnova-price">{{ __('cart.total') }}</div>
+                                <div class="cartnova-total">{{ number_format($item['total'], 2) }} {{ __('cart.currency_egp') }}</div>
                             </div>
                         </article>
                     @endforeach
                 </div>
-            </div>
+            </section>
 
-            <aside class="cartx-card cartx-summary">
+            <aside class="cartnova-side">
                 <h3>{{ __('cart.current_order_total') }}</h3>
-                <div class="cartx-row"><span>{{ __('cart.product_plural') }}</span><span>{{ $cartCount }}</span></div>
-                <div class="cartx-row"><span>{{ __('cart.total') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</span></div>
-                <div class="cartx-row"><strong>{{ __('cart.complete_order') }}</strong><strong>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</strong></div>
-                <a href="{{ route('checkout.method') }}" class="cartx-checkout">{{ __('cart.complete_order') }}</a>
+                <div class="cartnova-rows">
+                    <div class="cartnova-row"><span>{{ __('cart.product_plural') }}</span><span>{{ $cartCount }}</span></div>
+                    <div class="cartnova-row"><span>{{ __('cart.total') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</span></div>
+                    <div class="cartnova-row"><strong>{{ __('cart.complete_order') }}</strong><strong>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</strong></div>
+                </div>
+                <a href="{{ route('checkout.method') }}" class="cartnova-action">{{ __('cart.complete_order') }}</a>
+                <a href="{{ url()->previous() }}" class="cartnova-secondary">{{ __('cart.continue_browsing') }}</a>
             </aside>
         </div>
     @endif
