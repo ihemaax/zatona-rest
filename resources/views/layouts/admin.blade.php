@@ -1659,6 +1659,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentStaffRole = @json(auth()->user()?->role);
     const isReadyOrdersPage = @json(request()->routeIs('admin.orders.ready'));
     const readyOrdersPollUrl = @json(route('admin.orders.ready.poll', absolute: false));
+    const isDemoDashboardMode = @json($isDemoDashboard);
 
     let toastTimer = null;
     let audioCtx = null;
@@ -1991,6 +1992,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     enhanceMobileTables();
+
+    if (isDemoDashboardMode) {
+        document.addEventListener('click', function (event) {
+            const anchor = event.target.closest('a[href]');
+            if (!anchor) return;
+
+            const href = anchor.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+            const url = new URL(href, window.location.origin);
+            if (!url.pathname.startsWith('/admin/')) return;
+
+            event.preventDefault();
+            if (url.pathname === '/admin/dashboard') {
+                window.location.href = '{{ route('admin.dashboard.demo') }}';
+                return;
+            }
+
+            const demoPath = `/demo${url.pathname}${url.search}`;
+            window.location.href = demoPath;
+        });
+    }
 
     if (window.innerWidth <= 767) {
         const contentRoot = document.querySelector('.admin-content');
