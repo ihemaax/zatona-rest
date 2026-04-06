@@ -128,11 +128,11 @@ class KitchenController extends Controller
 
         if ($order->order_type === 'delivery') {
             $order->update([
-                'status' => 'preparing',
+                'status' => 'ready_for_pickup',
                 'status_note' => 'تم إنهاء التحضير بالمطبخ وجاهز لإسناد الدليفري',
             ]);
 
-            return back()->with('success', 'الطلب جاهز للتوصيل. قم بإسناده للدليفري من شاشة الطلب.');
+            return back()->with('success', 'الطلب جاهز وتم تحويله لشاشة الطلبات الجاهزة لإسناد الدليفري.');
         }
 
         $order->update([

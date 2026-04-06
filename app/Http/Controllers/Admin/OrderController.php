@@ -20,10 +20,10 @@ class OrderController extends Controller
         $allowed = [
             'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['preparing', 'cancelled'],
-            'preparing' => $orderType === 'delivery'
+            'preparing' => ['ready_for_pickup', 'cancelled'],
+            'ready_for_pickup' => $orderType === 'delivery'
                 ? ['out_for_delivery', 'cancelled']
-                : ['ready_for_pickup', 'cancelled'],
-            'ready_for_pickup' => ['delivered', 'cancelled'],
+                : ['delivered', 'cancelled'],
             'out_for_delivery' => ['delivered', 'cancelled'],
             'delivered' => [],
             'cancelled' => [],
@@ -231,7 +231,7 @@ class OrderController extends Controller
         if (!$this->isAllowedTransition($order->status, $validated['status'], $nextOrderType)) {
             return redirect()
                 ->back()
-                ->with('error', 'تسلسل الحالة غير صحيح. الدورة المعتمدة: pending → confirmed → preparing → ready_for_pickup/delivery.');
+                ->with('error', 'تسلسل الحالة غير صحيح. الدورة المعتمدة: pending → confirmed → preparing → ready_for_pickup → out_for_delivery/delivered.');
         }
 
         $minutes = $validated['estimated_delivery_minutes'] ?? null;
@@ -278,8 +278,8 @@ class OrderController extends Controller
 
         $wasAssignedToDifferentUser = (int) ($order->delivery_user_id ?? 0) !== (int) $deliveryUser->id;
 
-        if ($order->status !== 'preparing') {
-            return redirect()->back()->with('error', 'لا يمكن إسناد الطلب للدليفري إلا بعد انتهاء المطبخ وتجهيزه (Preparing).');
+        if ($order->status !== 'ready_for_pickup' || $order->order_type !== 'delivery') {
+            return redirect()->back()->with('error', 'إسناد الدليفري متاح فقط للطلبات الجاهزة من المطبخ ونوعها توصيل.');
         }
 
         $order->update([

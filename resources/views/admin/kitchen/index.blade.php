@@ -41,7 +41,7 @@
             <div>
                 <h2 class="kitchen-title">طلبات المطبخ المؤكدة</h2>
                 <p class="kitchen-sub">الطلب يظهر هنا تلقائيًا بمجرد تحوله إلى حالة <strong>confirmed</strong> (تأكيد).</p>
-                <p class="kitchen-sub mb-0">التسلسل: <strong>pending → confirmed → preparing → جاهز للتسليم/التوصيل</strong>.</p>
+                <p class="kitchen-sub mb-0">التسلسل: <strong>pending → confirmed → preparing → ready_for_pickup</strong>.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <span class="live-chip">مؤكد: <strong id="confirmedCount">{{ $confirmedCount }}</strong></span>
@@ -96,16 +96,19 @@
                                 </td>
                                 <td>
                                     <div class="actions-col">
-                                        <form method="POST" action="{{ route('admin.kitchen.start', $order->id) }}">
-                                            @csrf
-                                            <button class="btn-kitchen btn-start" type="submit">بدء التحضير</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.kitchen.ready', $order->id) }}">
-                                            @csrf
-                                            <button class="btn-kitchen btn-ready" type="submit">
-                                                {{ $order->order_type === 'delivery' ? 'جاهز للتوصيل' : 'جاهز للتسليم' }}
-                                            </button>
-                                        </form>
+                                        @if($order->status === 'confirmed')
+                                            <form method="POST" action="{{ route('admin.kitchen.start', $order->id) }}" data-once-submit>
+                                                @csrf
+                                                <button class="btn-kitchen btn-start" type="submit">بدء التحضير</button>
+                                            </form>
+                                        @endif
+
+                                        @if($order->status === 'preparing')
+                                            <form method="POST" action="{{ route('admin.kitchen.ready', $order->id) }}" data-once-submit>
+                                                @csrf
+                                                <button class="btn-kitchen btn-ready" type="submit">جاهز للاستلام</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -149,6 +152,20 @@
             return `<ul class="items-list">${items.map((item) => `<li>${item.name} × ${item.quantity}</li>`).join('')}</ul>`;
         };
 
+        const bindOnceSubmit = () => {
+            body.querySelectorAll('form[data-once-submit]').forEach((form) => {
+                if (form.dataset.bound === '1') return;
+                form.dataset.bound = '1';
+                form.addEventListener('submit', () => {
+                    const btn = form.querySelector('button[type=\"submit\"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = '...جاري التنفيذ';
+                    }
+                }, { once: true });
+            });
+        };
+
         const render = (orders = []) => {
             const confirmedCount = orders.filter((order) => order.status === 'confirmed').length;
             const preparingCount = orders.filter((order) => order.status === 'preparing').length;
@@ -163,7 +180,20 @@
             }
 
             body.innerHTML = orders.map((order) => {
-                const readyLabel = order.order_type === 'delivery' ? 'جاهز للتوصيل' : 'جاهز للتسليم';
+                const startForm = order.status === 'confirmed'
+                    ? `<form method=\"POST\" action=\"${startBase}/${order.id}/start\" data-once-submit>\n\
+                            <input type=\"hidden\" name=\"_token\" value=\"${csrf}\">\n\
+                            <button class=\"btn-kitchen btn-start\" type=\"submit\">بدء التحضير</button>\n\
+                       </form>`
+                    : '';
+
+                const readyForm = order.status === 'preparing'
+                    ? `<form method=\"POST\" action=\"${startBase}/${order.id}/ready\" data-once-submit>\n\
+                            <input type=\"hidden\" name=\"_token\" value=\"${csrf}\">\n\
+                            <button class=\"btn-kitchen btn-ready\" type=\"submit\">جاهز للاستلام</button>\n\
+                       </form>`
+                    : '';
+
                 return `
                     <tr>
                         <td class="order-no">${order.order_number || ('#' + order.id)}</td>
@@ -177,19 +207,15 @@
                         <td>${itemList(order.items)}</td>
                         <td>
                             <div class="actions-col">
-                                <form method="POST" action="${startBase}/${order.id}/start">
-                                    <input type="hidden" name="_token" value="${csrf}">
-                                    <button class="btn-kitchen btn-start" type="submit">بدء التحضير</button>
-                                </form>
-                                <form method="POST" action="${startBase}/${order.id}/ready">
-                                    <input type="hidden" name="_token" value="${csrf}">
-                                    <button class="btn-kitchen btn-ready" type="submit">${readyLabel}</button>
-                                </form>
+                                ${startForm}
+                                ${readyForm}
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            bindOnceSubmit();
         };
 
         const poll = async () => {
@@ -207,6 +233,7 @@
             }
         };
 
+        bindOnceSubmit();
         setInterval(poll, 5000);
     })();
 </script>

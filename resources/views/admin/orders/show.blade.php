@@ -710,10 +710,10 @@
                     $allowedTransitions = [
                         'pending' => ['confirmed', 'cancelled'],
                         'confirmed' => ['preparing', 'cancelled'],
-                        'preparing' => $currentOrderType === 'delivery'
+                        'preparing' => ['ready_for_pickup', 'cancelled'],
+                        'ready_for_pickup' => $currentOrderType === 'delivery'
                             ? ['out_for_delivery', 'cancelled']
-                            : ['ready_for_pickup', 'cancelled'],
-                        'ready_for_pickup' => ['delivered', 'cancelled'],
+                            : ['delivered', 'cancelled'],
                         'out_for_delivery' => ['delivered', 'cancelled'],
                         'delivered' => [],
                         'cancelled' => [],
@@ -754,7 +754,7 @@
                             @endif
                         </select>
                         @unless($isDeliveryUser)
-                            <small class="text-muted d-block mt-1">الدورة المعتمدة: pending ← confirmed ← preparing ← (ready_for_pickup أو out_for_delivery) ← delivered.</small>
+                            <small class="text-muted d-block mt-1">الدورة المعتمدة: pending ← confirmed ← preparing ← ready_for_pickup ← (out_for_delivery أو delivered).</small>
                         @endunless
                     </div>
 

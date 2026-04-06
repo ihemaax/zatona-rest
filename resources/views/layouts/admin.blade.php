@@ -1139,7 +1139,8 @@
         request()->routeIs('admin.orders.show') ||
         request()->routeIs('admin.orders.delivery') ||
         request()->routeIs('admin.orders.pickup') ||
-        request()->routeIs('admin.kitchen.*');
+        request()->routeIs('admin.kitchen.*') ||
+        request()->routeIs('admin.orders.ready');
 
     $operationsGroupOpen =
         request()->routeIs('admin.branches.*') ||
@@ -1239,6 +1240,11 @@
                         <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>شاشة المطبخ</span>
+                        </a>
+
+                        <a href="{{ route('admin.orders.ready') }}" class="sb-sublink {{ request()->routeIs('admin.orders.ready') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>الطلبات الجاهزة</span>
                         </a>
 
                         @if($adminUser?->isSuperAdmin() || $adminUser?->hasPermission('manage_delivery'))

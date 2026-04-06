@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
 use App\Http\Controllers\Admin\KitchenController;
+use App\Http\Controllers\Admin\ReadyOrderController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -195,6 +196,7 @@ Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('a
     Route::get('/kitchen/poll', [KitchenController::class, 'poll'])->name('admin.kitchen.poll');
     Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])->name('admin.kitchen.start');
     Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])->name('admin.kitchen.ready');
+    Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
 
     Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])
         ->name('admin.delivery.dashboard');
