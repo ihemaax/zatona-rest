@@ -1542,6 +1542,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const AI_STORAGE_KEY = 'admin_ai_widget_state_v1';
     const AI_NOTIFY_KEY = 'admin_ai_unread_v1';
+    const currentStaffRole = @json(auth()->user()?->role);
+    const isReadyOrdersPage = @json(request()->routeIs('admin.orders.ready'));
+    const readyOrdersPollUrl = @json(route('admin.orders.ready.poll', absolute: false));
 
     let toastTimer = null;
     let audioCtx = null;
@@ -1700,6 +1703,20 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
     }
 
+    function showCashierReadyToast(text) {
+        const popup = document.createElement('div');
+        popup.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#166534;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.2);font-weight:800;font-size:.85rem;';
+        popup.textContent = text;
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.transition = 'opacity .35s ease';
+        }, 2600);
+
+        setTimeout(() => popup.remove(), 3100);
+    }
+
     menuBtn?.addEventListener('click', () => {
         sidebar?.classList.contains('show') ? closeSidebar() : openSidebar();
     });
@@ -1793,6 +1810,56 @@ document.addEventListener('DOMContentLoaded', function () {
             aiOverlay?.classList.add('show');
             aiPopup?.setAttribute('aria-hidden', 'false');
         }
+    }
+
+    if (currentStaffRole === 'cashier' && !isReadyOrdersPage) {
+        let seenReadyOrderIds = new Set();
+        let readyPollInitialized = false;
+
+        const notifyCashierReadyOrders = async () => {
+            try {
+                const response = await fetch(readyOrdersPollUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const allReadyOrders = [
+                    ...(data.delivery_orders || []),
+                    ...(data.pickup_orders || []),
+                ];
+
+                const currentIds = new Set(
+                    allReadyOrders.map((order) => Number(order.id)).filter(Boolean)
+                );
+
+                if (readyPollInitialized) {
+                    const newReadyCount = allReadyOrders.filter((order) => !seenReadyOrderIds.has(Number(order.id))).length;
+
+                    if (newReadyCount > 0) {
+                        showCashierReadyToast(`تم تجهيز ${newReadyCount} طلب جديد وجاهز للاستلام.`);
+                        beepAiNotification();
+                    }
+                }
+
+                seenReadyOrderIds = currentIds;
+                readyPollInitialized = true;
+            } catch (_) {
+                // تجاهل أخطاء الشبكة المؤقتة
+            }
+        };
+
+        notifyCashierReadyOrders();
+        setInterval(notifyCashierReadyOrders, 3000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                notifyCashierReadyOrders();
+            }
+        });
     }
 });
 </script>
