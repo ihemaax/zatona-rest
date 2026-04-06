@@ -19,7 +19,7 @@
         return $product->category->name ?? __('home.menu');
     });
 
-    $coverImage = $setting->cover_image ?? null;
+    $coverImage = $setting->banner ?? $setting->cover_image ?? null;
     $logoImage = $setting->logo ?? null;
 @endphp
 
