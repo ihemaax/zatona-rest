@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
@@ -197,7 +198,16 @@ class CheckoutController extends Controller
                 ->with('success', 'تم تأكيد الطلب بنجاح');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'حدث خطأ أثناء إنشاء الطلب');
+
+            Log::error('checkout.store.failed', [
+                'message' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'order_type' => $request->order_type,
+                'ip' => $request->ip(),
+                'trace_id' => (string) Str::uuid(),
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إنشاء الطلب، حاول مرة أخرى خلال دقائق');
         }
     }
 
