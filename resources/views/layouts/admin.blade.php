@@ -1208,10 +1208,12 @@
                             <span>طلباتي (الدليفري)</span>
                         </a>
                     @elseif($isKitchenUser)
-                        <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>شاشة المطبخ</span>
-                        </a>
+                        @if($adminUser?->isSuperAdmin() || $adminUser?->isOwner() || $adminUser?->role === \App\Models\User::ROLE_MANAGER || $adminUser?->role === \App\Models\User::ROLE_KITCHEN)
+                            <a href="{{ route('admin.kitchen.index') }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>شاشة المطبخ</span>
+                            </a>
+                        @endif
                     @else
                         <a href="{{ route('admin.dashboard') }}" class="sb-sublink {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>

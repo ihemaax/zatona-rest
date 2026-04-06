@@ -3,6 +3,8 @@
 @php
     $pageTitle = 'شاشة المطبخ';
     $pageSubtitle = 'استقبال الطلبات المؤكدة ومتابعة التحضير لايف';
+    $confirmedCount = $orders->where('status', 'confirmed')->count();
+    $preparingCount = $orders->where('status', 'preparing')->count();
 @endphp
 
 @section('content')
@@ -39,8 +41,13 @@
             <div>
                 <h2 class="kitchen-title">طلبات المطبخ المؤكدة</h2>
                 <p class="kitchen-sub">الطلب يظهر هنا تلقائيًا بمجرد تحوله إلى حالة <strong>confirmed</strong> (تأكيد).</p>
+                <p class="kitchen-sub mb-0">التسلسل: <strong>pending → confirmed → preparing → جاهز للتسليم/التوصيل</strong>.</p>
             </div>
-            <span class="live-chip">Live تحديث كل 5 ثواني</span>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="live-chip">مؤكد: <strong id="confirmedCount">{{ $confirmedCount }}</strong></span>
+                <span class="live-chip">قيد التحضير: <strong id="preparingCount">{{ $preparingCount }}</strong></span>
+                <span class="live-chip">Live تحديث كل 5 ثواني</span>
+            </div>
         </div>
 
         <div class="kitchen-body">
@@ -143,6 +150,13 @@
         };
 
         const render = (orders = []) => {
+            const confirmedCount = orders.filter((order) => order.status === 'confirmed').length;
+            const preparingCount = orders.filter((order) => order.status === 'preparing').length;
+            const confirmedEl = document.getElementById('confirmedCount');
+            const preparingEl = document.getElementById('preparingCount');
+            if (confirmedEl) confirmedEl.textContent = String(confirmedCount);
+            if (preparingEl) preparingEl.textContent = String(preparingCount);
+
             if (!orders.length) {
                 body.innerHTML = '<tr><td colspan="7" class="empty-state">لا توجد طلبات مؤكدة في المطبخ حالياً.</td></tr>';
                 return;

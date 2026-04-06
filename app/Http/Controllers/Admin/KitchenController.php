@@ -15,7 +15,8 @@ class KitchenController extends Controller
     {
         return $user->role === User::ROLE_KITCHEN
             || $user->isSuperAdmin()
-            || $user->hasPermission('update_order_status');
+            || $user->isOwner()
+            || $user->role === User::ROLE_MANAGER;
     }
 
     protected function applyBranchScope($query)

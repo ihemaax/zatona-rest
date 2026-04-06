@@ -692,7 +692,34 @@
             </div>
 
             <div class="order-panel-body">
-                @php($isDeliveryUser = auth()->user()?->role === \App\Models\User::ROLE_DELIVERY)
+                @php
+                    $isDeliveryUser = auth()->user()?->role === \App\Models\User::ROLE_DELIVERY;
+                    $statusLabels = [
+                        'pending' => 'قيد المراجعة',
+                        'confirmed' => 'تم التأكيد',
+                        'preparing' => 'قيد التحضير',
+                        'out_for_delivery' => 'خرج للتوصيل',
+                        'delivered' => 'تم التسليم',
+                        'cancelled' => 'تم الإلغاء',
+                    ];
+
+                    $currentOrderType = old('order_type', $order->order_type);
+                    $allowedTransitions = [
+                        'pending' => ['confirmed', 'cancelled'],
+                        'confirmed' => ['preparing', 'cancelled'],
+                        'preparing' => $currentOrderType === 'delivery'
+                            ? ['out_for_delivery', 'cancelled']
+                            : ['delivered', 'cancelled'],
+                        'out_for_delivery' => ['delivered', 'cancelled'],
+                        'delivered' => [],
+                        'cancelled' => [],
+                    ];
+
+                    $nextStatuses = collect(array_unique(array_merge(
+                        [$order->status],
+                        $allowedTransitions[$order->status] ?? []
+                    )));
+                @endphp
 
                 <form action="{{ route('admin.orders.status', $order->id) }}" method="POST" class="side-form-grid">
                     @csrf
@@ -715,18 +742,16 @@
                                 <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التسليم</option>
                                 <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>تم الإلغاء</option>
                             @else
-                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>قيد المراجعة</option>
-                                <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>تم التأكيد</option>
-                                <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
-
-                                @if($order->order_type === 'delivery')
-                                    <option value="out_for_delivery" {{ $order->status === 'out_for_delivery' ? 'selected' : '' }}>خرج للتوصيل</option>
-                                @endif
-
-                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التسليم</option>
-                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>تم الإلغاء</option>
+                                @foreach($nextStatuses as $status)
+                                    <option value="{{ $status }}" {{ $order->status === $status ? 'selected' : '' }}>
+                                        {{ $statusLabels[$status] ?? $status }}
+                                    </option>
+                                @endforeach
                             @endif
                         </select>
+                        @unless($isDeliveryUser)
+                            <small class="text-muted d-block mt-1">الدورة المعتمدة: pending ← confirmed ← preparing ← (out_for_delivery أو delivered).</small>
+                        @endunless
                     </div>
 
                     <div>
