@@ -2,6 +2,11 @@
 
 @section('content')
 @php
+    $title = __('site.brand');
+    $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
+@endphp
+
+@php
     $restaurantName = $setting->restaurant_name ?? __('site.brand');
     $cartCount = count($cart ?? []);
     $subtotal = collect($cart ?? [])->sum(function ($item) {
@@ -551,3 +556,14 @@
     @endif
 </div>
 @endsection
+@push('scripts')
+<script>
+window.dataLayer = window.dataLayer || [];
+window.dataLayer.push({
+    event: 'view_cart',
+    cart_count: {{ (int) $cartCount }},
+    value: {{ (float) $subtotal }},
+    currency: @json(__('cart.currency_egp')),
+});
+</script>
+@endpush
