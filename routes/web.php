@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\ReadyOrderController;
+use App\Http\Controllers\Demo\AdminDemoController;
 
 use App\Http\Controllers\Admin\ReportController;
 
@@ -102,6 +103,11 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard', function () {
     return redirect()->route('home');
 })->middleware(['auth'])->name('dashboard');
+
+Route::get('/demo/admin-dashboard', [DashboardController::class, 'demo'])->name('admin.dashboard.demo');
+Route::get('/demo/admin/{path?}', [AdminDemoController::class, 'show'])
+    ->where('path', '.*')
+    ->name('admin.demo.module');
 
 /*
 |--------------------------------------------------------------------------
