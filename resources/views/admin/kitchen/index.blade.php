@@ -46,7 +46,7 @@
             <div class="d-flex flex-wrap gap-2">
                 <span class="live-chip">مؤكد: <strong id="confirmedCount">{{ $confirmedCount }}</strong></span>
                 <span class="live-chip">قيد التحضير: <strong id="preparingCount">{{ $preparingCount }}</strong></span>
-                <span class="live-chip">Live تحديث كل 5 ثواني</span>
+                <span class="live-chip">Live تحديث كل 3 ثواني</span>
             </div>
         </div>
 
@@ -66,7 +66,7 @@
                     </thead>
                     <tbody id="kitchenOrdersBody">
                         @forelse($orders as $order)
-                            <tr>
+                            <tr data-order-id="{{ $order->id }}">
                                 <td class="order-no">{{ $order->order_number }}</td>
                                 <td>
                                     <div>{{ $order->customer_name }}</div>
@@ -195,7 +195,7 @@
                     : '';
 
                 return `
-                    <tr>
+                    <tr data-order-id="${order.id}">
                         <td class="order-no">${order.order_number || ('#' + order.id)}</td>
                         <td>
                             <div>${order.customer_name || '-'}</div>
@@ -218,6 +218,35 @@
             bindOnceSubmit();
         };
 
+        let seenKitchenOrders = new Set(
+            Array.from(body.querySelectorAll('tr')).map((row) => Number(row.dataset.orderId || 0)).filter(Boolean)
+        );
+
+        const showStageNotification = (text) => {
+            const popup = document.createElement('div');
+            popup.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#166534;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.2);font-weight:800;font-size:.85rem;';
+            popup.textContent = text;
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.style.opacity = '0';
+                popup.style.transition = 'opacity .35s ease';
+            }, 2500);
+
+            setTimeout(() => popup.remove(), 3000);
+        };
+
+        const notifyNewOrders = (orders = []) => {
+            const current = new Set(orders.map((order) => Number(order.id)).filter(Boolean));
+            const newOrders = orders.filter((order) => !seenKitchenOrders.has(Number(order.id)));
+
+            if (newOrders.length) {
+                showStageNotification(`وصل ${newOrders.length} طلب جديد للمطبخ.`);
+            }
+
+            seenKitchenOrders = current;
+        };
+
         const poll = async () => {
             try {
                 const response = await fetch(@json(route('admin.kitchen.poll')), {
@@ -227,14 +256,22 @@
                 });
                 if (!response.ok) return;
                 const data = await response.json();
-                render(data.orders || []);
+                const orders = data.orders || [];
+                notifyNewOrders(orders);
+                render(orders);
             } catch (_) {
                 // تجاهل أخطاء الشبكة المؤقتة
             }
         };
 
         bindOnceSubmit();
-        setInterval(poll, 5000);
+        poll();
+        setInterval(poll, 3000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                poll();
+            }
+        });
     })();
 </script>
 @endsection
