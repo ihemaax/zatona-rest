@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $setting = Setting::first();
+        $setting = Cache::remember('front.home.setting', now()->addMinutes(5), function () {
+            return Setting::first();
+        });
 
         $products = Product::with([
             'category',
