@@ -909,6 +909,7 @@
             flex:1;
             min-height:0;
             background:#fffdfa;
+            position:relative;
         }
 
         .admin-ai-popup.minimized .admin-ai-popup-body{
@@ -921,6 +922,45 @@
             border:0;
             display:block;
             background:#fff;
+        }
+
+        .admin-ai-fallback{
+            position:absolute;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            padding:18px;
+            background:#fffdfa;
+        }
+
+        .admin-ai-fallback.show{
+            display:flex;
+        }
+
+        .admin-ai-fallback-card{
+            width:min(360px, 100%);
+            border:1px solid #e6ddd1;
+            border-radius:16px;
+            padding:16px;
+            background:#fff;
+            box-shadow:0 10px 24px rgba(35,31,27,.08);
+        }
+
+        .admin-ai-fallback-title{
+            margin:0 0 6px;
+            font-size:.95rem;
+            font-weight:900;
+            color:#2a241f;
+        }
+
+        .admin-ai-fallback-text{
+            margin:0 0 12px;
+            font-size:.8rem;
+            font-weight:700;
+            color:#756d64;
+            line-height:1.8;
         }
 
         .admin-ai-toast{
@@ -1556,6 +1596,13 @@
                 loading="lazy"
                 referrerpolicy="same-origin"
             ></iframe>
+            <div class="admin-ai-fallback" id="adminAiFallback">
+                <div class="admin-ai-fallback-card">
+                    <p class="admin-ai-fallback-title">تعذر تحميل نافذة المساعد داخل الودجت</p>
+                    <p class="admin-ai-fallback-text">استخدم فتح الصفحة الكاملة للمساعد وسيعمل بشكل طبيعي.</p>
+                    <a href="{{ url('/admin/ai-assistant') }}" class="btn-admin-soft">فتح صفحة المساعد الكاملة</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1590,6 +1637,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const aiClose = document.getElementById('adminAiClose');
     const aiMinimize = document.getElementById('adminAiMinimize');
     const aiToast = document.getElementById('adminAiToast');
+    const aiFallback = document.getElementById('adminAiFallback');
 
     const AI_STORAGE_KEY = 'admin_ai_widget_state_v1';
     const AI_NOTIFY_KEY = 'admin_ai_unread_v1';
@@ -1599,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let toastTimer = null;
     let audioCtx = null;
+    let aiLoadGuardTimer = null;
 
     const isMobile = () => window.innerWidth < BP;
 
@@ -1646,7 +1695,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function lazyLoadAiFrame() {
         if (aiFrame && (!aiFrame.getAttribute('src') || aiFrame.getAttribute('src') === 'about:blank')) {
+            aiFallback?.classList.remove('show');
+            aiFrame.style.display = 'block';
             aiFrame.setAttribute('src', aiFrame.dataset.src || '/admin/ai-assistant?embed=1');
+
+            if (aiLoadGuardTimer) {
+                clearTimeout(aiLoadGuardTimer);
+            }
+
+            aiLoadGuardTimer = setTimeout(() => {
+                if (aiFallback?.classList.contains('show')) return;
+                showAiFallback();
+            }, 5000);
+        }
+    }
+
+    function showAiFallback() {
+        aiFrame.style.display = 'none';
+        aiFallback?.classList.add('show');
+    }
+
+    function inspectAiFrame() {
+        if (!aiFrame) return;
+
+        try {
+            const frameDoc = aiFrame.contentDocument;
+            const textLength = (frameDoc?.body?.innerText || '').trim().length;
+            const hasRenderableNodes = (frameDoc?.body?.children?.length || 0) > 0;
+
+            if (!frameDoc || (!hasRenderableNodes && textLength === 0)) {
+                showAiFallback();
+            } else {
+                aiFallback?.classList.remove('show');
+                aiFrame.style.display = 'block';
+            }
+        } catch (e) {
+            showAiFallback();
+        } finally {
+            if (aiLoadGuardTimer) {
+                clearTimeout(aiLoadGuardTimer);
+                aiLoadGuardTimer = null;
+            }
         }
     }
 
@@ -1831,6 +1920,7 @@ document.addEventListener('DOMContentLoaded', function () {
     aiOverlay?.addEventListener('click', closeAiPopup);
     aiMinimize?.addEventListener('click', minimizeAiPopup);
     aiToast?.addEventListener('click', openAiPopup);
+    aiFrame?.addEventListener('load', inspectAiFrame);
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
