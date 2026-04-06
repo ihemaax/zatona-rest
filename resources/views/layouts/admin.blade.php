@@ -7,7 +7,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap{{ app()->getLocale() === 'ar' ? '.rtl' : '' }}.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @php
         $manifestPath = public_path('build/manifest.json');
         $hasAdminLayoutEntry = false;
