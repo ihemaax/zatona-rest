@@ -21,7 +21,7 @@ class ReadyOrderController extends Controller
             return $query->where('branch_id', $user->branch_id);
         }
 
-        return $query->whereRaw('1 = 0');
+        return $query;
     }
 
     public function index()
