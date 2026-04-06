@@ -982,6 +982,52 @@
         </div>
     </section>
 
+    <section class="ops-grid">
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">ملخص الشيفت</h2>
+                    <p class="ops-card-subtitle">مؤشرات سريعة لإجمالي الطلبات والمبيعات ومتوسط قيمة الطلب</p>
+                </div>
+            </div>
+            <div class="ops-card-body">
+                <div class="ops-focus-grid">
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">طلبات الشيفت</div>
+                        <div class="ops-focus-value" id="shiftOrdersCount">{{ $shiftSummary['orders_count'] }}</div>
+                    </div>
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">إجمالي الشيفت</div>
+                        <div class="ops-focus-value" id="shiftSalesTotal">{{ number_format($shiftSummary['sales_total'], 2) }} ج.م</div>
+                    </div>
+                    <div class="ops-focus-box">
+                        <div class="ops-focus-label">متوسط الطلب</div>
+                        <div class="ops-focus-value" id="shiftAvgOrderValue">{{ number_format($shiftSummary['avg_order_value'], 2) }} ج.م</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ops-card">
+            <div class="ops-card-head">
+                <div>
+                    <h2 class="ops-card-title">Top 5 منتجات</h2>
+                    <p class="ops-card-subtitle">الأصناف الأعلى بيعًا حسب الفترة المختارة</p>
+                </div>
+            </div>
+            <div class="ops-card-body" id="topProductsBox">
+                @forelse($topProducts as $product)
+                    <div class="ops-branch">
+                        <div class="ops-branch-name">{{ $product->product_name }}</div>
+                        <span class="ops-branch-count">{{ (int) $product->total_quantity }} وحدة</span>
+                    </div>
+                @empty
+                    <div class="ops-empty">لا توجد بيانات مبيعات لهذه الفترة</div>
+                @endforelse
+            </div>
+        </div>
+    </section>
+
     <section class="ops-table-card">
         <div class="ops-table-head">
             <div>
@@ -1087,6 +1133,10 @@ document.addEventListener('DOMContentLoaded', function () {
         kpiAvgDelivery: $('kpiAvgDelivery'),
         kpiCancelRate:  $('kpiCancellationRate'),
         kpiCompletion:  $('kpiCompletionRate'),
+        shiftOrders:    $('shiftOrdersCount'),
+        shiftSales:     $('shiftSalesTotal'),
+        shiftAvgOrder:  $('shiftAvgOrderValue'),
+        topProducts:    $('topProductsBox'),
     };
 
     let lastCount = parseInt(els.newOrders?.textContent || '0', 10);
@@ -1253,6 +1303,21 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     };
 
+    const renderTopProducts = (items = []) => {
+        if (!els.topProducts) return;
+        if (!items.length) {
+            els.topProducts.innerHTML = '<div class="ops-empty">لا توجد بيانات مبيعات لهذه الفترة</div>';
+            return;
+        }
+
+        els.topProducts.innerHTML = items.map(item => `
+            <div class="ops-branch">
+                <div class="ops-branch-name">${esc(item.product_name || '')}</div>
+                <span class="ops-branch-count">${Number(item.total_quantity || 0)} وحدة</span>
+            </div>
+        `).join('');
+    };
+
     async function poll() {
         if (fetching) return;
         fetching = true;
@@ -1294,12 +1359,16 @@ document.addEventListener('DOMContentLoaded', function () {
             set(els.kpiAvgDelivery, Number(c.kpis?.avg_delivery_minutes ?? 0).toFixed(1));
             set(els.kpiCancelRate, Number(c.kpis?.cancellation_rate ?? 0).toFixed(2) + '%');
             set(els.kpiCompletion, Number(c.kpis?.completion_rate ?? 0).toFixed(2) + '%');
+            set(els.shiftOrders, c.shift_summary?.orders_count ?? 0);
+            set(els.shiftSales, money(c.shift_summary?.sales_total ?? 0));
+            set(els.shiftAvgOrder, money(c.shift_summary?.avg_order_value ?? 0));
 
             renderNotifs(data.notifications || []);
             renderLatest(data.latest_orders || []);
             renderDelivery(data.delivery_latest || []);
             renderPickup(data.pickup_latest || []);
             renderBranches(data.branches_stats || []);
+            renderTopProducts(data.top_products || []);
             renderStatusBreakdown(c.status_breakdown || {});
             renderWeeklyTrend(data.weekly_trend || []);
         } catch (e) {

@@ -23,6 +23,7 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\PopupCampaignController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
 
@@ -69,6 +70,7 @@ Route::prefix('cart')->group(function () {
 
 Route::get('/checkout/method', [CheckoutController::class, 'method'])->name('checkout.method');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.apply-coupon');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
 
@@ -122,6 +124,10 @@ Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name
     Route::resource('branches', BranchController::class)->names('admin.branches');
     Route::resource('categories', CategoryController::class)->names('admin.categories');
     Route::resource('products', ProductController::class)->names('admin.products');
+    Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
+    Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
+    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
 Route::middleware('permission:manage_staff')->group(function () {
     Route::get('/staff', [StaffController::class, 'index'])->name('admin.staff.index');
     Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
