@@ -1997,23 +1997,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (isDemoDashboardMode) {
         document.addEventListener('click', function (event) {
-            const anchor = event.target.closest('a[href]');
-            if (!anchor) return;
+            const link = event.target.closest('a[href]');
+            if (!link) return;
 
-            const href = anchor.getAttribute('href');
+            const href = link.getAttribute('href');
             if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
-            const url = new URL(href, window.location.origin);
-            if (!url.pathname.startsWith('/admin/')) return;
+            const targetUrl = new URL(href, window.location.origin);
+            if (!targetUrl.pathname.startsWith('/admin/')) return;
 
             event.preventDefault();
-            if (url.pathname === '/admin/dashboard') {
+
+            if (targetUrl.pathname === '/admin/dashboard') {
                 window.location.href = '{{ route('admin.dashboard.demo') }}';
                 return;
             }
 
-            const demoPath = `/demo${url.pathname}${url.search}`;
-            window.location.href = demoPath;
+            window.location.href = `/demo${targetUrl.pathname}${targetUrl.search}`;
         });
     }
 
