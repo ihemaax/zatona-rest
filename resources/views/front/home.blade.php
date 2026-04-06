@@ -2,6 +2,10 @@
 
 @section('content')
 @php
+    if (!($setting instanceof \App\Models\Setting)) {
+        $setting = null;
+    }
+
     $restaurantName = $setting->restaurant_name ?? __('site.brand');
     $restaurantPhone = $setting->restaurant_phone ?? null;
     $deliveryFee = $setting->delivery_fee ?? 0;

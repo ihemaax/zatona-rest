@@ -12,9 +12,12 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $setting = Cache::remember('front.home.setting', now()->addMinutes(5), function () {
-            return Setting::first();
-        });
+
+        // Hotfix: remove any stale cached serialized model entries from previous deployments.
+        Cache::forget('front.home.setting');
+        Cache::forget('front.home.products');
+
+        $setting = Setting::first();
 
         $products = Product::with([
             'category',
