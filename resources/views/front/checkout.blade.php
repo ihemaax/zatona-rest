@@ -158,7 +158,11 @@
                     <label class="form-label">{{ __('checkout.coupon_code') }}</label>
                     <div class="input-group">
                         <input type="text" name="coupon_code" id="couponCodeInput" class="form-control" value="{{ $couponCode }}" placeholder="{{ __('checkout.coupon_code_placeholder') }}">
-                        <button type="submit" formaction="{{ route('checkout.apply-coupon') }}" class="btn btn-outline-secondary">{{ __('checkout.apply_coupon') }}</button>
+                        @if(Route::has('checkout.apply-coupon'))
+                            <button type="submit" formaction="{{ route('checkout.apply-coupon') }}" class="btn btn-outline-secondary">{{ __('checkout.apply_coupon') }}</button>
+                        @else
+                            <button type="button" class="btn btn-outline-secondary" disabled title="Coupon endpoint unavailable">{{ __('checkout.apply_coupon') }}</button>
+                        @endif
                     </div>
                     <div class="small text-muted mt-1">{{ __('checkout.coupon_hint') }}</div>
                 </div>
