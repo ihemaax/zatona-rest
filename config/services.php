@@ -27,6 +27,11 @@ return [
     'api_key' => env('GEMINI_API_KEY'),
     'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
 ],
+    'wapilot' => [
+        'base_url' => env('WAPILOT_BASE_URL', 'https://api.wapilot.net/api/v2'),
+        'token' => env('WAPILOT_TOKEN'),
+        'instance_id' => env('WAPILOT_INSTANCE_ID'),
+    ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

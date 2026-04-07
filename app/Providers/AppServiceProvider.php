@@ -80,6 +80,27 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('admin-ai', function (Request $request) {
+            return [
+                Limit::perMinute(20)->by($request->user()?->id ?: $request->ip()),
+                Limit::perHour(200)->by(($request->user()?->id ?: $request->ip()) . '|admin-ai-hourly'),
+            ];
+        });
+
+        RateLimiter::for('checkout-otp-send', function (Request $request) {
+            return [
+                Limit::perMinute(3)->by($request->ip()),
+                Limit::perHour(10)->by($request->ip() . '|checkout-otp-send-hourly'),
+            ];
+        });
+
+        RateLimiter::for('checkout-otp-verify', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by($request->ip()),
+                Limit::perHour(60)->by($request->ip() . '|checkout-otp-verify-hourly'),
+            ];
+        });
+
 
 
         View::composer('layouts.admin', function ($view) {

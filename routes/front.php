@@ -50,6 +50,12 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.in
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
     ->middleware('throttle:checkout-coupon')
     ->name('checkout.apply-coupon');
+Route::post('/checkout/otp/send', [CheckoutController::class, 'sendOtp'])
+    ->middleware('throttle:checkout-otp-send')
+    ->name('checkout.otp.send');
+Route::post('/checkout/otp/verify', [CheckoutController::class, 'verifyOtp'])
+    ->middleware('throttle:checkout-otp-verify')
+    ->name('checkout.otp.verify');
 Route::post('/checkout', [CheckoutController::class, 'store'])
     ->middleware('throttle:checkout-store')
     ->name('checkout.store');
