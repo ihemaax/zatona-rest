@@ -94,7 +94,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
     (() => {
         const deliveryBody = document.getElementById('readyDeliveryOrdersBody');
         const pickupBody = document.getElementById('readyPickupOrdersBody');

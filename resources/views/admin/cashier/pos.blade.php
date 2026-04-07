@@ -110,7 +110,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 (() => {
     const lines = [];
     const form = document.getElementById('cashierCheckoutForm');

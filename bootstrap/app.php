@@ -18,8 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'setLocale' => \App\Http\Middleware\SetLocale::class,
         ]);
 
+
+        $middleware->web(prepend: [
+            \App\Http\Middleware\ForceHttps::class,
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\AuthenticateSessionFingerprint::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
