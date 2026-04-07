@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if ($user && $user->isCustomer() && empty($user->phone_verified_at)) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'لازم تفعيل رقم الواتساب أولاً قبل تسجيل الدخول.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

@@ -79,6 +79,7 @@
                             <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="checknova-block pickup-fields" id="pickupFields">
@@ -399,5 +400,6 @@
             }
         });
     }
+
 </script>
 @endsection

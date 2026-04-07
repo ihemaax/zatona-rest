@@ -15,6 +15,12 @@
         </div>
 
         <div class="col-12">
+            <label for="phone" class="auth-label">رقم واتساب</label>
+            <input id="phone" class="form-control auth-input" type="text" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="مثال: 01012345678">
+            <x-input-error :messages="$errors->get('phone')" class="mt-2 text-danger small" />
+        </div>
+
+        <div class="col-12">
             <label for="password" class="auth-label">{{ __('Password') }}</label>
             <input id="password" class="form-control auth-input" type="password" name="password" required autocomplete="new-password">
             <x-input-error :messages="$errors->get('password')" class="mt-2 text-danger small" />
