@@ -18,13 +18,28 @@ class AiAssistantController extends Controller
 {
     protected string $sessionKey = 'admin_ai_chat_history';
 
+    protected function ensureAiAccess(): void
+    {
+        $user = auth()->user();
+
+        abort_unless(
+            $user && $user->canAccessDashboard(),
+            403,
+            'المساعد الذكي متاح للمدير والإدمن والسوبر أدمن فقط.'
+        );
+    }
+
     public function index()
     {
+        $this->ensureAiAccess();
+
         return view('admin.ai.index');
     }
 
     public function ask(Request $request, GeminiService $gemini)
     {
+        $this->ensureAiAccess();
+
         $request->validate([
             'question' => ['required', 'string', 'max:3000'],
         ]);
@@ -131,6 +146,8 @@ class AiAssistantController extends Controller
 
     public function clear()
     {
+        $this->ensureAiAccess();
+
         session()->forget($this->sessionKey);
 
         return response()->json([

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -227,7 +228,11 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        abort_unless($user && $user->canAccessDashboard(), 403, 'هذه الصفحة متاحة للمدير والإدمن والسوبر أدمن فقط.');
+        abort_unless($user && $user->canAccessAdminPanel(), 403, 'غير مسموح لك بالدخول إلى لوحة الإدارة.');
+
+        if (!$user->canAccessDashboard()) {
+            return redirect()->to($this->resolveStaffLandingUrl($user));
+        }
 
         $range = $request->query('range', 'today');
         if (!in_array($range, ['today', '7d', '30d'], true)) {
@@ -388,5 +393,26 @@ class DashboardController extends Controller
                 ];
             })->values(),
         ]);
+    }
+
+    protected function resolveStaffLandingUrl(User $user): string
+    {
+        if ($user->role === User::ROLE_KITCHEN) {
+            return route('admin.kitchen.index');
+        }
+
+        if ($user->role === User::ROLE_DELIVERY) {
+            return route('admin.delivery.dashboard');
+        }
+
+        if ($user->hasPermission('use_cashier') && !empty($user->branch_id)) {
+            return route('admin.cashier.pos', ['branch' => $user->branch_id]);
+        }
+
+        if ($user->hasPermission('use_cashier') && $user->hasPermission('manage_cashier')) {
+            return route('admin.cashier.index');
+        }
+
+        return route('admin.orders.index');
     }
 }

@@ -40,20 +40,42 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
     Route::get('/dashboard/export-snapshot', [DashboardController::class, 'exportSnapshot'])->name('admin.dashboard.export-snapshot');
 
-    Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
-    Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
+    Route::middleware('permission:manage_settings')->group(function () {
+        Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
+        Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
 
-    Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
-    Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name('admin.popup-campaign.update');
+        Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
+        Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name('admin.popup-campaign.update');
+    });
 
-    Route::resource('branches', BranchController::class)->names('admin.branches');
-    Route::resource('categories', CategoryController::class)->names('admin.categories');
-    Route::resource('products', ProductController::class)->names('admin.products');
+    Route::middleware('permission:manage_branches')->group(function () {
+        Route::resource('branches', BranchController::class)->names('admin.branches');
+    });
 
-    Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
-    Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
-    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
-    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+    Route::middleware('permission:manage_categories')->group(function () {
+        Route::resource('categories', CategoryController::class)->names('admin.categories');
+    });
+
+    Route::middleware('permission:manage_products')->group(function () {
+        Route::resource('products', ProductController::class)->names('admin.products');
+
+        /* Product Options */
+        Route::get('/products/{product}/options', [ProductOptionGroupController::class, 'index'])->name('admin.products.options.index');
+        Route::post('/products/{product}/options', [ProductOptionGroupController::class, 'store'])->name('admin.products.options.store');
+        Route::put('/products/{product}/options/{group}', [ProductOptionGroupController::class, 'update'])->name('admin.products.options.update');
+        Route::delete('/products/{product}/options/{group}', [ProductOptionGroupController::class, 'destroy'])->name('admin.products.options.destroy');
+
+        Route::post('/products/{product}/options/{group}/items', [ProductOptionItemController::class, 'store'])->name('admin.products.options.items.store');
+        Route::put('/products/{product}/options/{group}/items/{item}', [ProductOptionItemController::class, 'update'])->name('admin.products.options.items.update');
+        Route::delete('/products/{product}/options/{group}/items/{item}', [ProductOptionItemController::class, 'destroy'])->name('admin.products.options.items.destroy');
+    });
+
+    Route::middleware('permission:manage_settings')->group(function () {
+        Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
+        Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+        Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
+        Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+    });
 
     Route::middleware('permission:view_reports')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
@@ -71,7 +93,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     });
 
     Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('admin.ai.index');
-    Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])->name('admin.ai.ask');
+    Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])
+        ->middleware('throttle:admin-ai')
+        ->name('admin.ai.ask');
 
     /* Digital Menu */
     Route::get('/digital-menu/settings', [DigitalMenuSettingController::class, 'edit'])->name('admin.digital-menu.settings');
@@ -106,16 +130,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::put('/cashier/menu-items/{item}', [CashierController::class, 'updateMenuItem'])->name('admin.cashier.menu-items.update');
         Route::delete('/cashier/menu-items/{item}', [CashierController::class, 'destroyMenuItem'])->name('admin.cashier.menu-items.destroy');
     });
-
-    /* Product Options */
-    Route::get('/products/{product}/options', [ProductOptionGroupController::class, 'index'])->name('admin.products.options.index');
-    Route::post('/products/{product}/options', [ProductOptionGroupController::class, 'store'])->name('admin.products.options.store');
-    Route::put('/products/{product}/options/{group}', [ProductOptionGroupController::class, 'update'])->name('admin.products.options.update');
-    Route::delete('/products/{product}/options/{group}', [ProductOptionGroupController::class, 'destroy'])->name('admin.products.options.destroy');
-
-    Route::post('/products/{product}/options/{group}/items', [ProductOptionItemController::class, 'store'])->name('admin.products.options.items.store');
-    Route::put('/products/{product}/options/{group}/items/{item}', [ProductOptionItemController::class, 'update'])->name('admin.products.options.items.update');
-    Route::delete('/products/{product}/options/{group}/items/{item}', [ProductOptionItemController::class, 'destroy'])->name('admin.products.options.items.destroy');
 
     /* Orders */
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');

@@ -80,6 +80,13 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('admin-ai', function (Request $request) {
+            return [
+                Limit::perMinute(20)->by($request->user()?->id ?: $request->ip()),
+                Limit::perHour(200)->by(($request->user()?->id ?: $request->ip()) . '|admin-ai-hourly'),
+            ];
+        });
+
 
 
         View::composer('layouts.admin', function ($view) {
