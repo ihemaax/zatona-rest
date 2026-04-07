@@ -246,6 +246,12 @@
     const finalTotalText = document.getElementById('finalTotalText');
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
+    const phoneInput = document.querySelector('input[name=\"customer_phone\"]');
+    const otpCodeInput = document.getElementById('otpCodeInput');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const otpStatusNote = document.getElementById('otpStatusNote');
+    const csrfToken = @json(csrf_token());
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
