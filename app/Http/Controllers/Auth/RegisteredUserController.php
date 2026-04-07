@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use App\Services\WapilotService;
-use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -36,9 +35,25 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'name.required' => 'من فضلك اكتب الاسم بالكامل.',
+            'name.max' => 'الاسم طويل جدًا. الحد الأقصى 255 حرف.',
+
+            'email.required' => 'من فضلك اكتب البريد الإلكتروني.',
+            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة. مثال صحيح: name@example.com',
+            'email.max' => 'البريد الإلكتروني طويل جدًا.',
+            'email.unique' => 'البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم بريدًا آخر.',
+
+            'phone.required' => 'من فضلك اكتب رقم واتساب.',
+            'phone.max' => 'رقم الهاتف طويل جدًا.',
+            'phone.unique' => 'رقم واتساب مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.',
+
+            'password.required' => 'من فضلك اكتب كلمة المرور.',
+            'password.min' => 'كلمة المرور لازم تكون 6 أحرف على الأقل.',
+            'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
         ]);
 
         $user = User::create([
