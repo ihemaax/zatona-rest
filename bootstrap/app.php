@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
 
         $middleware->web(prepend: [
+            \App\Http\Middleware\TrustProxies::class,
             \App\Http\Middleware\ForceHttps::class,
         ]);
 
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\AuthenticateSessionFingerprint::class,
+            \App\Http\Middleware\StoreAuditLog::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\AiAssistantController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CashierController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerLeadController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
 use App\Http\Controllers\Admin\DeliveryManagementController;
@@ -81,6 +83,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
+    });
+
+    Route::middleware('permission:view_audit_logs')->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+    });
+
+    Route::middleware('permission:view_customer_leads')->group(function () {
+        Route::get('/customer-leads', [CustomerLeadController::class, 'index'])->name('admin.customer-leads.index');
+        Route::get('/customer-leads/export/excel', [CustomerLeadController::class, 'export'])->name('admin.customer-leads.export.excel');
     });
 
     Route::middleware('permission:manage_staff')->group(function () {
