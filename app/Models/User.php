@@ -93,6 +93,7 @@ class User extends Authenticatable
             'manage_staff' => 'إدارة الموظفين',
             'manage_delivery' => 'متابعة وإدارة الدليفري',
             'view_reports' => 'عرض التقارير',
+            'view_customer_leads' => 'عرض بيانات العملاء التسويقية',
             'manage_cashier' => 'إدارة نظام الكاشير',
             'use_cashier' => 'استخدام شاشة الكاشير',
         ];
@@ -128,6 +129,7 @@ class User extends Authenticatable
                 'manage_digital_menu',
                 'manage_delivery',
                 'view_reports',
+                'view_customer_leads',
                 'manage_cashier',
                 'use_cashier',
             ],

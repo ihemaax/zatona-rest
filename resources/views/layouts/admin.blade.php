@@ -68,7 +68,8 @@
         request()->routeIs('admin.coupons.*') ||
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
-        request()->routeIs('admin.reports.*');
+        request()->routeIs('admin.reports.*') ||
+        request()->routeIs('admin.customer-leads.*');
 
     $digitalMenuGroupOpen =
         request()->routeIs('admin.digital-menu.settings') ||
@@ -250,6 +251,13 @@
                         <a href="{{ $demoOrAdminUrl('reports', route('admin.reports.index')) }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>التقارير</span>
+                        </a>
+                    @endif
+
+                    @if($hasAdminPermission('view_customer_leads'))
+                        <a href="{{ route('admin.customer-leads.index') }}" class="sb-sublink {{ request()->routeIs('admin.customer-leads.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>بيانات العملاء</span>
                         </a>
                     @endif
                 </div>
