@@ -10,12 +10,14 @@ use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\WapilotService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
@@ -113,7 +115,29 @@ class CheckoutController extends Controller
         ]);
 
         $normalizedPhone = $this->normalizeEgyptianPhone((string) $request->customer_phone);
-        abort_if(!$this->isOtpVerifiedForPhone($request, $normalizedPhone), 422, 'لازم تأكيد رقم واتساب بكود التحقق قبل تأكيد الطلب.');
+        if (!$this->isOtpVerifiedForPhone($request, $normalizedPhone)) {
+            session(['checkout_pending_payload' => $request->only([
+                'order_type',
+                'branch_id',
+                'customer_name',
+                'customer_phone',
+                'address_line',
+                'area',
+                'latitude',
+                'longitude',
+                'notes',
+                'save_address',
+                'address_label',
+                'make_default',
+                'coupon_code',
+            ])]);
+
+            $this->issueOtpIfNeeded($request, $normalizedPhone, app(WapilotService::class));
+
+            return redirect()
+                ->route('checkout.otp.page')
+                ->with('info', 'بعتنالك كود على الواتساب عشان نتأكد إنك جعان فعلاً 😄');
+        }
 
         if ($request->order_type === 'delivery' && empty($request->address_line)) {
             return redirect()->back()->with('error', 'يرجى إدخال عنوان التوصيل');
@@ -260,70 +284,75 @@ class CheckoutController extends Controller
         }
     }
 
-    public function sendOtp(Request $request, WapilotService $wapilot)
+    public function showOtpVerificationPage(Request $request): RedirectResponse|View
     {
-        $data = $request->validate([
-            'customer_phone' => ['required', 'string', 'max:20'],
-        ]);
+        $pending = session('checkout_pending_payload');
+        if (!$pending || empty($pending['customer_phone'])) {
+            return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
+        }
 
-        $phone = $this->normalizeEgyptianPhone($data['customer_phone']);
-        abort_if($phone === '', 422, 'رقم الهاتف غير صالح.');
-
-        $code = (string) random_int(100000, 999999);
-        $cacheKey = $this->otpCacheKey($request);
-
-        Cache::put($cacheKey, [
-            'phone' => $phone,
-            'code_hash' => Hash::make($code),
-            'attempts' => 0,
-            'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
-            'verified' => false,
-            'verified_at' => null,
-        ], now()->addMinutes($this->otpTtlMinutes));
-
-        $wapilot->sendTextToPhone(
-            $phone,
-            "كود تأكيد الطلب: {$code}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إرسال كود التحقق على واتساب.',
+        return view('front.checkout-otp', [
+            'phone' => $pending['customer_phone'],
         ]);
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtpAndContinue(Request $request)
     {
         $data = $request->validate([
-            'customer_phone' => ['required', 'string', 'max:20'],
             'otp_code' => ['required', 'digits:6'],
         ]);
 
-        $phone = $this->normalizeEgyptianPhone($data['customer_phone']);
+        $pending = session('checkout_pending_payload');
+        if (!$pending || empty($pending['customer_phone'])) {
+            return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
+        }
+
+        $phone = $this->normalizeEgyptianPhone((string) $pending['customer_phone']);
         $cacheKey = $this->otpCacheKey($request);
         $payload = Cache::get($cacheKey);
 
-        abort_if(!$payload, 422, 'الكود غير موجود أو منتهي. اطلب كود جديد.');
-        abort_if(($payload['phone'] ?? null) !== $phone, 422, 'رقم الهاتف لا يطابق الرقم الذي تم إرسال الكود إليه.');
-        abort_if(($payload['expires_at'] ?? 0) < now()->timestamp, 422, 'انتهت صلاحية الكود. اطلب كود جديد.');
-        abort_if((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts, 422, 'تم تجاوز عدد المحاولات المسموح. اطلب كود جديد.');
+        if (!$payload) {
+            return back()->with('error', 'الكود غير موجود أو منتهي. اطلب كود جديد.');
+        }
 
         $payload['attempts'] = (int) ($payload['attempts'] ?? 0) + 1;
+        if (($payload['phone'] ?? null) !== $phone) {
+            return back()->with('error', 'رقم الهاتف لا يطابق الرقم المرسل.');
+        }
+
+        if (($payload['expires_at'] ?? 0) < now()->timestamp) {
+            return back()->with('error', 'انتهت صلاحية الكود. اطلب كود جديد.');
+        }
+
+        if ((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts) {
+            return back()->with('error', 'تم تجاوز عدد المحاولات المسموح. اطلب كود جديد.');
+        }
 
         if (!Hash::check($data['otp_code'], (string) ($payload['code_hash'] ?? ''))) {
             Cache::put($cacheKey, $payload, now()->addMinutes($this->otpTtlMinutes));
-            abort(422, 'كود التحقق غير صحيح.');
+            return back()->with('error', 'كود التحقق غير صحيح.');
         }
 
         $payload['verified'] = true;
         $payload['verified_at'] = now()->timestamp;
         Cache::put($cacheKey, $payload, now()->addMinutes($this->otpTtlMinutes));
         session(['checkout_phone_verified' => $phone]);
+        $request->merge($pending);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تأكيد رقم واتساب بنجاح.',
-        ]);
+        return $this->store($request);
+    }
+
+    public function resendOtp(Request $request, WapilotService $wapilot): RedirectResponse
+    {
+        $pending = session('checkout_pending_payload');
+        if (!$pending || empty($pending['customer_phone'])) {
+            return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
+        }
+
+        $phone = $this->normalizeEgyptianPhone((string) $pending['customer_phone']);
+        $this->issueOtp($request, $phone, $wapilot);
+
+        return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
 
     public function success(Order $order, ?string $token = null)
@@ -416,5 +445,39 @@ class CheckoutController extends Controller
     {
         Cache::forget($this->otpCacheKey($request));
         session()->forget('checkout_phone_verified');
+        session()->forget('checkout_pending_payload');
+    }
+
+    protected function issueOtpIfNeeded(Request $request, string $phone, WapilotService $wapilot): void
+    {
+        $payload = Cache::get($this->otpCacheKey($request));
+
+        if (
+            !$payload
+            || ($payload['phone'] ?? null) !== $phone
+            || (int) ($payload['expires_at'] ?? 0) < now()->timestamp
+        ) {
+            $this->issueOtp($request, $phone, $wapilot);
+        }
+    }
+
+    protected function issueOtp(Request $request, string $phone, WapilotService $wapilot): void
+    {
+        $code = (string) random_int(100000, 999999);
+        $cacheKey = $this->otpCacheKey($request);
+
+        Cache::put($cacheKey, [
+            'phone' => $phone,
+            'code_hash' => Hash::make($code),
+            'attempts' => 0,
+            'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
+            'verified' => false,
+            'verified_at' => null,
+        ], now()->addMinutes($this->otpTtlMinutes));
+
+        $wapilot->sendTextToPhone(
+            $phone,
+            "كود تأكيد الطلب: {$code}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
+        );
     }
 }

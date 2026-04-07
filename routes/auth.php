@@ -16,6 +16,13 @@ Route::middleware('guest')->group(function () {
         ->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('register/verify-phone', [RegisteredUserController::class, 'showPhoneVerificationNotice'])
+        ->name('register.phone.verify.notice');
+    Route::post('register/verify-phone', [RegisteredUserController::class, 'verifyPhone'])
+        ->name('register.phone.verify');
+    Route::post('register/verify-phone/resend', [RegisteredUserController::class, 'resendPhoneOtp'])
+        ->middleware('throttle:checkout-otp-send')
+        ->name('register.phone.verify.resend');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

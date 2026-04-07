@@ -80,17 +80,6 @@
                         </div>
                     </div>
 
-                    <div class="mt-3">
-                        <label class="checknova-label">كود تحقق واتساب</label>
-                        <div class="checknova-two">
-                            <div class="input-group">
-                                <input type="text" id="otpCodeInput" class="form-control" maxlength="6" placeholder="ادخل كود التحقق">
-                                <button type="button" id="verifyOtpBtn" class="btn btn-outline-secondary">تأكيد الكود</button>
-                            </div>
-                            <button type="button" id="sendOtpBtn" class="btn btn-outline-dark w-100">إرسال كود واتساب</button>
-                        </div>
-                        <div class="checknova-note mt-2" id="otpStatusNote">لازم تأكيد رقم الواتساب قبل تأكيد الطلب.</div>
-                    </div>
                 </div>
 
                 <div class="checknova-block pickup-fields" id="pickupFields">
@@ -418,82 +407,5 @@
         });
     }
 
-    function setOtpStatus(message, type = 'muted') {
-        if (!otpStatusNote) return;
-        otpStatusNote.className = 'checknova-note mt-2';
-        if (type === 'success') otpStatusNote.classList.add('text-success');
-        else if (type === 'error') otpStatusNote.classList.add('text-danger');
-        else otpStatusNote.classList.add('text-muted');
-        otpStatusNote.textContent = message;
-    }
-
-    async function postJson(url, payload) {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            throw new Error(data.message || 'فشل تنفيذ الطلب.');
-        }
-
-        return data;
-    }
-
-    if (sendOtpBtn) {
-        sendOtpBtn.addEventListener('click', async function () {
-            try {
-                const phone = (phoneInput?.value || '').trim();
-                if (!phone) {
-                    setOtpStatus('اكتب رقم الهاتف الأول.', 'error');
-                    return;
-                }
-
-                sendOtpBtn.disabled = true;
-                setOtpStatus('جاري إرسال كود التحقق...');
-
-                const data = await postJson(@json(route('checkout.otp.send')), { customer_phone: phone });
-                setOtpStatus(data.message || 'تم إرسال الكود بنجاح.', 'success');
-            } catch (error) {
-                setOtpStatus(error.message || 'تعذر إرسال الكود.', 'error');
-            } finally {
-                sendOtpBtn.disabled = false;
-            }
-        });
-    }
-
-    if (verifyOtpBtn) {
-        verifyOtpBtn.addEventListener('click', async function () {
-            try {
-                const phone = (phoneInput?.value || '').trim();
-                const code = (otpCodeInput?.value || '').trim();
-
-                if (!phone || !code) {
-                    setOtpStatus('اكتب رقم الهاتف وكود التحقق.', 'error');
-                    return;
-                }
-
-                verifyOtpBtn.disabled = true;
-                setOtpStatus('جاري التحقق من الكود...');
-
-                const data = await postJson(@json(route('checkout.otp.verify')), {
-                    customer_phone: phone,
-                    otp_code: code
-                });
-                setOtpStatus(data.message || 'تم التحقق من الرقم بنجاح.', 'success');
-            } catch (error) {
-                setOtpStatus(error.message || 'الكود غير صحيح أو منتهي.', 'error');
-            } finally {
-                verifyOtpBtn.disabled = false;
-            }
-        });
-    }
 </script>
 @endsection
