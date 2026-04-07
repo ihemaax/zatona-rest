@@ -77,7 +77,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
     (() => {
         const roleSelect = document.querySelector('select[name="role"]');
         const list = document.getElementById('auto-permissions-list');

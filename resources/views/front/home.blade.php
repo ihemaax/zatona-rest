@@ -440,7 +440,7 @@
 </div>
 @endif
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('menuSearchInput');
     const sections = document.querySelectorAll('.product-section');

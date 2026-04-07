@@ -165,7 +165,7 @@
     </section>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
     (() => {
         const body = document.getElementById('kitchenOrdersBody');
         if (!body) return;
