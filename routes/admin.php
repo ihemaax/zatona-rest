@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CashierController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryDashboardController;
@@ -90,6 +91,21 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/digital-menu/qr/image', [DigitalMenuQrController::class, 'image'])->name('admin.digital-menu.qr.image');
     Route::get('/digital-menu/qr/download', [DigitalMenuQrController::class, 'download'])->name('admin.digital-menu.qr.download');
     Route::get('/digital-menu/qr/print', [DigitalMenuQrController::class, 'print'])->name('admin.digital-menu.qr.print');
+
+
+    /* Cashier */
+    Route::middleware('permission:use_cashier')->group(function () {
+        Route::get('/cashier/pos/{branch}', [CashierController::class, 'pos'])->name('admin.cashier.pos');
+        Route::post('/cashier/pos/{branch}/checkout', [CashierController::class, 'checkout'])->name('admin.cashier.checkout');
+        Route::get('/cashier/pos/{branch}/invoice/{order}', [CashierController::class, 'invoice'])->name('admin.cashier.invoice');
+    });
+
+    Route::middleware('permission:manage_cashier')->group(function () {
+        Route::get('/cashier', [CashierController::class, 'index'])->name('admin.cashier.index');
+        Route::post('/cashier/menu-items', [CashierController::class, 'storeMenuItem'])->name('admin.cashier.menu-items.store');
+        Route::put('/cashier/menu-items/{item}', [CashierController::class, 'updateMenuItem'])->name('admin.cashier.menu-items.update');
+        Route::delete('/cashier/menu-items/{item}', [CashierController::class, 'destroyMenuItem'])->name('admin.cashier.menu-items.destroy');
+    });
 
     /* Product Options */
     Route::get('/products/{product}/options', [ProductOptionGroupController::class, 'index'])->name('admin.products.options.index');
