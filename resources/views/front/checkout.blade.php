@@ -14,76 +14,307 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    .checknova-wrap{max-width:1260px;margin:0 auto;padding-bottom:110px}
-    .checknova-grid{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:22px;align-items:start}
+    .checkout-pro {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 12px 110px;
+    }
 
-    .checknova-form{background:#ffffff;border:1px solid #e2e8f0;border-radius:30px;overflow:hidden;box-shadow:0 20px 48px rgba(15,23,42,.1)}
-    .checknova-hero{padding:24px;background:radial-gradient(circle at top left,#0f172a,#111827 40%,#1e293b);color:#e2e8f0}
-    .checknova-hero h1{margin:0;font-size:1.9rem;font-weight:900;color:#fff}
-    .checknova-hero p{margin:8px 0 0;font-size:.92rem;font-weight:700;color:#cbd5e1}
-    .checknova-method{margin-top:12px;display:inline-flex;align-items:center;gap:8px;border:1px solid #334155;background:#0b1220;padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:900}
-    .checknova-method.delivery{color:#fcd34d}.checknova-method.pickup{color:#93c5fd}
+    .checkout-pro-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 22px;
+        align-items: start;
+    }
 
-    .checknova-body{padding:20px;display:grid;gap:18px}
-    .checknova-block{background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:16px}
-    .checknova-block h3{margin:0 0 12px;font-size:1rem;font-weight:900;color:#0f172a}
-    .checknova-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .checknova-three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .checknova-label{display:block;margin:0 0 6px;font-size:.8rem;font-weight:800;color:#334155}
-    .checknova-note{font-size:.78rem;color:#64748b;font-weight:700;margin-top:6px}
+    .checkout-pro-main {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, .09);
+    }
 
-    #map{height:340px;border-radius:14px;border:1px solid #dbe5f1;overflow:hidden}
-    .delivery-fields,.pickup-fields{display:none}
+    .checkout-pro-hero {
+        background: linear-gradient(140deg, #0f172a 0%, #111827 45%, #1d4ed8 120%);
+        color: #e2e8f0;
+        padding: 26px;
+        display: grid;
+        gap: 14px;
+    }
 
-    .checknova-summary{position:sticky;top:90px;background:#0b1220;border:1px solid #24324a;border-radius:24px;padding:18px;color:#dbeafe;box-shadow:0 16px 34px rgba(2,6,23,.35)}
-    .checknova-summary h3{margin:0;color:#f8fafc;font-size:1.05rem;font-weight:900}
-    .checknova-items{margin-top:12px;display:grid;gap:8px;max-height:260px;overflow:auto;padding-right:4px}
-    .checknova-item{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;font-weight:800;color:#cbd5e1}
-    .checknova-calc{margin-top:14px;padding-top:12px;border-top:1px dashed #334155;display:grid;gap:9px}
-    .checknova-row{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;font-weight:800}
-    .checknova-row.total{font-size:1rem;color:#fff}
-    .checknova-change{margin-top:12px;display:block;text-align:center;text-decoration:none;border-radius:12px;padding:10px;background:#1e293b;border:1px solid #334155;color:#dbeafe;font-weight:900}
+    .checkout-pro-eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(203, 213, 225, .4);
+        background: rgba(15, 23, 42, .45);
+        padding: 8px 12px;
+        font-size: .78rem;
+        font-weight: 800;
+    }
 
-    @media (max-width:991.98px){.checknova-grid{grid-template-columns:1fr}.checknova-summary{position:static}}
-    @media (max-width:767.98px){.checknova-wrap{padding-bottom:92px}.checknova-form{border-radius:20px}.checknova-hero{padding:16px}.checknova-hero h1{font-size:1.24rem}.checknova-body{padding:14px}.checknova-two,.checknova-three{grid-template-columns:1fr}}
+    .checkout-pro-hero h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: #fff;
+        font-weight: 900;
+        letter-spacing: -.02em;
+    }
+
+    .checkout-pro-hero p {
+        margin: 0;
+        font-size: .92rem;
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    .checkout-pro-switch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .checkout-pro-switch a {
+        text-decoration: none;
+        border: 1px solid #334155;
+        background: #0b1220;
+        color: #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 800;
+        font-size: .85rem;
+    }
+
+    .checkout-pro-switch a.active {
+        border-color: #60a5fa;
+        color: #fff;
+        box-shadow: 0 0 0 2px rgba(96, 165, 250, .22);
+    }
+
+    .checkout-pro-form {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+    }
+
+    .checkout-pro-block {
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        background: #f8fafc;
+        padding: 16px;
+    }
+
+    .checkout-pro-block h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .checkout-pro-block-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .checkout-pro-hint {
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .checkout-pro-grid-2,
+    .checkout-pro-grid-3 {
+        display: grid;
+        gap: 12px;
+    }
+
+    .checkout-pro-grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .checkout-pro-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .checkout-pro-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #334155;
+        font-size: .82rem;
+        font-weight: 800;
+    }
+
+    .checkout-pro-map {
+        height: 330px;
+        border-radius: 14px;
+        border: 1px solid #dbe5f1;
+        overflow: hidden;
+    }
+
+    .delivery-fields,
+    .pickup-fields {
+        display: none;
+    }
+
+    .checkout-pro-summary {
+        position: sticky;
+        top: 90px;
+        border: 1px solid #24324a;
+        background: #0b1220;
+        border-radius: 24px;
+        padding: 18px;
+        color: #dbeafe;
+        box-shadow: 0 18px 40px rgba(2, 6, 23, .35);
+    }
+
+    .checkout-pro-summary h3 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.06rem;
+        font-weight: 900;
+    }
+
+    .checkout-pro-items {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+        max-height: 270px;
+        overflow: auto;
+    }
+
+    .checkout-pro-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: .83rem;
+        font-weight: 800;
+        color: #cbd5e1;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(100, 116, 139, .4);
+    }
+
+    .checkout-pro-calc {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(100, 116, 139, .45);
+        display: grid;
+        gap: 9px;
+    }
+
+    .checkout-pro-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: .86rem;
+        font-weight: 800;
+    }
+
+    .checkout-pro-row.total {
+        font-size: 1.03rem;
+        color: #fff;
+    }
+
+    .checkout-pro-change {
+        margin-top: 12px;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 12px;
+        padding: 10px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #dbeafe;
+        font-weight: 900;
+    }
+
+    @media (max-width: 991.98px) {
+        .checkout-pro-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-pro-summary {
+            position: static;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .checkout-pro-main {
+            border-radius: 20px;
+        }
+
+        .checkout-pro-hero {
+            padding: 18px;
+        }
+
+        .checkout-pro-hero h1 {
+            font-size: 1.35rem;
+        }
+
+        .checkout-pro-form {
+            padding: 14px;
+        }
+
+        .checkout-pro-grid-2,
+        .checkout-pro-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="checknova-wrap">
-    <div class="checknova-grid">
-        <section class="checknova-form">
-            <header class="checknova-hero">
-                <h1>{{ __('checkout.complete_order') }}</h1>
-                <p>{{ __('checkout.receiving_method_label') }}</p>
-                <div class="checknova-method {{ $activeOrderType }}">
+<div class="checkout-pro">
+    <div class="checkout-pro-grid">
+        <section class="checkout-pro-main">
+            <header class="checkout-pro-hero">
+                <span class="checkout-pro-eyebrow">
                     @if($activeOrderType === 'pickup')
                         🏬 {{ __('checkout.pickup_from_restaurant') }}
                     @else
                         🚚 {{ __('checkout.delivery_to_address') }}
                     @endif
+                </span>
+
+                <h1>{{ __('checkout.complete_order') }}</h1>
+                <p>{{ __('checkout.receiving_method_label') }} — {{ __('checkout.payment_method') }} {{ __('checkout.cash_on_delivery') }}</p>
+
+                <div class="checkout-pro-switch">
+                    <a href="{{ route('checkout.index', ['order_type' => 'delivery']) }}" class="{{ $activeOrderType === 'delivery' ? 'active' : '' }}">🚚 {{ __('checkout.delivery_to_address') }}</a>
+                    <a href="{{ route('checkout.index', ['order_type' => 'pickup']) }}" class="{{ $activeOrderType === 'pickup' ? 'active' : '' }}">🏬 {{ __('checkout.pickup_from_restaurant') }}</a>
                 </div>
             </header>
 
-            <form action="{{ route('checkout.store') }}" method="POST" class="checknova-body">
+            <form action="{{ route('checkout.store') }}" method="POST" class="checkout-pro-form">
                 @csrf
                 <input type="hidden" name="order_type" id="orderTypeSelect" value="{{ $activeOrderType }}">
 
-                <div class="checknova-block">
-                    <h3>{{ __('checkout.customer_name') }} & {{ __('checkout.phone_number') }}</h3>
-                    <div class="checknova-two">
+                <div class="checkout-pro-block">
+                    <div class="checkout-pro-block-head">
+                        <h3>{{ __('checkout.customer_name') }} & {{ __('checkout.phone_number') }}</h3>
+                        <span class="checkout-pro-hint">{{ __('checkout.confirm_order') }}</span>
+                    </div>
+
+                    <div class="checkout-pro-grid-2">
                         <div>
-                            <label class="checknova-label">{{ __('checkout.customer_name') }}</label>
+                            <label class="checkout-pro-label">{{ __('checkout.customer_name') }}</label>
                             <input type="text" name="customer_name" class="form-control" value="{{ old('customer_name', auth()->check() ? auth()->user()->name : '') }}" required>
                         </div>
                         <div>
-                            <label class="checknova-label">{{ __('checkout.phone_number') }}</label>
+                            <label class="checkout-pro-label">{{ __('checkout.phone_number') }}</label>
                             <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
                         </div>
                     </div>
-
                 </div>
 
-                <div class="checknova-block pickup-fields" id="pickupFields">
-                    <h3>{{ __('checkout.choose_branch') }}</h3>
+                <div class="checkout-pro-block pickup-fields" id="pickupFields">
+                    <div class="checkout-pro-block-head">
+                        <h3>{{ __('checkout.choose_branch') }}</h3>
+                        <span class="checkout-pro-hint">{{ __('checkout.pickup_from_restaurant') }}</span>
+                    </div>
+
                     <select name="branch_id" class="form-select">
                         <option value="">{{ __('checkout.choose_branch_placeholder') }}</option>
                         @foreach($branches as $branch)
@@ -94,11 +325,14 @@
                     </select>
                 </div>
 
-                <div class="checknova-block delivery-fields" id="deliveryFields">
-                    <h3>{{ __('checkout.delivery_to_address') }}</h3>
+                <div class="checkout-pro-block delivery-fields" id="deliveryFields">
+                    <div class="checkout-pro-block-head">
+                        <h3>{{ __('checkout.delivery_to_address') }}</h3>
+                        <span class="checkout-pro-hint">{{ __('checkout.network_issue_hint') }}</span>
+                    </div>
 
                     @if($savedAddresses->count())
-                        <label class="checknova-label">{{ __('checkout.choose_saved_address') }}</label>
+                        <label class="checkout-pro-label">{{ __('checkout.choose_saved_address') }}</label>
                         <select id="savedAddressSelect" class="form-select mb-3">
                             <option value="">{{ __('checkout.choose_saved_address_placeholder') }}</option>
                             @foreach($savedAddresses as $address)
@@ -115,32 +349,31 @@
                         </select>
                     @endif
 
-                    <div class="checknova-two">
+                    <div class="checkout-pro-grid-2">
                         <div>
-                            <label class="checknova-label">{{ __('checkout.detailed_address') }}</label>
+                            <label class="checkout-pro-label">{{ __('checkout.detailed_address') }}</label>
                             <input type="text" name="address_line" id="address_line" class="form-control" value="{{ old('address_line') }}">
                         </div>
                         <div>
-                            <label class="checknova-label">{{ __('checkout.area') }}</label>
+                            <label class="checkout-pro-label">{{ __('checkout.area') }}</label>
                             <input type="text" name="area" id="area" class="form-control" value="{{ old('area') }}">
                         </div>
                     </div>
 
-                    <div class="checknova-two mt-3">
+                    <div class="checkout-pro-grid-2 mt-3">
                         <button type="button" id="useCurrentLocationBtn" class="btn btn-brand w-100">{{ __('checkout.use_current_location') }}</button>
-                        <div class="checknova-note" id="locationStatus"></div>
+                        <div class="checkout-pro-hint" id="locationStatus"></div>
                     </div>
-                    <div class="checknova-note">{{ __('checkout.network_issue_hint') }}</div>
 
                     <div class="mt-3">
-                        <label class="checknova-label">{{ __('checkout.select_location_on_map') }}</label>
-                        <div id="map"></div>
+                        <label class="checkout-pro-label">{{ __('checkout.select_location_on_map') }}</label>
+                        <div id="map" class="checkout-pro-map"></div>
                     </div>
 
                     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
                     <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
 
-                    <div class="checknova-three mt-3">
+                    <div class="checkout-pro-grid-3 mt-3">
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" value="1" id="save_address" name="save_address">
                             <label class="form-check-label" for="save_address">{{ __('checkout.save_this_address') }}</label>
@@ -150,24 +383,19 @@
                             <label class="form-check-label" for="make_default">{{ __('checkout.make_default_address') }}</label>
                         </div>
                         <div>
-                            <label class="checknova-label">{{ __('checkout.address_name') }}</label>
+                            <label class="checkout-pro-label">{{ __('checkout.address_name') }}</label>
                             <input type="text" name="address_label" class="form-control" placeholder="{{ __('checkout.address_name_placeholder') }}">
                         </div>
                     </div>
                 </div>
 
-                <div class="checknova-block">
-                    <h3>{{ __('checkout.notes') }}</h3>
+                <div class="checkout-pro-block">
+                    <h3 class="mb-2">{{ __('checkout.notes') }}</h3>
                     <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
                 </div>
 
-                <div class="checknova-block">
-                    <h3>{{ __('checkout.payment_method') }}</h3>
-                    <input type="text" class="form-control" value="{{ __('checkout.cash_on_delivery') }}" disabled>
-                </div>
-
-                <div class="checknova-block">
-                    <h3>{{ __('checkout.coupon_code') }}</h3>
+                <div class="checkout-pro-block">
+                    <h3 class="mb-2">{{ __('checkout.coupon_code') }}</h3>
                     <div class="input-group">
                         <input type="text" name="coupon_code" id="couponCodeInput" class="form-control" value="{{ $couponCode }}" placeholder="{{ __('checkout.coupon_code_placeholder') }}">
                         @if(Route::has('checkout.apply-coupon'))
@@ -176,32 +404,32 @@
                             <button type="button" class="btn btn-outline-secondary" disabled title="Coupon endpoint unavailable">{{ __('checkout.apply_coupon') }}</button>
                         @endif
                     </div>
-                    <div class="checknova-note">{{ __('checkout.coupon_hint') }}</div>
+                    <div class="checkout-pro-hint mt-2">{{ __('checkout.coupon_hint') }}</div>
                 </div>
 
                 <button class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
             </form>
         </section>
 
-        <aside class="checknova-summary">
+        <aside class="checkout-pro-summary">
             <h3>{{ __('checkout.order_summary') }}</h3>
-            <div class="checknova-items">
+            <div class="checkout-pro-items">
                 @foreach($cart as $item)
-                    <div class="checknova-item">
+                    <div class="checkout-pro-item">
                         <span>{{ $item['name'] }} × {{ $item['quantity'] }}</span>
                         <span>{{ number_format($item['total'], 2) }} {{ __('checkout.currency_egp') }}</span>
                     </div>
                 @endforeach
             </div>
 
-            <div class="checknova-calc">
-                <div class="checknova-row"><span>{{ __('checkout.subtotal') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('checkout.currency_egp') }}</span></div>
-                <div class="checknova-row"><span>{{ __('checkout.delivery_fee') }}</span><span id="deliveryFeeText">{{ number_format($delivery, 2) }} {{ __('checkout.currency_egp') }}</span></div>
-                <div class="checknova-row" id="discountRow" style="{{ $discountValue > 0 ? '' : 'display:none;' }}"><span>{{ __('checkout.discount') }}</span><span id="discountText">-{{ number_format($discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
-                <div class="checknova-row total"><span>{{ __('checkout.final_total') }}</span><span id="finalTotalText">{{ number_format($subtotal + $delivery - $discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+            <div class="checkout-pro-calc">
+                <div class="checkout-pro-row"><span>{{ __('checkout.subtotal') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checkout-pro-row"><span>{{ __('checkout.delivery_fee') }}</span><span id="deliveryFeeText">{{ number_format($delivery, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checkout-pro-row" id="discountRow" style="{{ $discountValue > 0 ? '' : 'display:none;' }}"><span>{{ __('checkout.discount') }}</span><span id="discountText">-{{ number_format($discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
+                <div class="checkout-pro-row total"><span>{{ __('checkout.final_total') }}</span><span id="finalTotalText">{{ number_format($subtotal + $delivery - $discountValue, 2) }} {{ __('checkout.currency_egp') }}</span></div>
             </div>
 
-            <a href="{{ route('checkout.method') }}" class="checknova-change">{{ __('checkout.receiving_method_label') }}</a>
+            <a href="{{ route('checkout.method') }}" class="checkout-pro-change">{{ __('checkout.receiving_method_label') }}</a>
         </aside>
     </div>
 </div>
@@ -246,12 +474,6 @@
     const finalTotalText = document.getElementById('finalTotalText');
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
-    const phoneInput = document.querySelector('input[name=\"customer_phone\"]');
-    const otpCodeInput = document.getElementById('otpCodeInput');
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const otpStatusNote = document.getElementById('otpStatusNote');
-    const csrfToken = @json(csrf_token());
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
@@ -281,7 +503,7 @@
     toggleOrderTypeFields();
 
     function setStatus(message, type = 'muted') {
-        locationStatus.className = 'checknova-note';
+        locationStatus.className = 'checkout-pro-hint';
         if (type === 'success') locationStatus.classList.add('text-success');
         else if (type === 'error') locationStatus.classList.add('text-danger');
         else locationStatus.classList.add('text-muted');
@@ -406,6 +628,5 @@
             }
         });
     }
-
 </script>
 @endsection
