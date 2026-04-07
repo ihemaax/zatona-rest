@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AiAssistantController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CashierController;
@@ -82,6 +83,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
+    });
+
+    Route::middleware('permission:view_audit_logs')->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     });
 
     Route::middleware('permission:view_customer_leads')->group(function () {

@@ -69,7 +69,8 @@
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
         request()->routeIs('admin.reports.*') ||
-        request()->routeIs('admin.customer-leads.*');
+        request()->routeIs('admin.customer-leads.*') ||
+        request()->routeIs('admin.audit-logs.*');
 
     $digitalMenuGroupOpen =
         request()->routeIs('admin.digital-menu.settings') ||
@@ -251,6 +252,13 @@
                         <a href="{{ $demoOrAdminUrl('reports', route('admin.reports.index')) }}" class="sb-sublink {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>التقارير</span>
+                        </a>
+                    @endif
+
+                    @if($hasAdminPermission('view_audit_logs'))
+                        <a href="{{ route('admin.audit-logs.index') }}" class="sb-sublink {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>Audit Logs</span>
                         </a>
                     @endif
 
