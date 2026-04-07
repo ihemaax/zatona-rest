@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class GeminiService
@@ -12,7 +13,11 @@ class GeminiService
         try {
             return $this->askGroq($prompt);
         } catch (\Throwable $groqError) {
-            return 'Groq مش شغال حاليًا. الخطأ: ' . $groqError->getMessage();
+            Log::error('ai.groq.request_failed', [
+                'message' => $groqError->getMessage(),
+            ]);
+
+            return 'المساعد الذكي غير متاح حاليًا، حاول تاني بعد شوية.';
         }
     }
 
