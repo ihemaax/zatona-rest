@@ -30,8 +30,8 @@ class SecurityHeaders
             . "form-action 'self'; "
             . "object-src 'none'; "
             . "img-src 'self' data: https:; "
-            . "font-src 'self' data: https:; "
-            . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+            . "font-src 'self' data: https://fonts.gstatic.com; "
+            . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
             . "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://unpkg.com https://www.googletagmanager.com; "
             . "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com wss:; ";
 
