@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,11 +23,44 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if (auth()->user()->canAccessAdminPanel()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+        $user = auth()->user();
+
+        if ($user && $user->canAccessAdminPanel()) {
+            return $this->redirectToStaffLanding($user);
         }
 
         return redirect()->intended(route('home', absolute: false));
+    }
+
+    protected function redirectToStaffLanding(User $user): RedirectResponse
+    {
+        if ($user->canAccessDashboard()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->role === User::ROLE_KITCHEN) {
+            return redirect()->route('admin.kitchen.index');
+        }
+
+        if ($user->role === User::ROLE_DELIVERY) {
+            return redirect()->route('admin.delivery.dashboard');
+        }
+
+        if ($user->hasPermission('use_cashier')) {
+            if ($user->hasPermission('manage_cashier')) {
+                return redirect()->route('admin.cashier.index');
+            }
+
+            if (!empty($user->branch_id)) {
+                return redirect()->route('admin.cashier.pos', ['branch' => $user->branch_id]);
+            }
+        }
+
+        if ($user->hasPermission('view_orders')) {
+            return redirect()->route('admin.orders.index');
+        }
+
+        return redirect()->route('home');
     }
 
     public function destroy(Request $request): RedirectResponse
