@@ -91,6 +91,8 @@ class User extends Authenticatable
             'manage_staff' => 'إدارة الموظفين',
             'manage_delivery' => 'متابعة وإدارة الدليفري',
             'view_reports' => 'عرض التقارير',
+            'manage_cashier' => 'إدارة نظام الكاشير',
+            'use_cashier' => 'استخدام شاشة الكاشير',
         ];
     }
 
@@ -111,6 +113,8 @@ class User extends Authenticatable
                 'manage_staff',
                 'manage_delivery',
                 'view_reports',
+                'manage_cashier',
+                'use_cashier',
             ],
 
             self::ROLE_MANAGER => [
@@ -122,16 +126,20 @@ class User extends Authenticatable
                 'manage_digital_menu',
                 'manage_delivery',
                 'view_reports',
+                'manage_cashier',
+                'use_cashier',
             ],
 
             self::ROLE_BRANCH_STAFF => [
                 'view_orders',
                 'update_order_status',
+                'use_cashier',
             ],
 
             self::ROLE_CASHIER => [
                 'view_orders',
                 'update_order_status',
+                'use_cashier',
             ],
 
             self::ROLE_KITCHEN => [

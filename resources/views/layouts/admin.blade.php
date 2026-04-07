@@ -55,6 +55,8 @@
         request()->routeIs('admin.orders.show') ||
         request()->routeIs('admin.orders.delivery') ||
         request()->routeIs('admin.orders.pickup') ||
+        request()->routeIs('admin.cashier.pos') ||
+        request()->routeIs('admin.cashier.invoice') ||
         request()->routeIs('admin.kitchen.*') ||
         request()->routeIs('admin.orders.ready');
 
@@ -62,6 +64,7 @@
         request()->routeIs('admin.branches.*') ||
         request()->routeIs('admin.categories.*') ||
         request()->routeIs('admin.products.*') ||
+        request()->routeIs('admin.cashier.index') ||
         request()->routeIs('admin.coupons.*') ||
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
@@ -155,6 +158,13 @@
                             <span>طلبات الاستلام</span>
                         </a>
 
+                        @if($adminUser?->hasPermission('use_cashier') && $adminUser?->branch_id)
+                            <a href="{{ route('admin.cashier.pos', $adminUser->branch_id) }}" class="sb-sublink {{ request()->routeIs('admin.cashier.pos') || request()->routeIs('admin.cashier.invoice') ? 'active' : '' }}">
+                                <span class="sb-sublink-dot"></span>
+                                <span>شاشة الكاشير</span>
+                            </a>
+                        @endif
+
                         <a href="{{ $demoOrAdminUrl('kitchen', route('admin.kitchen.index')) }}" class="sb-sublink {{ request()->routeIs('admin.kitchen.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>شاشة المطبخ</span>
@@ -207,6 +217,13 @@
                         <a href="{{ $demoOrAdminUrl('products', route('admin.products.index')) }}" class="sb-sublink {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>المنتجات</span>
+                        </a>
+                    @endif
+
+                    @if($hasAdminPermission('manage_cashier'))
+                        <a href="{{ route('admin.cashier.index') }}" class="sb-sublink {{ request()->routeIs('admin.cashier.index') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>إدارة الكاشير</span>
                         </a>
                     @endif
 
