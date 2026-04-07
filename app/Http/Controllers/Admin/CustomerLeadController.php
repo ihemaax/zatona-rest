@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\CustomerLeadsExport;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerLeadController extends Controller
 {
@@ -16,7 +15,7 @@ class CustomerLeadController extends Controller
 
         $customers = User::query()
             ->where('user_type', User::TYPE_CUSTOMER)
-            ->select(['id', 'name', 'email', 'phone', 'created_at'])
+            ->select(['id', 'name', 'email', 'phone'])
             ->latest('id')
             ->paginate(30);
 
@@ -25,19 +24,42 @@ class CustomerLeadController extends Controller
         ]);
     }
 
-    public function export(Request $request)
+    public function export(Request $request): StreamedResponse
     {
         $this->authorizeAccess($request->user());
 
         $customers = User::query()
             ->where('user_type', User::TYPE_CUSTOMER)
-            ->select(['name', 'email', 'phone', 'created_at'])
+            ->select(['name', 'email', 'phone'])
             ->latest('id')
-            ->get();
+            ->cursor();
 
-        $fileName = 'customer_leads_' . now()->format('Ymd_His') . '.xlsx';
+        $fileName = 'customer_leads_' . now()->format('Ymd_His') . '.csv';
 
-        return Excel::download(new CustomerLeadsExport($customers), $fileName);
+        return response()->streamDownload(function () use ($customers): void {
+            $handle = fopen('php://output', 'w');
+
+            if ($handle === false) {
+                return;
+            }
+
+            // BOM for UTF-8 so Arabic appears correctly in Excel.
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, ['الاسم', 'الإيميل', 'رقم الهاتف']);
+
+            foreach ($customers as $customer) {
+                fputcsv($handle, [
+                    $customer->name,
+                    $customer->email,
+                    $customer->phone,
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     protected function authorizeAccess(?User $user): void

@@ -77,5 +77,6 @@ class CustomerLeadsTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-disposition');
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
     }
 }
