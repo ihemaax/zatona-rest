@@ -206,8 +206,8 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+<script nonce="{{ $cspNonce }}" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script nonce="{{ $cspNonce }}">
     const defaultLat = 31.2001;
     const defaultLng = 29.9187;
     const deliveryFee = {{ (float)($setting->delivery_fee ?? 0) }};

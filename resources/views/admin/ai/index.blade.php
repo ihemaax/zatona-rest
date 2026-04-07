@@ -601,7 +601,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const chatBody = document.getElementById('aiChatBody');
     const thread = document.getElementById('cgptThread');

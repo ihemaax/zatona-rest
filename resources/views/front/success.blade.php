@@ -40,7 +40,7 @@
 </div>
 @endsection
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
 window.dataLayer = window.dataLayer || [];
 window.dataLayer.push({
     event: 'purchase',

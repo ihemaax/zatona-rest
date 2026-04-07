@@ -56,5 +56,6 @@ return [
 
     'analytics' => [
         'measurement_id' => env('ANALYTICS_MEASUREMENT_ID'),
+        'load_external_script' => env('ANALYTICS_LOAD_EXTERNAL_SCRIPT', false),
     ],
 ];

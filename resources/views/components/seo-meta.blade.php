@@ -35,7 +35,7 @@
 <meta name="twitter:description" content="{{ $resolvedDescription }}">
 <meta name="twitter:image" content="{{ $resolvedImage }}">
 
-<script type="application/ld+json">
+<script nonce="{{ $cspNonce }}" type="application/ld+json">
 {!! json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'Restaurant',

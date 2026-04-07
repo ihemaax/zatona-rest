@@ -539,7 +539,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
     const basePrice = {{ (float) $product->price }};
     const quantityInput = document.getElementById('quantityInput');
     const finalPriceElement = document.getElementById('finalPrice');

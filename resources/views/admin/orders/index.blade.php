@@ -647,7 +647,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const desktopBody = document.getElementById('ordersDesktopTableBody');
     const mobileList = document.getElementById('ordersMobileList');

@@ -273,7 +273,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const copyBtn = document.getElementById('copyMenuLinkBtn');
     const input = document.getElementById('digitalMenuLink');
