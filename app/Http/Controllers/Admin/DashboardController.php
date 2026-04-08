@@ -251,20 +251,32 @@ class DashboardController extends Controller
 
     public function demo(Request $request)
     {
-        $range = $request->query('range', 'today');
-        if (!in_array($range, ['today', '7d', '30d'], true)) {
-            $range = 'today';
-        }
-
-        return view('admin.dashboard', array_merge(
-            $this->buildEmptyDashboardData($range),
-            [
-                'dashboardBaseRoute' => 'admin.dashboard.demo',
-                'dashboardPollRoute' => null,
-                'dashboardExportRoute' => null,
-                'isDemoDashboard' => true,
-            ]
-        ));
+        return view('demo.admin-dashboard-standalone', [
+            'demoUpdatedAt' => now()->format('Y-m-d h:i A'),
+            'cards' => [
+                'orders_count' => 842,
+                'new_orders' => 67,
+                'pending_orders' => 21,
+                'branches_count' => 12,
+                'today_sales' => 154320.50,
+                'delivery_sales' => 109740.25,
+                'pickup_sales' => 44580.25,
+                'avg_order_value' => 183.28,
+            ],
+            'branches' => [
+                ['name' => 'فرع مدينة نصر', 'orders' => 166, 'sales' => 29840.00, 'sla' => '22 دقيقة'],
+                ['name' => 'فرع المعادي', 'orders' => 142, 'sales' => 25610.50, 'sla' => '24 دقيقة'],
+                ['name' => 'فرع التجمع الخامس', 'orders' => 174, 'sales' => 32220.00, 'sla' => '21 دقيقة'],
+                ['name' => 'فرع 6 أكتوبر', 'orders' => 133, 'sales' => 24890.00, 'sla' => '25 دقيقة'],
+            ],
+            'latestOrders' => [
+                ['number' => 'ORD-91310', 'customer' => 'Khaled Mostafa', 'type' => 'Delivery', 'total' => 320.00, 'status' => 'Out for Delivery'],
+                ['number' => 'ORD-91311', 'customer' => 'Sara Emad', 'type' => 'Pickup', 'total' => 190.00, 'status' => 'Preparing'],
+                ['number' => 'ORD-91312', 'customer' => 'Omar Hany', 'type' => 'Delivery', 'total' => 275.00, 'status' => 'Confirmed'],
+                ['number' => 'ORD-91313', 'customer' => 'Nadine Fathy', 'type' => 'Delivery', 'total' => 415.50, 'status' => 'Delivered'],
+                ['number' => 'ORD-91314', 'customer' => 'Mariam Adel', 'type' => 'Pickup', 'total' => 165.00, 'status' => 'Ready'],
+            ],
+        ]);
     }
 
     public function exportSnapshot(Request $request): StreamedResponse
