@@ -136,11 +136,7 @@ class RegisteredUserController extends Controller
 
     protected function issueRegistrationOtp(User $user, WpSenderXService $otpService): bool
     {
-        $result = $otpService->sendOtp(
-            (string) $user->phone,
-            "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
-            (string) config('services.wpsenderx.session_id', '')
-        );
+        $result = $otpService->sendOtp((string) $user->phone);
 
         return (bool) ($result['ok'] ?? false);
     }

@@ -86,6 +86,135 @@ class CheckoutController extends Controller
         return back()->with('success', 'تم تطبيق الكوبون بنجاح');
     }
 
+    public function sendOtp(Request $request, WpSenderXService $otpService): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'customer_phone' => ContactValidation::egyptianMobileRules(),
+            ], ContactValidation::messages());
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            Log::warning('checkout.otp.send.validation_failed', [
+                'ip' => $request->ip(),
+                'errors' => $exception->errors(),
+            ]);
+
+            throw $exception;
+        }
+
+        Log::info('checkout.otp.send.received', [
+            'ip' => $request->ip(),
+            'has_csrf_header' => $request->headers->has('X-CSRF-TOKEN'),
+            'accept' => (string) $request->header('Accept'),
+            'content_type' => (string) $request->header('Content-Type'),
+        ]);
+
+        if (!$this->isOtpFeatureEnabled()) {
+            return response()->json([
+                'success' => true,
+                'ok' => true,
+                'type' => 'disabled',
+                'message' => 'التحقق عبر واتساب غير مفعل حاليًا.',
+            ], 200);
+        }
+
+        $normalizedPhone = $otpService->normalizePhone((string) $data['customer_phone']);
+        if (!$otpService->isEgyptianMobileForOtp($normalizedPhone)) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'type' => 'validation',
+                'message' => 'رقم الهاتف غير صالح.',
+            ], 422);
+        }
+
+        $result = $otpService->sendOtp($normalizedPhone);
+
+        if (!(bool) ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'type' => (string) ($result['type'] ?? 'provider'),
+                'message' => (string) ($result['message'] ?? 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.'),
+            ], (int) ($result['status'] ?? 503));
+        }
+
+        Cache::put($this->otpCacheKey($request), [
+            'phone' => $normalizedPhone,
+            'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
+            'verified' => false,
+            'verified_at' => null,
+        ], now()->addMinutes($this->otpTtlMinutes));
+
+        session()->forget('checkout_phone_verified');
+
+        return response()->json([
+            'success' => true,
+            'ok' => true,
+            'type' => 'provider',
+            'message' => 'تم إرسال كود التحقق على واتساب.',
+            'expires_in_minutes' => $this->otpTtlMinutes,
+        ]);
+    }
+
+    public function verifyOtp(Request $request, WpSenderXService $otpService): JsonResponse
+    {
+        $data = $request->validate([
+            'customer_phone' => ContactValidation::egyptianMobileRules(),
+            'otp_code' => ['required', 'digits:6'],
+        ], ContactValidation::messages());
+
+        if (!$this->isOtpFeatureEnabled()) {
+            return response()->json([
+                'success' => true,
+                'ok' => true,
+                'type' => 'disabled',
+                'message' => 'التحقق عبر واتساب غير مفعل.',
+            ], 200);
+        }
+
+        $normalizedPhone = $otpService->normalizePhone((string) $data['customer_phone']);
+        $payload = Cache::get($this->otpCacheKey($request));
+
+        if (!$payload) {
+            return response()->json(['success' => false, 'ok' => false, 'type' => 'validation', 'message' => 'الكود غير موجود أو منتهي. اطلب كود جديد.'], 422);
+        }
+
+        if (($payload['phone'] ?? '') !== $normalizedPhone) {
+            $this->clearOtpSession($request);
+
+            return response()->json(['success' => false, 'ok' => false, 'type' => 'validation', 'message' => 'رقم الهاتف تغيّر. من فضلك اطلب كود جديد.'], 422);
+        }
+
+        if ((int) ($payload['expires_at'] ?? 0) < now()->timestamp) {
+            $this->clearOtpSession($request);
+
+            return response()->json(['success' => false, 'ok' => false, 'type' => 'validation', 'message' => 'انتهت صلاحية الكود. اطلب كود جديد.'], 422);
+        }
+
+        $result = $otpService->verifyOtp($normalizedPhone, (string) $data['otp_code']);
+        if (!(bool) ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'type' => (string) ($result['type'] ?? 'provider'),
+                'message' => (string) ($result['message'] ?? 'كود التحقق غير صحيح أو منتهي.'),
+            ], (int) ($result['status'] ?? 422));
+        }
+
+        $payload['verified'] = true;
+        $payload['verified_at'] = now()->timestamp;
+
+        Cache::put($this->otpCacheKey($request), $payload, now()->addMinutes($this->otpTtlMinutes));
+        session(['checkout_phone_verified' => $normalizedPhone]);
+
+        return response()->json([
+            'success' => true,
+            'ok' => true,
+            'type' => 'provider',
+            'message' => 'تم التحقق من رقم الهاتف بنجاح.',
+        ]);
+    }
+
     public function store(Request $request)
     {
         $setting = Setting::first();
