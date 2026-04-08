@@ -14,15 +14,21 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
-    protected function applyOrderScope($query)
+    protected function applyOrderScope($query, ?int $branchFilterId = null)
     {
         $user = auth()->user();
 
         if (!$user) {
+            if ($branchFilterId) {
+                $query->where('branch_id', $branchFilterId);
+            }
             return $query;
         }
 
         if ($user->canViewAllBranchesOrders()) {
+            if ($branchFilterId) {
+                $query->where('branch_id', $branchFilterId);
+            }
             return $query;
         }
 
@@ -47,11 +53,53 @@ class DashboardController extends Controller
         }
     }
 
-    protected function buildDashboardData(string $range = 'today'): array
+    protected function resolveBranchFilter(Request $request, ?User $user): ?int
+    {
+        $branchId = (int) $request->query('branch_id', 0);
+        if ($branchId <= 0) {
+            return null;
+        }
+
+        if (!$user) {
+            return null;
+        }
+
+        if ($user->canViewAllBranchesOrders()) {
+            return Branch::whereKey($branchId)->exists() ? $branchId : null;
+        }
+
+        if ($user->branch_id && (int) $user->branch_id === $branchId) {
+            return $branchId;
+        }
+
+        return null;
+    }
+
+    protected function branchFilterOptions(?User $user)
+    {
+        if (!$user) {
+            return collect();
+        }
+
+        if ($user->canViewAllBranchesOrders()) {
+            return Branch::query()->orderBy('name')->get(['id', 'name']);
+        }
+
+        if ($user->branch_id) {
+            return Branch::query()
+                ->whereKey($user->branch_id)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
+        return collect();
+    }
+
+    protected function buildDashboardData(string $range = 'today', ?int $branchFilterId = null): array
     {
         $user = auth()->user();
         $ordersBase = Order::query();
-        $this->applyOrderScope($ordersBase);
+        $this->applyOrderScope($ordersBase, $branchFilterId);
         $this->applyDateRange($ordersBase, $range);
 
         $ordersCount = (clone $ordersBase)->count();
@@ -82,7 +130,7 @@ class DashboardController extends Controller
             $date = Carbon::today()->subDays($daysAgo);
 
             $dailyQuery = Order::query();
-            $this->applyOrderScope($dailyQuery);
+            $this->applyOrderScope($dailyQuery, $branchFilterId);
 
             if ($range === '30d') {
                 $dailyQuery->whereDate('created_at', '>=', today()->subDays(29));
@@ -133,22 +181,39 @@ class DashboardController extends Controller
             ->orderByDesc('total_quantity')
             ->limit(5);
 
-        $this->applyOrderScope($topProducts);
+        $this->applyOrderScope($topProducts, $branchFilterId);
         $this->applyDateRange($topProducts, $range, 'orders.created_at');
         $topProducts = $topProducts->get();
 
-        if (!$user) {
-            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
+        $branchesStatsQuery = Branch::query()->orderBy('name');
+        if ($branchFilterId) {
+            $branchesStatsQuery->whereKey($branchFilterId);
+        } elseif ($user && !$user->canViewAllBranchesOrders() && $user->branch_id) {
+            $branchesStatsQuery->whereKey($user->branch_id);
+        } elseif ($user && !$user->canViewAllBranchesOrders() && !$user->branch_id) {
+            $branchesStatsQuery->whereRaw('1 = 0');
+        }
+
+        $branchesStats = $branchesStatsQuery
+            ->withCount(['orders as orders_count' => function ($query) use ($range, $branchFilterId) {
+                $this->applyOrderScope($query, $branchFilterId);
+                $this->applyDateRange($query, $range);
+            }])
+            ->get();
+
+        if (!$user && $branchFilterId) {
+            $branchesStats = $branchesStats->where('id', $branchFilterId)->values();
+        } elseif (!$user) {
+            $branchesStats = $branchesStats->values();
         } elseif ($user->canViewAllBranchesOrders()) {
-            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
-        } elseif ($user->branch_id) {
-            $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
+            $branchesStats = $branchesStats->values();
         } else {
-            $branchesStats = collect();
+            $branchesStats = $branchesStats->values();
         }
 
         return [
             'range' => $range,
+            'selectedBranchId' => $branchFilterId,
             'ordersCount' => $ordersCount,
             'todayOrders' => $ordersCount,
             'newOrders' => $newOrders,
@@ -171,7 +236,7 @@ class DashboardController extends Controller
         ];
     }
 
-    protected function buildEmptyDashboardData(string $range = 'today'): array
+    protected function buildEmptyDashboardData(string $range = 'today', ?int $branchFilterId = null): array
     {
         $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) {
             $date = Carbon::today()->subDays($daysAgo);
@@ -186,6 +251,7 @@ class DashboardController extends Controller
 
         return [
             'range' => $range,
+            'selectedBranchId' => $branchFilterId,
             'ordersCount' => 0,
             'todayOrders' => 0,
             'newOrders' => 0,
@@ -237,14 +303,17 @@ class DashboardController extends Controller
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
         }
+        $selectedBranchId = $this->resolveBranchFilter($request, $user);
+        $branchFilterOptions = $this->branchFilterOptions($user);
 
         return view('admin.dashboard', array_merge(
-            $this->buildDashboardData($range),
+            $this->buildDashboardData($range, $selectedBranchId),
             [
                 'dashboardBaseRoute' => 'admin.dashboard',
                 'dashboardPollRoute' => 'admin.dashboard.poll',
                 'dashboardExportRoute' => 'admin.dashboard.export-snapshot',
                 'isDemoDashboard' => false,
+                'branchFilterOptions' => $branchFilterOptions,
             ]
         ));
     }
@@ -255,6 +324,8 @@ class DashboardController extends Controller
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
         }
+        $selectedBranchId = (int) $request->query('branch_id', 0);
+        $selectedBranchId = $selectedBranchId > 0 ? $selectedBranchId : null;
 
         $now = now();
 
@@ -311,6 +382,7 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', [
             'range' => $range,
+            'selectedBranchId' => $selectedBranchId,
             'ordersCount' => 842,
             'todayOrders' => 842,
             'newOrders' => 67,
@@ -343,6 +415,7 @@ class DashboardController extends Controller
             'dashboardPollRoute' => null,
             'dashboardExportRoute' => null,
             'isDemoDashboard' => true,
+            'branchFilterOptions' => Branch::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -355,8 +428,9 @@ class DashboardController extends Controller
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
         }
+        $selectedBranchId = $this->resolveBranchFilter($request, $user);
 
-        $data = $this->buildDashboardData($range);
+        $data = $this->buildDashboardData($range, $selectedBranchId);
 
         $filename = 'dashboard-snapshot-' . $range . '-' . now()->format('Ymd-His') . '.csv';
 
@@ -388,8 +462,9 @@ class DashboardController extends Controller
         if (!in_array($range, ['today', '7d', '30d'], true)) {
             $range = 'today';
         }
+        $selectedBranchId = $this->resolveBranchFilter($request, $user);
 
-        $data = $this->buildDashboardData($range);
+        $data = $this->buildDashboardData($range, $selectedBranchId);
 
         return response()->json([
             'cards' => [
