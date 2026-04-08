@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesMediaPath;
 use Illuminate\Database\Eloquent\Model;
 
 class DigitalMenuItem extends Model
 {
+    use NormalizesMediaPath;
     protected $fillable = [
         'digital_menu_category_id',
         'name',
@@ -26,4 +28,12 @@ class DigitalMenuItem extends Model
     {
         return $this->belongsTo(DigitalMenuCategory::class, 'digital_menu_category_id');
     }
+
+
+
+    public function getImageAttribute(mixed $value): ?string
+    {
+        return $this->normalizeMediaPath($value);
+    }
+
 }
