@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\ContactValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -139,12 +140,12 @@ class CashierController extends Controller
 
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['nullable', 'string', 'max:20'],
+            'customer_phone' => ContactValidation::egyptianMobileRules(false),
             'notes' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'exists:cashier_menu_items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1', 'max:100'],
-        ]);
+        ], ContactValidation::messages());
 
         $menuItems = CashierMenuItem::with('product')
             ->where('branch_id', $branch->id)
@@ -186,7 +187,9 @@ class CashierController extends Controller
                 'order_type' => 'pickup',
                 'branch_id' => $branch->id,
                 'customer_name' => $validated['customer_name'],
-                'customer_phone' => $validated['customer_phone'] ?? 'غير متوفر',
+                'customer_phone' => !empty($validated['customer_phone'])
+                    ? ContactValidation::normalizeEgyptianMobile((string) $validated['customer_phone'])
+                    : 'غير متوفر',
                 'address_line' => 'داخل المطعم - طلب كاشير',
                 'area' => $branch->name,
                 'notes' => $validated['notes'] ?? null,

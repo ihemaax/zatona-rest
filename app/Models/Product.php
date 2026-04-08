@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalizesMediaPath;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
+    use NormalizesMediaPath;
     protected $fillable = [
         'category_id',
         'name',
@@ -36,4 +38,12 @@ class Product extends Model
 {
     return $this->hasMany(\App\Models\ProductOptionGroup::class)->orderBy('sort_order');
 }
+
+
+
+    public function getImageAttribute(mixed $value): ?string
+    {
+        return $this->normalizeMediaPath($value);
+    }
+
 }
