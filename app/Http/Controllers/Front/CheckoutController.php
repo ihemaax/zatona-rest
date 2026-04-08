@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
+use App\Support\ContactValidation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -72,7 +73,7 @@ class CheckoutController extends Controller
     {
         $request->validate([
             'coupon_code' => 'required|string|max:40',
-        ]);
+        ], ContactValidation::messages());
 
         $cart = session()->get('cart', []);
         $subtotal = (float) collect($cart)->sum('total');
@@ -100,7 +101,7 @@ class CheckoutController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
 
             'customer_name'  => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:20',
+            'customer_phone' => ContactValidation::egyptianMobileRules(),
 
             'address_line'   => 'nullable|string|max:255',
             'area'           => 'nullable|string|max:255',
@@ -112,9 +113,9 @@ class CheckoutController extends Controller
             'address_label'  => 'nullable|string|max:255',
             'make_default'   => 'nullable|boolean',
             'coupon_code'    => 'nullable|string|max:40',
-        ]);
+        ], ContactValidation::messages());
 
-        $normalizedPhone = $this->normalizeEgyptianPhone((string) $request->customer_phone);
+        $normalizedPhone = ContactValidation::normalizeEgyptianMobile((string) $request->customer_phone);
         if (!$this->isOtpVerifiedForPhone($request, $normalizedPhone)) {
             session(['checkout_pending_payload' => $request->only([
                 'order_type',
@@ -188,7 +189,7 @@ class CheckoutController extends Controller
                 'branch_id'                  => $request->order_type === 'pickup' ? $request->branch_id : null,
 
                 'customer_name'              => $request->customer_name,
-                'customer_phone'             => $request->customer_phone,
+                'customer_phone'             => $normalizedPhone,
 
                 'address_line'               => $request->order_type === 'delivery'
                     ? $request->address_line
@@ -307,7 +308,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
         }
 
-        $phone = $this->normalizeEgyptianPhone((string) $pending['customer_phone']);
+        $phone = ContactValidation::normalizeEgyptianMobile((string) $pending['customer_phone']);
         $cacheKey = $this->otpCacheKey($request);
         $payload = Cache::get($cacheKey);
 
@@ -349,7 +350,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
         }
 
-        $phone = $this->normalizeEgyptianPhone((string) $pending['customer_phone']);
+        $phone = ContactValidation::normalizeEgyptianMobile((string) $pending['customer_phone']);
         $this->issueOtp($request, $phone);
 
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
@@ -399,28 +400,6 @@ class CheckoutController extends Controller
     protected function otpCacheKey(Request $request): string
     {
         return 'checkout_otp:' . sha1((string) $request->session()->getId());
-    }
-
-    protected function normalizeEgyptianPhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-        if ($digits === '') {
-            return '';
-        }
-
-        if (str_starts_with($digits, '00')) {
-            $digits = substr($digits, 2);
-        }
-
-        if (str_starts_with($digits, '0')) {
-            $digits = '2' . $digits;
-        }
-
-        if (!str_starts_with($digits, '2')) {
-            $digits = '2' . $digits;
-        }
-
-        return $digits;
     }
 
     protected function isOtpVerifiedForPhone(Request $request, string $phone): bool
