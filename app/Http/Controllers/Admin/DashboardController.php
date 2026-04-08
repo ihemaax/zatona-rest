@@ -126,7 +126,7 @@ class DashboardController extends Controller
             'cancelled' => (clone $ordersBase)->where('status', 'cancelled')->count(),
         ];
 
-        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($range) {
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($range, $branchFilterId) {
             $date = Carbon::today()->subDays($daysAgo);
 
             $dailyQuery = Order::query();
