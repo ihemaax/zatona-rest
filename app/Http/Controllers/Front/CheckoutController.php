@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendWhatsappTextJob;
 use App\Models\Branch;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
+use App\Services\WpSenderOtpService;
 use App\Support\ContactValidation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -23,7 +22,6 @@ use Illuminate\View\View;
 class CheckoutController extends Controller
 {
     protected int $otpTtlMinutes = 10;
-    protected int $otpMaxAttempts = 5;
 
     public function method()
     {
@@ -316,7 +314,6 @@ class CheckoutController extends Controller
             return back()->with('error', 'الكود غير موجود أو منتهي. اطلب كود جديد.');
         }
 
-        $payload['attempts'] = (int) ($payload['attempts'] ?? 0) + 1;
         if (($payload['phone'] ?? null) !== $phone) {
             return back()->with('error', 'رقم الهاتف لا يطابق الرقم المرسل.');
         }
@@ -325,13 +322,8 @@ class CheckoutController extends Controller
             return back()->with('error', 'انتهت صلاحية الكود. اطلب كود جديد.');
         }
 
-        if ((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts) {
-            return back()->with('error', 'تم تجاوز عدد المحاولات المسموح. اطلب كود جديد.');
-        }
-
-        if (!Hash::check($data['otp_code'], (string) ($payload['code_hash'] ?? ''))) {
-            Cache::put($cacheKey, $payload, now()->addMinutes($this->otpTtlMinutes));
-            return back()->with('error', 'كود التحقق غير صحيح.');
+        if (!app(WpSenderOtpService::class)->verifyOtp($phone, (string) $data['otp_code'])) {
+            return back()->with('error', 'كود التحقق غير صحيح أو منتهي.');
         }
 
         $payload['verified'] = true;
@@ -442,21 +434,18 @@ class CheckoutController extends Controller
 
     protected function issueOtp(Request $request, string $phone): void
     {
-        $code = (string) random_int(100000, 999999);
         $cacheKey = $this->otpCacheKey($request);
+
+        app(WpSenderOtpService::class)->sendOtp(
+            $phone,
+            "كود تأكيد الطلب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
+        );
 
         Cache::put($cacheKey, [
             'phone' => $phone,
-            'code_hash' => Hash::make($code),
-            'attempts' => 0,
             'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
             'verified' => false,
             'verified_at' => null,
         ], now()->addMinutes($this->otpTtlMinutes));
-
-        SendWhatsappTextJob::dispatch(
-            $phone,
-            "كود تأكيد الطلب: {$code}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
-        );
     }
 }
