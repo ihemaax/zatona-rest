@@ -255,7 +255,7 @@
                         @if(!empty($setting->logo))
                             <div class="preview-box">
                                 <img
-                                    src="{{ asset('storage/' . $setting->logo) }}"
+                                    src="{{ \App\Support\MediaUrl::fromPath($setting->logo) }}"
                                     alt="logo"
                                     class="preview-thumb logo-thumb"
                                 >
@@ -271,7 +271,7 @@
                         @if(!empty($setting->banner))
                             <div class="preview-box">
                                 <img
-                                    src="{{ asset('storage/' . $setting->banner) }}"
+                                    src="{{ \App\Support\MediaUrl::fromPath($setting->banner) }}"
                                     alt="banner"
                                     class="preview-thumb banner-thumb"
                                 >
