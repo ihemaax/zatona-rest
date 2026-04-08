@@ -230,4 +230,15 @@ return [
 
     'serialization' => 'json',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Absolute Session Timeout (seconds)
+    |--------------------------------------------------------------------------
+    |
+    | In addition to idle timeout, force a full re-authentication after this
+    | many seconds from login time for better account/session hardening.
+    |
+    */
+    'absolute_timeout_seconds' => (int) env('SESSION_ABSOLUTE_TIMEOUT_SECONDS', 18000),
+
 ];
