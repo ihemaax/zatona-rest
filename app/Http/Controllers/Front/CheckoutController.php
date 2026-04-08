@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsappTextJob;
 use App\Models\Branch;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
-use App\Services\WapilotService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -132,7 +132,7 @@ class CheckoutController extends Controller
                 'coupon_code',
             ])]);
 
-            $this->issueOtpIfNeeded($request, $normalizedPhone, app(WapilotService::class));
+            $this->issueOtpIfNeeded($request, $normalizedPhone);
 
             return redirect()
                 ->route('checkout.otp.page')
@@ -342,7 +342,7 @@ class CheckoutController extends Controller
         return $this->store($request);
     }
 
-    public function resendOtp(Request $request, WapilotService $wapilot): RedirectResponse
+    public function resendOtp(Request $request): RedirectResponse
     {
         $pending = session('checkout_pending_payload');
         if (!$pending || empty($pending['customer_phone'])) {
@@ -350,7 +350,7 @@ class CheckoutController extends Controller
         }
 
         $phone = $this->normalizeEgyptianPhone((string) $pending['customer_phone']);
-        $this->issueOtp($request, $phone, $wapilot);
+        $this->issueOtp($request, $phone);
 
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
@@ -448,7 +448,7 @@ class CheckoutController extends Controller
         session()->forget('checkout_pending_payload');
     }
 
-    protected function issueOtpIfNeeded(Request $request, string $phone, WapilotService $wapilot): void
+    protected function issueOtpIfNeeded(Request $request, string $phone): void
     {
         $payload = Cache::get($this->otpCacheKey($request));
 
@@ -457,11 +457,11 @@ class CheckoutController extends Controller
             || ($payload['phone'] ?? null) !== $phone
             || (int) ($payload['expires_at'] ?? 0) < now()->timestamp
         ) {
-            $this->issueOtp($request, $phone, $wapilot);
+            $this->issueOtp($request, $phone);
         }
     }
 
-    protected function issueOtp(Request $request, string $phone, WapilotService $wapilot): void
+    protected function issueOtp(Request $request, string $phone): void
     {
         $code = (string) random_int(100000, 999999);
         $cacheKey = $this->otpCacheKey($request);
@@ -475,7 +475,7 @@ class CheckoutController extends Controller
             'verified_at' => null,
         ], now()->addMinutes($this->otpTtlMinutes));
 
-        $wapilot->sendTextToPhone(
+        SendWhatsappTextJob::dispatch(
             $phone,
             "كود تأكيد الطلب: {$code}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
         );

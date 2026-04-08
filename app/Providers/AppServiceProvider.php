@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->fallbackFromRedisIfExtensionMissing();
+        $this->validateCriticalSecrets();
 
         Paginator::useBootstrapFive();
 
@@ -42,7 +45,28 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        View::share('setting', Setting::first());
+        $sharedSetting = Setting::first();
+
+        try {
+            $sharedSetting = Cache::remember('global.setting.v1', now()->addMinutes(5), fn () => Setting::first());
+        } catch (\Throwable $exception) {
+            Log::warning('cache.setting_fallback', [
+                'driver' => config('cache.default'),
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        View::share('setting', $sharedSetting);
+
+        RateLimiter::for('auth-login', function (Request $request) {
+            $email = strtolower((string) $request->input('email'));
+
+            return [
+                Limit::perMinute(6)->by($request->ip()),
+                Limit::perMinute(8)->by($email . '|' . $request->ip()),
+                Limit::perHour(40)->by($request->ip() . '|login-hourly'),
+            ];
+        });
 
         RateLimiter::for('cart', function (Request $request) {
             return Limit::perMinute(80)
@@ -84,6 +108,16 @@ class AppServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(20)->by($request->user()?->id ?: $request->ip()),
                 Limit::perHour(200)->by(($request->user()?->id ?: $request->ip()) . '|admin-ai-hourly'),
+            ];
+        });
+
+        RateLimiter::for('admin-actions', function (Request $request) {
+            $actorKey = (string) ($request->user()?->id ?: $request->ip());
+
+            return [
+                Limit::perMinute(60)->by($actorKey),
+                Limit::perMinute(20)->by($actorKey . '|' . $request->path()),
+                Limit::perHour(500)->by($actorKey . '|admin-hourly'),
             ];
         });
 
@@ -132,5 +166,61 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('layoutNewOrdersCount', $newOrdersCount);
         });
+    }
+
+    protected function validateCriticalSecrets(): void
+    {
+        if (!app()->isProduction()) {
+            return;
+        }
+
+        $missing = [];
+
+        if ((string) config('app.key') === '') {
+            $missing[] = 'APP_KEY';
+        }
+
+        if ((string) config('services.wapilot.token') === '') {
+            $missing[] = 'WAPILOT_TOKEN';
+        }
+
+        if ((string) config('services.wapilot.instance_id') === '') {
+            $missing[] = 'WAPILOT_INSTANCE_ID';
+        }
+
+        if ($missing !== []) {
+            Log::critical('critical.secrets.missing', [
+                'missing' => $missing,
+            ]);
+        }
+    }
+
+    protected function fallbackFromRedisIfExtensionMissing(): void
+    {
+        $redisClient = (string) config('database.redis.client', 'phpredis');
+        $redisExtensionMissing = $redisClient === 'phpredis' && !class_exists(\Redis::class);
+
+        if (!$redisExtensionMissing) {
+            return;
+        }
+
+        if ((string) config('cache.default') === 'redis') {
+            config(['cache.default' => 'database']);
+        }
+
+        if ((string) config('session.driver') === 'redis') {
+            config(['session.driver' => 'database']);
+            config(['session.store' => null]);
+        }
+
+        if ((string) config('queue.default') === 'redis') {
+            config(['queue.default' => 'database']);
+        }
+
+        Log::warning('redis.extension.missing_fallback_applied', [
+            'cache' => config('cache.default'),
+            'session' => config('session.driver'),
+            'queue' => config('queue.default'),
+        ]);
     }
 }

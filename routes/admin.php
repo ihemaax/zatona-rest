@@ -44,10 +44,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
-        Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
+        Route::post('/settings', [SettingController::class, 'update'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.settings.update');
 
         Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
-        Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])->name('admin.popup-campaign.update');
+        Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.popup-campaign.update');
     });
 
     Route::middleware('permission:manage_branches')->group(function () {
@@ -74,9 +78,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
-        Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
-        Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
-        Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+        Route::post('/coupons', [CouponController::class, 'store'])->middleware('throttle:admin-actions')->name('admin.coupons.store');
+        Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->middleware('throttle:admin-actions')->name('admin.coupons.update');
+        Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->middleware('throttle:admin-actions')->name('admin.coupons.destroy');
     });
 
     Route::middleware('permission:view_reports')->group(function () {
@@ -110,7 +114,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     /* Digital Menu */
     Route::get('/digital-menu/settings', [DigitalMenuSettingController::class, 'edit'])->name('admin.digital-menu.settings');
-    Route::post('/digital-menu/settings', [DigitalMenuSettingController::class, 'update'])->name('admin.digital-menu.settings.update');
+    Route::post('/digital-menu/settings', [DigitalMenuSettingController::class, 'update'])
+        ->middleware('throttle:admin-actions')
+        ->name('admin.digital-menu.settings.update');
 
     Route::get('/digital-menu/categories', [DigitalMenuCategoryController::class, 'index'])->name('admin.digital-menu.categories');
     Route::post('/digital-menu/categories', [DigitalMenuCategoryController::class, 'store'])->name('admin.digital-menu.categories.store');
@@ -148,13 +154,21 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/orders-pickup', [OrderController::class, 'pickupOrders'])->name('admin.orders.pickup');
     Route::get('/orders/poll', [OrderController::class, 'poll'])->name('admin.orders.poll');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
-    Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])->name('admin.orders.assign-delivery');
+    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])
+        ->middleware('throttle:admin-actions')
+        ->name('admin.orders.status');
+    Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])
+        ->middleware('throttle:admin-actions')
+        ->name('admin.orders.assign-delivery');
 
     Route::get('/kitchen', [KitchenController::class, 'index'])->name('admin.kitchen.index');
     Route::get('/kitchen/poll', [KitchenController::class, 'poll'])->name('admin.kitchen.poll');
-    Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])->name('admin.kitchen.start');
-    Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])->name('admin.kitchen.ready');
+    Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])
+        ->middleware('throttle:admin-actions')
+        ->name('admin.kitchen.start');
+    Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])
+        ->middleware('throttle:admin-actions')
+        ->name('admin.kitchen.ready');
 
     Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
     Route::get('/ready-orders/poll', [ReadyOrderController::class, 'poll'])->name('admin.orders.ready.poll');
