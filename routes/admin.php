@@ -27,7 +27,13 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Demo\AdminDemoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/demo/admin-dashboard', [DashboardController::class, 'demo'])->name('admin.dashboard.demo');
+Route::get('/demo/admin-dashboard', [DashboardController::class, 'demo'])
+    ->withoutMiddleware([
+        \App\Http\Middleware\AuthenticateSessionFingerprint::class,
+        \App\Http\Middleware\EnforceSessionAbsoluteTimeout::class,
+        \App\Http\Middleware\StoreAuditLog::class,
+    ])
+    ->name('admin.dashboard.demo');
 Route::get('/demo/admin/{path?}', [AdminDemoController::class, 'show'])
     ->where('path', '.*')
     ->name('admin.demo.module');
