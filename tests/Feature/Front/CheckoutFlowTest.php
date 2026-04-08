@@ -52,7 +52,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -104,7 +104,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -142,7 +142,7 @@ class CheckoutFlowTest extends TestCase
             'backendapi.wpsenderx.com/*' => Http::response(['status' => 'success', 'message' => 'sent'], 200),
         ]);
 
-        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '01000000000'])
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
             ->assertOk()
             ->assertJson(['ok' => true]);
     }
@@ -157,11 +157,11 @@ class CheckoutFlowTest extends TestCase
             'backendapi.wpsenderx.com/api/otp/verify' => Http::response(['status' => 'success'], 200),
         ]);
 
-        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '01000000000'])
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
             ->assertOk();
 
         $this->postJson(route('checkout.otp.verify'), [
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'otp_code' => '123456',
         ])->assertOk()->assertJson(['ok' => true]);
 
@@ -186,7 +186,7 @@ class CheckoutFlowTest extends TestCase
             'backendapi.wpsenderx.com/*' => Http::response('<html>Just a moment...</html>', 403, ['Content-Type' => 'text/html']),
         ]);
 
-        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '01000000000'])
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
             ->assertStatus(403)
             ->assertJson(['ok' => false]);
     }
@@ -221,7 +221,7 @@ class CheckoutFlowTest extends TestCase
         return [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,

@@ -314,7 +314,11 @@
                         </div>
                         <div>
                             <label class="elite-checkout-label">{{ __('checkout.phone_number') }}</label>
-                            <input type="text" name="customer_phone" id="customerPhoneInput" class="form-control" value="{{ old('customer_phone') }}" required>
+                            <div class="input-group">
+                                <span class="input-group-text" dir="ltr">+20</span>
+                                <input type="text" name="customer_phone" id="customerPhoneInput" class="form-control" value="{{ old('customer_phone') }}" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="1206628718" required>
+                            </div>
+                            <div class="elite-checkout-note mt-1">اكتب 10 أرقام فقط بدون +20</div>
                         </div>
                     </div>
                 </div>
@@ -671,6 +675,11 @@
         otpMessageBox.textContent = message || '';
     }
 
+    function sanitizeLocalEgyptianPhone(value) {
+        const digits = (value || '').replace(/\D/g, '');
+        return digits.slice(0, 10);
+    }
+
     function updateOtpUi() {
         if (!confirmOrderBtn || !otpStatusText) return;
         if (!otpEnabled) {
@@ -701,6 +710,9 @@
 
     async function sendOtpRequest() {
         const phone = customerPhoneInput?.value?.trim() || '';
+        if (customerPhoneInput) {
+            customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
+        }
         if (!phone) {
             setOtpMessage('من فضلك اكتب رقم الموبايل أولًا.', 'error');
             return;
@@ -723,6 +735,9 @@
 
     async function verifyOtpRequest() {
         const phone = customerPhoneInput?.value?.trim() || '';
+        if (customerPhoneInput) {
+            customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
+        }
         const otp = otpCodeInput?.value?.trim() || '';
 
         if (!phone || !otp) {
@@ -761,7 +776,9 @@
     }
 
     if (customerPhoneInput) {
+        customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
         customerPhoneInput.addEventListener('input', function () {
+            customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
             otpVerified = false;
             updateOtpUi();
             setOtpMessage('تم تغيير رقم الهاتف، لازم تعيد التحقق.', 'muted');

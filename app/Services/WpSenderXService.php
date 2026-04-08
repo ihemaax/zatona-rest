@@ -71,24 +71,28 @@ class WpSenderXService
             return '';
         }
 
-        if ($hasPlus && str_starts_with($digits, '20')) {
-            return $digits;
+        if ($hasPlus && str_starts_with($digits, '20') && strlen($digits) === 12) {
+            return '+' . $digits;
+        }
+
+        if (strlen($digits) === 10 && str_starts_with($digits, '1')) {
+            return '+20' . $digits;
         }
 
         if (strlen($digits) === 11 && str_starts_with($digits, '01')) {
-            return '2' . $digits;
+            return '+2' . $digits;
         }
 
         if (strlen($digits) === 12 && str_starts_with($digits, '20')) {
-            return $digits;
+            return '+' . $digits;
         }
 
-        return ltrim($digits, '+');
+        return '+' . ltrim($digits, '+');
     }
 
     public function isEgyptianMobileForOtp(string $normalized): bool
     {
-        return (bool) preg_match('/^201[0125][0-9]{8}$/', $normalized);
+        return (bool) preg_match('/^\\+201[0125][0-9]{8}$/', $normalized);
     }
 
     protected function request(string $method, string $endpoint, array $payload = []): array

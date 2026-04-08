@@ -16,7 +16,11 @@
 
         <div class="col-12">
             <label for="phone" class="auth-label">رقم واتساب</label>
-            <input id="phone" class="form-control auth-input" type="text" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="مثال: 01012345678">
+            <div class="input-group">
+                <span class="input-group-text" dir="ltr">+20</span>
+                <input id="phone" class="form-control auth-input" type="text" name="phone" value="{{ old('phone') }}" required autocomplete="tel" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="1206628718" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10)">
+            </div>
+            <div class="small text-muted mt-1">اكتب 10 أرقام فقط بدون +20</div>
             <x-input-error :messages="$errors->get('phone')" class="mt-2 text-danger small" />
         </div>
 

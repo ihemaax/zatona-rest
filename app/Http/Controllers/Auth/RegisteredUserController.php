@@ -9,6 +9,7 @@ use App\Support\ContactValidation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -35,13 +36,20 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [...ContactValidation::emailRules(), 'unique:' . User::class],
-            'phone' => [...ContactValidation::egyptianMobileRules(), 'unique:users,phone'],
+            'phone' => [
+                ...ContactValidation::egyptianMobileRules(),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $normalized = ContactValidation::normalizeEgyptianMobile((string) $value);
+                    if ($normalized !== '' && DB::table('users')->where('phone', $normalized)->exists()) {
+                        $fail('رقم الموبايل مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.');
+                    }
+                },
+            ],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ], array_merge(ContactValidation::messages(), [
             'name.required' => 'من فضلك اكتب الاسم بالكامل.',
             'name.max' => 'الاسم طويل جدًا. الحد الأقصى 255 حرف.',
             'email.unique' => 'البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم بريدًا آخر.',
-            'phone.unique' => 'رقم الموبايل مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.',
             'password.required' => 'من فضلك اكتب كلمة المرور.',
             'password.min' => 'كلمة المرور لازم تكون 6 أحرف على الأقل.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
