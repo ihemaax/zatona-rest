@@ -13,12 +13,12 @@ class WpSenderXService
     public function sendOtp(string $recipient, ?string $message = null, ?string $sessionId = null): array
     {
         if (!$this->isEnabled()) {
-            return $this->ok('WPSenderX disabled by configuration.', ['skipped' => true]);
+            return $this->result(true, 'disabled', 'WPSenderX disabled by configuration.', 200, ['skipped' => true]);
         }
 
         $normalized = $this->normalizePhone($recipient);
         if (!$this->isEgyptianMobileForOtp($normalized)) {
-            return $this->fail('رقم الهاتف غير صالح لإرسال كود التحقق.', 422, ['recipient' => $normalized]);
+            return $this->result(false, 'validation', 'رقم الهاتف غير صالح لإرسال كود التحقق.', 422, ['recipient' => $normalized]);
         }
 
         $payload = ['recipient' => $normalized];
@@ -37,12 +37,12 @@ class WpSenderXService
     public function verifyOtp(string $recipient, string $otpCode): array
     {
         if (!$this->isEnabled()) {
-            return $this->ok('WPSenderX disabled by configuration.', ['skipped' => true]);
+            return $this->result(true, 'disabled', 'WPSenderX disabled by configuration.', 200, ['skipped' => true]);
         }
 
         $normalized = $this->normalizePhone($recipient);
         if (!$this->isEgyptianMobileForOtp($normalized)) {
-            return $this->fail('رقم الهاتف غير صالح.', 422, ['recipient' => $normalized]);
+            return $this->result(false, 'validation', 'رقم الهاتف غير صالح.', 422, ['recipient' => $normalized]);
         }
 
         return $this->request('POST', '/otp/verify', [
@@ -98,12 +98,12 @@ class WpSenderXService
     protected function request(string $method, string $endpoint, array $payload = []): array
     {
         if (!$this->isEnabled()) {
-            return $this->ok('WPSenderX disabled by configuration.', ['skipped' => true]);
+            return $this->result(true, 'disabled', 'WPSenderX disabled by configuration.', 200, ['skipped' => true]);
         }
 
         $apiKey = trim((string) config('services.wpsenderx.api_key'));
         if ($apiKey === '') {
-            return $this->fail('WPSenderX API key is missing.', 500);
+            return $this->result(false, 'local', 'WPSenderX API key is missing.', 500);
         }
 
         $url = $this->baseUrl() . $endpoint;
@@ -127,14 +127,14 @@ class WpSenderXService
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->fail('تعذر الاتصال بخدمة التحقق حالياً. حاول مرة أخرى بعد قليل.', 503);
+            return $this->result(false, 'timeout', 'تعذر الاتصال بخدمة التحقق حالياً. حاول مرة أخرى بعد قليل.', 503);
         } catch (Throwable $exception) {
             Log::error('wpsenderx.unexpected_error', [
                 'endpoint' => $endpoint,
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->fail('حدث خطأ أثناء التواصل مع خدمة التحقق.', 500);
+            return $this->result(false, 'unknown', 'حدث خطأ أثناء التواصل مع خدمة التحقق.', 500);
         }
     }
 
@@ -150,7 +150,7 @@ class WpSenderXService
                 'snippet' => mb_substr(trim(strip_tags($body)), 0, 300),
             ]);
 
-            return $this->fail('خدمة التحقق غير متاحة حالياً. حاول مرة أخرى بعد قليل.', $status);
+            return $this->result(false, 'provider_protection', 'خدمة التحقق غير متاحة حالياً. حاول مرة أخرى بعد قليل.', $status);
         }
 
         $json = null;
@@ -168,8 +168,8 @@ class WpSenderXService
             ]);
 
             return $response->successful()
-                ? $this->ok('Request succeeded with non-JSON response.', ['raw' => mb_substr($body, 0, 500)])
-                : $this->fail('فشل التحقق من الخدمة الخارجية.', $status);
+                ? $this->result(true, 'provider', 'Request succeeded with non-JSON response.', 200, ['raw' => mb_substr($body, 0, 500)])
+                : $this->result(false, 'provider', 'فشل التحقق من الخدمة الخارجية.', $status);
         }
 
         Log::info('wpsenderx.response', [
@@ -179,17 +179,10 @@ class WpSenderXService
         ]);
 
         if (!$response->successful()) {
-            return $this->fail(
-                (string) ($json['message'] ?? 'فشل تنفيذ الطلب على خدمة التحقق.'),
-                $status,
-                ['response' => $json]
-            );
+            return $this->result(false, 'provider', (string) ($json['message'] ?? 'فشل تنفيذ الطلب على خدمة التحقق.'), $status, ['response' => $json]);
         }
 
-        return $this->ok(
-            (string) ($json['message'] ?? 'ok'),
-            ['response' => $json]
-        );
+        return $this->result(true, 'provider', (string) ($json['message'] ?? 'ok'), 200, ['response' => $json]);
     }
 
     protected function sanitizeForLog(array $data): array
@@ -233,19 +226,12 @@ class WpSenderXService
         return rtrim((string) config('services.wpsenderx.base_url', 'https://backendapi.wpsenderx.com/api'), '/');
     }
 
-    protected function ok(string $message, array $extra = []): array
+    protected function result(bool $success, string $type, string $message, int $status = 200, array $extra = []): array
     {
         return array_merge([
-            'ok' => true,
-            'message' => $message,
-            'status' => 200,
-        ], $extra);
-    }
-
-    protected function fail(string $message, int $status = 500, array $extra = []): array
-    {
-        return array_merge([
-            'ok' => false,
+            'success' => $success,
+            'ok' => $success,
+            'type' => $type,
             'message' => $message,
             'status' => $status,
         ], $extra);

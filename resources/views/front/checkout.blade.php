@@ -696,10 +696,12 @@
     async function postJson(url, payload) {
         const response = await fetch(url, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify(payload),
         });
@@ -709,9 +711,10 @@
     }
 
     async function sendOtpRequest() {
-        const phone = customerPhoneInput?.value?.trim() || '';
+        let phone = customerPhoneInput?.value?.trim() || '';
         if (customerPhoneInput) {
             customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
+            phone = customerPhoneInput.value;
         }
         if (!phone) {
             setOtpMessage('من فضلك اكتب رقم الموبايل أولًا.', 'error');
@@ -724,7 +727,8 @@
         if (!json.ok) {
             otpVerified = false;
             updateOtpUi();
-            setOtpMessage(json.message || 'تعذر إرسال كود التحقق الآن.', 'error');
+            const reason = json.type ? ` (${json.type})` : '';
+            setOtpMessage((json.message || 'تعذر إرسال كود التحقق الآن.') + reason, 'error');
             return;
         }
 
@@ -734,9 +738,10 @@
     }
 
     async function verifyOtpRequest() {
-        const phone = customerPhoneInput?.value?.trim() || '';
+        let phone = customerPhoneInput?.value?.trim() || '';
         if (customerPhoneInput) {
             customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
+            phone = customerPhoneInput.value;
         }
         const otp = otpCodeInput?.value?.trim() || '';
 
@@ -754,7 +759,8 @@
         if (!json.ok) {
             otpVerified = false;
             updateOtpUi();
-            setOtpMessage(json.message || 'الكود غير صحيح أو منتهي.', 'error');
+            const reason = json.type ? ` (${json.type})` : '';
+            setOtpMessage((json.message || 'الكود غير صحيح أو منتهي.') + reason, 'error');
             return;
         }
 
