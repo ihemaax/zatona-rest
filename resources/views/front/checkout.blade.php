@@ -298,7 +298,7 @@
                 </div>
             </header>
 
-            <form action="{{ route('checkout.store') }}" method="POST" class="elite-checkout-form">
+            <form id="checkoutForm" action="{{ route('checkout.store') }}" method="POST" class="elite-checkout-form">
                 @csrf
                 <input type="hidden" name="order_type" id="orderTypeSelect" value="{{ $activeOrderType }}">
 
@@ -314,7 +314,11 @@
                         </div>
                         <div>
                             <label class="elite-checkout-label">{{ __('checkout.phone_number') }}</label>
-                            <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
+                            <div class="input-group">
+                                <span class="input-group-text" dir="ltr">+20</span>
+                                <input type="text" name="customer_phone" id="customerPhoneInput" class="form-control" value="{{ old('customer_phone') }}" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="1206628718" required>
+                            </div>
+                            <div class="elite-checkout-note mt-1">اكتب 10 أرقام فقط بدون +20</div>
                         </div>
                     </div>
                 </div>
@@ -410,7 +414,7 @@
                     <div class="elite-checkout-note mt-2">{{ __('checkout.coupon_hint') }}</div>
                 </div>
 
-                <button class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
+                <button id="confirmOrderBtn" class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
             </form>
         </section>
 
@@ -477,6 +481,7 @@
     const finalTotalText = document.getElementById('finalTotalText');
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
+    const customerPhoneInput = document.getElementById('customerPhoneInput');
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
@@ -629,6 +634,18 @@
                 map.setView([lat, lng], 16);
                 updateLatLng(lat, lng);
             }
+        });
+    }
+
+    function sanitizeLocalEgyptianPhone(value) {
+        const digits = (value || '').replace(/\D/g, '');
+        return digits.slice(0, 10);
+    }
+
+    if (customerPhoneInput) {
+        customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
+        customerPhoneInput.addEventListener('input', function () {
+            customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
         });
     }
 </script>

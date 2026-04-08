@@ -13,6 +13,17 @@ class CheckoutFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'services.wpsenderx.enabled' => false,
+            'services.wpsenderx.api_key' => 'test-key',
+            'services.wpsenderx.base_url' => 'https://backendapi.wpsenderx.com/api',
+        ]);
+    }
+
     public function test_guest_can_complete_delivery_checkout_flow(): void
     {
         Setting::create([
@@ -40,7 +51,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -92,7 +103,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -110,5 +121,63 @@ class CheckoutFlowTest extends TestCase
             'code' => 'SAVE10',
             'used_count' => 1,
         ]);
+    }
+
+    public function test_checkout_is_blocked_when_otp_not_verified(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        $this->seedCheckoutData();
+
+        $this->post(route('checkout.store'), $this->checkoutPayload())
+            ->assertSessionHas('error', 'لازم تأكد رقم الموبايل بكود واتساب قبل تأكيد الطلب.');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_checkout_redirects_to_otp_page_when_unverified(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        $this->seedCheckoutData();
+
+        $this->post(route('checkout.store'), $this->checkoutPayload())
+            ->assertRedirect(route('checkout.otp.page'));
+    }
+
+    protected function seedCheckoutData(): void
+    {
+        Setting::create([
+            'restaurant_name' => 'Test Restaurant',
+            'delivery_fee' => 20,
+            'is_open' => true,
+        ]);
+
+        $category = Category::create([
+            'name' => 'Pizza',
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Margherita',
+            'price' => 100,
+            'is_available' => true,
+        ]);
+
+        $this->post(route('cart.add', $product), [
+            'quantity' => 2,
+        ])->assertRedirect();
+    }
+
+    protected function checkoutPayload(): array
+    {
+        return [
+            'order_type' => 'delivery',
+            'customer_name' => 'Guest User',
+            'customer_phone' => '1000000000',
+            'address_line' => 'Alex Street 1',
+            'area' => 'Alex',
+            'latitude' => 31.2,
+            'longitude' => 29.9,
+        ];
     }
 }

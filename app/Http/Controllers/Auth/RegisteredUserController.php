@@ -4,20 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\WpSenderXService;
+use App\Support\ContactValidation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use App\Services\WapilotService;
-use App\Support\ContactValidation;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
     protected int $otpTtlMinutes = 10;
-    protected int $otpMaxAttempts = 5;
 
     /**
      * Display the registration view.
@@ -37,13 +36,20 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [...ContactValidation::emailRules(), 'unique:' . User::class],
-            'phone' => [...ContactValidation::egyptianMobileRules(), 'unique:users,phone'],
+            'phone' => [
+                ...ContactValidation::egyptianMobileRules(),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $normalized = ContactValidation::normalizeEgyptianMobile((string) $value);
+                    if ($normalized !== '' && DB::table('users')->where('phone', $normalized)->exists()) {
+                        $fail('رقم الموبايل مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.');
+                    }
+                },
+            ],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ], array_merge(ContactValidation::messages(), [
             'name.required' => 'من فضلك اكتب الاسم بالكامل.',
             'name.max' => 'الاسم طويل جدًا. الحد الأقصى 255 حرف.',
             'email.unique' => 'البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم بريدًا آخر.',
-            'phone.unique' => 'رقم الموبايل مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.',
             'password.required' => 'من فضلك اكتب كلمة المرور.',
             'password.min' => 'كلمة المرور لازم تكون 6 أحرف على الأقل.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
@@ -67,7 +73,12 @@ class RegisteredUserController extends Controller
         ]);
 
         session(['registration_pending_user' => $user->id]);
-        $this->issueRegistrationOtp($user, app(WapilotService::class));
+        if (!$this->issueRegistrationOtp($user, app(WpSenderXService::class))) {
+            $user->delete();
+
+            return back()->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.');
+        }
 
         return redirect()->route('register.phone.verify.notice');
     }
@@ -95,28 +106,11 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        $payload = Cache::get($this->registrationOtpCacheKey($user->id));
-        if (!$payload) {
-            return back()->with('error', 'الكود منتهي. اطلب كود جديد.');
+        $result = app(WpSenderXService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code);
+        if (!(bool) ($result['ok'] ?? false)) {
+            return back()->with('error', (string) ($result['message'] ?? 'الكود غير صحيح أو منتهي.'));
         }
 
-        if (($payload['expires_at'] ?? 0) < now()->timestamp) {
-            return back()->with('error', 'انتهت صلاحية الكود. اطلب كود جديد.');
-        }
-
-        if ((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts) {
-            return back()->with('error', 'تم تجاوز عدد المحاولات. اطلب كود جديد.');
-        }
-
-        $payload['attempts'] = (int) ($payload['attempts'] ?? 0) + 1;
-
-        if (!Hash::check((string) $request->otp_code, (string) ($payload['code_hash'] ?? ''))) {
-            Cache::put($this->registrationOtpCacheKey($user->id), $payload, now()->addMinutes($this->otpTtlMinutes));
-
-            return back()->with('error', 'الكود غير صحيح.');
-        }
-
-        Cache::forget($this->registrationOtpCacheKey($user->id));
         session()->forget('registration_pending_user');
 
         $user->update(['phone_verified_at' => now()]);
@@ -126,37 +120,29 @@ class RegisteredUserController extends Controller
         return redirect()->route('home')->with('success', 'تم تفعيل رقم واتساب بنجاح.');
     }
 
-    public function resendPhoneOtp(WapilotService $wapilot): RedirectResponse
+    public function resendPhoneOtp(WpSenderXService $otpService): RedirectResponse
     {
         $user = $this->getPendingRegistrationUser();
         if (!$user) {
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        $this->issueRegistrationOtp($user, $wapilot);
+        if (!$this->issueRegistrationOtp($user, $otpService)) {
+            return back()->with('error', 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.');
+        }
 
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
 
-    protected function issueRegistrationOtp(User $user, WapilotService $wapilot): void
+    protected function issueRegistrationOtp(User $user, WpSenderXService $otpService): bool
     {
-        $code = (string) random_int(100000, 999999);
-
-        Cache::put($this->registrationOtpCacheKey($user->id), [
-            'code_hash' => Hash::make($code),
-            'attempts' => 0,
-            'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
-        ], now()->addMinutes($this->otpTtlMinutes));
-
-        $wapilot->sendTextToPhone(
+        $result = $otpService->sendOtp(
             (string) $user->phone,
-            "كود تفعيل الحساب: {$code}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
+            "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
+            (string) config('services.wpsenderx.session_id', '')
         );
-    }
 
-    protected function registrationOtpCacheKey(int $userId): string
-    {
-        return 'register_otp:' . $userId;
+        return (bool) ($result['ok'] ?? false);
     }
 
     protected function getPendingRegistrationUser(): ?User
