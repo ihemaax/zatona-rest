@@ -54,7 +54,7 @@
     <div class="container py-2">
         <a class="navbar-brand brand-logo" href="{{ route('home') }}">
             @if(($layoutSetting?->logo))
-                <img src="{{ asset('storage/' . $layoutSetting->logo) }}" alt="{{ $layoutSetting->restaurant_name ?? __('site.brand') }}" class="brand-logo-image">
+                <img src="{{ \App\Support\MediaUrl::fromPath($layoutSetting->logo) }}" alt="{{ $layoutSetting->restaurant_name ?? __('site.brand') }}" class="brand-logo-image">
             @else
                 <span class="brand-badge">ZZ</span>
             @endif
