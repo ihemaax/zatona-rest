@@ -6,11 +6,19 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\MyOrderController;
 use App\Http\Controllers\Front\PageController;
+use App\Http\Controllers\Demo\SalesDemoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
+Route::get('/sales-demo', [SalesDemoController::class, 'index'])
+    ->withoutMiddleware([
+        \App\Http\Middleware\AuthenticateSessionFingerprint::class,
+        \App\Http\Middleware\EnforceSessionAbsoluteTimeout::class,
+        \App\Http\Middleware\StoreAuditLog::class,
+    ])
+    ->name('sales.demo');
 
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
 Route::get('/contact', [PageController::class, 'contact'])->name('pages.contact');
