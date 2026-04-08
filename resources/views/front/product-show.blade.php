@@ -416,7 +416,7 @@
     <div class="elite-product-wrap">
         <div class="elite-product-media-card">
             <img
-                src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/700x500?text=Food' }}"
+                src="{{ $product->image ? \App\Support\MediaUrl::fromPath( $product->image) : 'https://via.placeholder.com/700x500?text=Food' }}"
                 class="elite-product-image"
                 alt="{{ $product->name }}"
             >

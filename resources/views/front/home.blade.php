@@ -21,6 +21,9 @@
 
     $coverImage = $setting->banner ?? $setting->cover_image ?? null;
     $logoImage = $setting->logo ?? null;
+    $coverImageUrl = \App\Support\MediaUrl::fromPath($coverImage);
+    $logoImageUrl = \App\Support\MediaUrl::fromPath($logoImage);
+    $popupImageUrl = \App\Support\MediaUrl::fromPath($popupCampaign?->image);
 @endphp
 
 <style>
@@ -43,13 +46,13 @@
     .elite-home::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 8% 0%,rgba(16,89,73,.16),transparent 28%),radial-gradient(circle at 92% 10%,rgba(195,154,99,.16),transparent 34%);z-index:-1}
     .elite-hero-shell{ margin-bottom: 24px; }
     .elite-hero-card{border-radius:0 0 40px 40px;overflow:hidden;border:1px solid #d8cab2;background:var(--cream);box-shadow:0 24px 56px rgba(17,33,28,.2)}
-    .elite-cover{min-height:390px;background:linear-gradient(112deg,rgba(6,34,28,.76),rgba(8,42,35,.44)),url('{{ $coverImage ? asset("storage/" . $coverImage) : "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop" }}') center/cover no-repeat;position:relative}
+    .elite-cover{min-height:390px;background:linear-gradient(112deg,rgba(6,34,28,.76),rgba(8,42,35,.44)),url('{{ $coverImageUrl ?: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop" }}') center/cover no-repeat;position:relative}
     .elite-cover::after{content:"";position:absolute;inset:auto 0 0;height:190px;background:linear-gradient(to top,rgba(10,16,13,.8),transparent)}
     .elite-hero-content{ margin-top: -92px; padding: 0 24px 24px; position: relative; z-index: 2; }
     .elite-identity-card{border-radius:30px;border:1px solid rgba(255,255,255,.5);background:rgba(247,243,234,.96);backdrop-filter:blur(10px);box-shadow:0 18px 36px rgba(16,35,30,.14);padding:22px}
     .elite-identity-top{ display:grid; grid-template-columns: auto minmax(0,1fr) auto; gap:18px; align-items:center; }
     .elite-logo-frame{width:120px;height:120px;border-radius:50%;padding:5px;background:conic-gradient(from 220deg at 50% 50%,#fefaf2,#d6be95,#fefaf2);box-shadow:0 14px 26px rgba(15,40,33,.22)}
-    .elite-logo{ width:100%; height:100%; border-radius:50%; border:4px solid #fff; background:url('{{ $logoImage ? asset("storage/" . $logoImage) : "https://via.placeholder.com/500x500?text=Logo" }}') center/cover no-repeat,#fff; }
+    .elite-logo{ width:100%; height:100%; border-radius:50%; border:4px solid #fff; background:url('{{ $logoImageUrl ?: "https://via.placeholder.com/500x500?text=Logo" }}') center/cover no-repeat,#fff; }
     .elite-brand-kicker{display:inline-flex;align-items:center;gap:8px;background:#e7ddd0;color:#6b5f4f;border-radius:999px;padding:7px 12px;font-size:.74rem;font-weight:900;margin-bottom:10px}
     .elite-brand-kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--olive);display:inline-block}
     .elite-title{ margin:0 0 8px; font-size:2.1rem; font-weight:900; letter-spacing:-.03em; }
@@ -233,7 +236,7 @@
                         <button class="elite-cat active" type="button" data-category="all">
                             <div class="elite-cat-ring">
                                 <div class="elite-cat-inner">
-                                    <img src="{{ $coverImage ? asset('storage/' . $coverImage) : '' }}" alt="{{ __('home.all') }}">
+                                    <img src="{{ $coverImage ? \App\Support\MediaUrl::fromPath( $coverImage) : '' }}" alt="{{ __('home.all') }}">
                                 </div>
                             </div>
                             <div class="elite-cat-label">{{ __('home.all') }}</div>
@@ -243,7 +246,7 @@
                             @php
                                 $firstProduct = $categoryProducts->first();
                                 $categoryImage = $firstProduct && $firstProduct->image
-                                    ? asset('storage/' . $firstProduct->image)
+                                    ? \App\Support\MediaUrl::fromPath( $firstProduct->image)
                                     : 'https://via.placeholder.com/300x300?text=Food';
                             @endphp
 
@@ -277,7 +280,7 @@
                                             'name' => $product->name,
                                             'price' => $product->price,
                                             'description' => $product->description,
-                                            'image' => $product->image ? asset('storage/' . $product->image) : null,
+                                            'image' => $product->image ? \App\Support\MediaUrl::fromPath( $product->image) : null,
                                             'options' => $product->relationLoaded('optionGroups')
                                                 ? $product->optionGroups->map(function ($group) {
                                                     return [
@@ -303,7 +306,7 @@
                                     <article class="elite-product product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
                                         <div class="elite-product-media">
                                             <img
-                                                src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
+                                                src="{{ $product->image ? \App\Support\MediaUrl::fromPath( $product->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
                                                 alt="{{ $product->name }}"
                                                 class="elite-product-image"
                                             >
@@ -414,7 +417,7 @@
 <div class="offer-popup-overlay" id="offerPopupOverlay">
     <div class="offer-popup-card">
         @if($popupCampaign->image)
-            <img src="{{ asset('storage/' . $popupCampaign->image) }}" alt="{{ $popupCampaign->title }}" class="offer-popup-image">
+            <img src="{{ $popupImageUrl }}" alt="{{ $popupCampaign->title }}" class="offer-popup-image">
         @endif
 
         <div class="offer-popup-body">

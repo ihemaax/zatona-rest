@@ -132,7 +132,7 @@
                                 <td>
                                     @if($product->image)
                                         <img
-                                            src="{{ asset('storage/' . $product->image) }}"
+                                            src="{{ \App\Support\MediaUrl::fromPath( $product->image) }}"
                                             alt="{{ $product->name }}"
                                             style="width:58px;height:58px;object-fit:cover;border-radius:14px;border:1px solid #e5e7eb;"
                                         >
@@ -193,7 +193,7 @@
                 <div class="product-mobile-card">
                     <div class="product-mobile-head">
                         @if($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-mobile-image">
+                            <img src="{{ \App\Support\MediaUrl::fromPath( $product->image) }}" alt="{{ $product->name }}" class="product-mobile-image">
                         @else
                             <div class="product-mobile-placeholder"></div>
                         @endif

@@ -291,7 +291,7 @@
                         @if($product->image)
                             <div class="image-preview-box">
                                 <img
-                                    src="{{ asset('storage/' . $product->image) }}"
+                                    src="{{ \App\Support\MediaUrl::fromPath( $product->image) }}"
                                     alt="{{ $product->name }}"
                                     class="image-preview-thumb"
                                 >

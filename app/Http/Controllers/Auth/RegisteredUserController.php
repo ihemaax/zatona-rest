@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use App\Services\WapilotService;
+use App\Support\ContactValidation;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -35,31 +36,23 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
-            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+            'email' => [...ContactValidation::emailRules(), 'unique:' . User::class],
+            'phone' => [...ContactValidation::egyptianMobileRules(), 'unique:users,phone'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ], [
+        ], array_merge(ContactValidation::messages(), [
             'name.required' => 'من فضلك اكتب الاسم بالكامل.',
             'name.max' => 'الاسم طويل جدًا. الحد الأقصى 255 حرف.',
-
-            'email.required' => 'من فضلك اكتب البريد الإلكتروني.',
-            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة. مثال صحيح: name@example.com',
-            'email.max' => 'البريد الإلكتروني طويل جدًا.',
             'email.unique' => 'البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم بريدًا آخر.',
-
-            'phone.required' => 'من فضلك اكتب رقم واتساب.',
-            'phone.max' => 'رقم الهاتف طويل جدًا.',
-            'phone.unique' => 'رقم واتساب مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.',
-
+            'phone.unique' => 'رقم الموبايل مستخدم بالفعل. جرّب تسجيل الدخول أو استخدم رقمًا آخر.',
             'password.required' => 'من فضلك اكتب كلمة المرور.',
             'password.min' => 'كلمة المرور لازم تكون 6 أحرف على الأقل.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
-        ]);
+        ]));
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $this->normalizeEgyptianPhone((string) $request->phone),
+            'phone' => ContactValidation::normalizeEgyptianMobile((string) $request->phone),
             'password' => Hash::make($request->password),
 
             // فصل العميل عن الموظفين
@@ -174,24 +167,5 @@ class RegisteredUserController extends Controller
         }
 
         return User::find($id);
-    }
-
-    protected function normalizeEgyptianPhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-
-        if (str_starts_with($digits, '00')) {
-            $digits = substr($digits, 2);
-        }
-
-        if (str_starts_with($digits, '0')) {
-            $digits = '2' . $digits;
-        }
-
-        if (!str_starts_with($digits, '2')) {
-            $digits = '2' . $digits;
-        }
-
-        return $digits;
     }
 }

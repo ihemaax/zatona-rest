@@ -35,7 +35,7 @@
         min-height: 360px;
         background:
             linear-gradient(180deg, rgba(20,20,18,.10), rgba(20,20,18,.30)),
-            url('{{ $coverImage ? asset("storage/" . $coverImage) : "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600&auto=format&fit=crop" }}') center/cover no-repeat;
+            url('{{ $coverImage ? \App\Support\MediaUrl::fromPath( $coverImage) : "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600&auto=format&fit=crop" }}') center/cover no-repeat;
     }
 
     .elite-cover::before{
@@ -106,7 +106,7 @@
         height: 100%;
         border-radius: 50%;
         background:
-            url('{{ $logoImage ? asset("storage/" . $logoImage) : "https://via.placeholder.com/500x500?text=Logo" }}') center/cover no-repeat,
+            url('{{ $logoImage ? \App\Support\MediaUrl::fromPath( $logoImage) : "https://via.placeholder.com/500x500?text=Logo" }}') center/cover no-repeat,
             #fff;
         border: 4px solid #fff;
     }
@@ -857,7 +857,7 @@
                             @php
                                 $firstItem = $category->items->first();
                                 $categoryImage = $firstItem && $firstItem->image
-                                    ? asset('storage/' . $firstItem->image)
+                                    ? \App\Support\MediaUrl::fromPath( $firstItem->image)
                                     : 'https://via.placeholder.com/300x300?text=Food';
                             @endphp
 
@@ -893,7 +893,7 @@
                                         <article class="elite-product">
                                             <div class="elite-product-media">
                                                 <img
-                                                    src="{{ $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
+                                                    src="{{ $item->image ? \App\Support\MediaUrl::fromPath( $item->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
                                                     alt="{{ $item->name }}"
                                                     class="elite-product-image"
                                                 >

@@ -4,6 +4,7 @@ use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\CheckoutController;
 use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\Front\MediaController;
 use App\Http\Controllers\Front\MyOrderController;
 use App\Http\Controllers\Front\PageController;
 use App\Http\Controllers\Demo\SalesDemoController;
@@ -27,6 +28,16 @@ Route::get('/faq', [PageController::class, 'faq'])->name('pages.faq');
 
 /* المنيو الإلكتروني العام للعملاء - بدون تسجيل دخول */
 Route::get('/digital-menu/{slug}', [DigitalMenuController::class, 'show'])->name('digital.menu.show');
+Route::get('/media/{path}', [MediaController::class, 'show'])
+    ->where('path', '.*')
+    ->withoutMiddleware([
+        \App\Http\Middleware\SetLocale::class,
+        \App\Http\Middleware\SecurityHeaders::class,
+        \App\Http\Middleware\AuthenticateSessionFingerprint::class,
+        \App\Http\Middleware\EnforceSessionAbsoluteTimeout::class,
+        \App\Http\Middleware\StoreAuditLog::class,
+    ])
+    ->name('media.show');
 
 Route::get('/locale/{locale}', function ($locale) {
     if (in_array($locale, ['ar', 'en'])) {
