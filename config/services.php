@@ -30,6 +30,7 @@ return [
     'wpsenderx' => [
         'base_url' => env('WPSENDERX_BASE_URL', 'https://backendapi.wpsenderx.com/api'),
         'api_key' => env('WPSENDERX_API_KEY'),
+        'bearer_token' => env('WPSENDERX_BEARER_TOKEN'),
     ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

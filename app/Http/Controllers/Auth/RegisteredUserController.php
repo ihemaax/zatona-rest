@@ -65,7 +65,12 @@ class RegisteredUserController extends Controller
         ]);
 
         session(['registration_pending_user' => $user->id]);
-        $this->issueRegistrationOtp($user, app(WpSenderOtpService::class));
+        if (!$this->issueRegistrationOtp($user, app(WpSenderOtpService::class))) {
+            $user->delete();
+
+            return back()->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.');
+        }
 
         return redirect()->route('register.phone.verify.notice');
     }
@@ -113,14 +118,16 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        $this->issueRegistrationOtp($user, $otpService);
+        if (!$this->issueRegistrationOtp($user, $otpService)) {
+            return back()->with('error', 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.');
+        }
 
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
 
-    protected function issueRegistrationOtp(User $user, WpSenderOtpService $otpService): void
+    protected function issueRegistrationOtp(User $user, WpSenderOtpService $otpService): bool
     {
-        $otpService->sendOtp(
+        return $otpService->sendOtp(
             (string) $user->phone,
             "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
         );
