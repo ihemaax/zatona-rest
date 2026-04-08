@@ -10,7 +10,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
@@ -51,140 +50,125 @@ class DashboardController extends Controller
     protected function buildDashboardData(string $range = 'today'): array
     {
         $user = auth()->user();
-        $cacheKey = $this->dashboardCacheKey($range);
+        $ordersBase = Order::query();
+        $this->applyOrderScope($ordersBase);
+        $this->applyDateRange($ordersBase, $range);
 
-        return Cache::remember($cacheKey, now()->addSeconds(20), function () use ($user, $range) {
-            $ordersBase = Order::query();
-            $this->applyOrderScope($ordersBase);
-            $this->applyDateRange($ordersBase, $range);
+        $ordersCount = (clone $ordersBase)->count();
+        $newOrders = (clone $ordersBase)->where('is_seen_by_admin', false)->count();
+        $pendingOrders = (clone $ordersBase)->where('status', 'pending')->count();
+        $deliveryOrders = (clone $ordersBase)->where('order_type', 'delivery')->count();
+        $pickupOrders = (clone $ordersBase)->where('order_type', 'pickup')->count();
 
-            $ordersCount = (clone $ordersBase)->count();
-            $newOrders = (clone $ordersBase)->where('is_seen_by_admin', false)->count();
-            $pendingOrders = (clone $ordersBase)->where('status', 'pending')->count();
-            $deliveryOrders = (clone $ordersBase)->where('order_type', 'delivery')->count();
-            $pickupOrders = (clone $ordersBase)->where('order_type', 'pickup')->count();
+        $totalSales = (float) (clone $ordersBase)->sum('total');
+        $deliverySales = (float) (clone $ordersBase)->where('order_type', 'delivery')->sum('total');
+        $pickupSales = (float) (clone $ordersBase)->where('order_type', 'pickup')->sum('total');
 
-            $totalSales = (float) (clone $ordersBase)->sum('total');
-            $deliverySales = (float) (clone $ordersBase)->where('order_type', 'delivery')->sum('total');
-            $pickupSales = (float) (clone $ordersBase)->where('order_type', 'pickup')->sum('total');
+        $latestOrders = (clone $ordersBase)->with('branch')->latest()->take(10)->get();
+        $deliveryLatest = (clone $ordersBase)->with('branch')->where('order_type', 'delivery')->latest()->take(6)->get();
+        $pickupLatest = (clone $ordersBase)->with('branch')->where('order_type', 'pickup')->latest()->take(6)->get();
+        $notifications = (clone $ordersBase)->with('branch')->where('is_seen_by_admin', false)->latest()->take(6)->get();
 
-            $latestOrders = (clone $ordersBase)->with('branch')->latest()->take(10)->get();
-            $deliveryLatest = (clone $ordersBase)->with('branch')->where('order_type', 'delivery')->latest()->take(6)->get();
-            $pickupLatest = (clone $ordersBase)->with('branch')->where('order_type', 'pickup')->latest()->take(6)->get();
-            $notifications = (clone $ordersBase)->with('branch')->where('is_seen_by_admin', false)->latest()->take(6)->get();
+        $statusBreakdown = [
+            'pending' => (clone $ordersBase)->where('status', 'pending')->count(),
+            'confirmed' => (clone $ordersBase)->where('status', 'confirmed')->count(),
+            'preparing' => (clone $ordersBase)->where('status', 'preparing')->count(),
+            'out_for_delivery' => (clone $ordersBase)->where('status', 'out_for_delivery')->count(),
+            'delivered' => (clone $ordersBase)->where('status', 'delivered')->count(),
+            'cancelled' => (clone $ordersBase)->where('status', 'cancelled')->count(),
+        ];
 
-            $statusBreakdown = [
-                'pending' => (clone $ordersBase)->where('status', 'pending')->count(),
-                'confirmed' => (clone $ordersBase)->where('status', 'confirmed')->count(),
-                'preparing' => (clone $ordersBase)->where('status', 'preparing')->count(),
-                'out_for_delivery' => (clone $ordersBase)->where('status', 'out_for_delivery')->count(),
-                'delivered' => (clone $ordersBase)->where('status', 'delivered')->count(),
-                'cancelled' => (clone $ordersBase)->where('status', 'cancelled')->count(),
-            ];
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($range) {
+            $date = Carbon::today()->subDays($daysAgo);
 
-            $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($range) {
-                $date = Carbon::today()->subDays($daysAgo);
+            $dailyQuery = Order::query();
+            $this->applyOrderScope($dailyQuery);
 
-                $dailyQuery = Order::query();
-                $this->applyOrderScope($dailyQuery);
-
-                if ($range === '30d') {
-                    $dailyQuery->whereDate('created_at', '>=', today()->subDays(29));
-                }
-
-                return [
-                    'date' => $date->format('Y-m-d'),
-                    'label' => $date->format('D'),
-                    'orders' => (int) (clone $dailyQuery)->whereDate('created_at', $date)->count(),
-                    'sales' => (float) (clone $dailyQuery)->whereDate('created_at', $date)->sum('total'),
-                ];
-            })->values();
-
-            $cancelled = $statusBreakdown['cancelled'];
-            $delivered = $statusBreakdown['delivered'];
-            $completedOrCancelled = max(1, $delivered + $cancelled);
-
-            $avgPrepMinutes = (float) (clone $ordersBase)
-                ->whereNotNull('out_for_delivery_at')
-                ->whereNotNull('created_at')
-                ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, out_for_delivery_at)) as avg_minutes')
-                ->value('avg_minutes');
-
-            $avgDeliveryMinutes = (float) (clone $ordersBase)
-                ->whereNotNull('delivered_at')
-                ->whereNotNull('out_for_delivery_at')
-                ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, out_for_delivery_at, delivered_at)) as avg_minutes')
-                ->value('avg_minutes');
-
-            $kpis = [
-                'prep_sla_minutes' => round($avgPrepMinutes ?: 0, 1),
-                'avg_delivery_minutes' => round($avgDeliveryMinutes ?: 0, 1),
-                'cancellation_rate' => round(($cancelled / max(1, $ordersCount)) * 100, 2),
-                'completion_rate' => round(($delivered / $completedOrCancelled) * 100, 2),
-            ];
-
-            $avgOrderValue = $ordersCount > 0 ? round($totalSales / $ordersCount, 2) : 0;
-            $shiftSummary = [
-                'orders_count' => $ordersCount,
-                'sales_total' => round($totalSales, 2),
-                'avg_order_value' => $avgOrderValue,
-            ];
-
-            $topProducts = OrderItem::query()
-                ->join('orders', 'orders.id', '=', 'order_items.order_id')
-                ->selectRaw('order_items.product_name, SUM(order_items.quantity) as total_quantity')
-                ->groupBy('order_items.product_name')
-                ->orderByDesc('total_quantity')
-                ->limit(5);
-
-            $this->applyOrderScope($topProducts);
-            $this->applyDateRange($topProducts, $range, 'orders.created_at');
-            $topProducts = $topProducts->get();
-
-            if (!$user) {
-                $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
-            } elseif ($user->canViewAllBranchesOrders()) {
-                $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
-            } elseif ($user->branch_id) {
-                $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
-            } else {
-                $branchesStats = collect();
+            if ($range === '30d') {
+                $dailyQuery->whereDate('created_at', '>=', today()->subDays(29));
             }
 
             return [
-                'range' => $range,
-                'ordersCount' => $ordersCount,
-                'todayOrders' => $ordersCount,
-                'newOrders' => $newOrders,
-                'pendingOrders' => $pendingOrders,
-                'deliveryOrders' => $deliveryOrders,
-                'pickupOrders' => $pickupOrders,
-                'todaySales' => $totalSales,
-                'deliverySales' => $deliverySales,
-                'pickupSales' => $pickupSales,
-                'latestOrders' => $latestOrders,
-                'deliveryLatest' => $deliveryLatest,
-                'pickupLatest' => $pickupLatest,
-                'branchesStats' => $branchesStats,
-                'notifications' => $notifications,
-                'statusBreakdown' => $statusBreakdown,
-                'weeklyTrend' => $weeklyTrend,
-                'kpis' => $kpis,
-                'shiftSummary' => $shiftSummary,
-                'topProducts' => $topProducts,
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->format('D'),
+                'orders' => (int) (clone $dailyQuery)->whereDate('created_at', $date)->count(),
+                'sales' => (float) (clone $dailyQuery)->whereDate('created_at', $date)->sum('total'),
             ];
-        });
-    }
+        })->values();
 
-    protected function dashboardCacheKey(string $range): string
-    {
-        $user = auth()->user();
-        $userId = $user?->id ?? 'guest';
-        $branchId = $user?->branch_id ?? 'all';
-        $role = $user?->role ?? 'na';
-        $scope = $user?->canViewAllBranchesOrders() ? 'all' : 'scoped';
+        $cancelled = $statusBreakdown['cancelled'];
+        $delivered = $statusBreakdown['delivered'];
+        $completedOrCancelled = max(1, $delivered + $cancelled);
 
-        return "admin.dashboard.data.v1:{$userId}:{$role}:{$branchId}:{$scope}:{$range}";
+        $avgPrepMinutes = (float) (clone $ordersBase)
+            ->whereNotNull('out_for_delivery_at')
+            ->whereNotNull('created_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, out_for_delivery_at)) as avg_minutes')
+            ->value('avg_minutes');
+
+        $avgDeliveryMinutes = (float) (clone $ordersBase)
+            ->whereNotNull('delivered_at')
+            ->whereNotNull('out_for_delivery_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, out_for_delivery_at, delivered_at)) as avg_minutes')
+            ->value('avg_minutes');
+
+        $kpis = [
+            'prep_sla_minutes' => round($avgPrepMinutes ?: 0, 1),
+            'avg_delivery_minutes' => round($avgDeliveryMinutes ?: 0, 1),
+            'cancellation_rate' => round(($cancelled / max(1, $ordersCount)) * 100, 2),
+            'completion_rate' => round(($delivered / $completedOrCancelled) * 100, 2),
+        ];
+
+        $avgOrderValue = $ordersCount > 0 ? round($totalSales / $ordersCount, 2) : 0;
+        $shiftSummary = [
+            'orders_count' => $ordersCount,
+            'sales_total' => round($totalSales, 2),
+            'avg_order_value' => $avgOrderValue,
+        ];
+
+        $topProducts = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->selectRaw('order_items.product_name, SUM(order_items.quantity) as total_quantity')
+            ->groupBy('order_items.product_name')
+            ->orderByDesc('total_quantity')
+            ->limit(5);
+
+        $this->applyOrderScope($topProducts);
+        $this->applyDateRange($topProducts, $range, 'orders.created_at');
+        $topProducts = $topProducts->get();
+
+        if (!$user) {
+            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
+        } elseif ($user->canViewAllBranchesOrders()) {
+            $branchesStats = Branch::withCount('orders')->orderBy('name')->get();
+        } elseif ($user->branch_id) {
+            $branchesStats = Branch::where('id', $user->branch_id)->withCount('orders')->orderBy('name')->get();
+        } else {
+            $branchesStats = collect();
+        }
+
+        return [
+            'range' => $range,
+            'ordersCount' => $ordersCount,
+            'todayOrders' => $ordersCount,
+            'newOrders' => $newOrders,
+            'pendingOrders' => $pendingOrders,
+            'deliveryOrders' => $deliveryOrders,
+            'pickupOrders' => $pickupOrders,
+            'todaySales' => $totalSales,
+            'deliverySales' => $deliverySales,
+            'pickupSales' => $pickupSales,
+            'latestOrders' => $latestOrders,
+            'deliveryLatest' => $deliveryLatest,
+            'pickupLatest' => $pickupLatest,
+            'branchesStats' => $branchesStats,
+            'notifications' => $notifications,
+            'statusBreakdown' => $statusBreakdown,
+            'weeklyTrend' => $weeklyTrend,
+            'kpis' => $kpis,
+            'shiftSummary' => $shiftSummary,
+            'topProducts' => $topProducts,
+        ];
     }
 
     protected function buildEmptyDashboardData(string $range = 'today'): array
@@ -267,20 +251,32 @@ class DashboardController extends Controller
 
     public function demo(Request $request)
     {
-        $range = $request->query('range', 'today');
-        if (!in_array($range, ['today', '7d', '30d'], true)) {
-            $range = 'today';
-        }
-
-        return view('admin.dashboard', array_merge(
-            $this->buildEmptyDashboardData($range),
-            [
-                'dashboardBaseRoute' => 'admin.dashboard.demo',
-                'dashboardPollRoute' => null,
-                'dashboardExportRoute' => null,
-                'isDemoDashboard' => true,
-            ]
-        ));
+        return view('demo.admin-dashboard-standalone', [
+            'demoUpdatedAt' => now()->format('Y-m-d h:i A'),
+            'cards' => [
+                'orders_count' => 842,
+                'new_orders' => 67,
+                'pending_orders' => 21,
+                'branches_count' => 12,
+                'today_sales' => 154320.50,
+                'delivery_sales' => 109740.25,
+                'pickup_sales' => 44580.25,
+                'avg_order_value' => 183.28,
+            ],
+            'branches' => [
+                ['name' => 'فرع مدينة نصر', 'orders' => 166, 'sales' => 29840.00, 'sla' => '22 دقيقة'],
+                ['name' => 'فرع المعادي', 'orders' => 142, 'sales' => 25610.50, 'sla' => '24 دقيقة'],
+                ['name' => 'فرع التجمع الخامس', 'orders' => 174, 'sales' => 32220.00, 'sla' => '21 دقيقة'],
+                ['name' => 'فرع 6 أكتوبر', 'orders' => 133, 'sales' => 24890.00, 'sla' => '25 دقيقة'],
+            ],
+            'latestOrders' => [
+                ['number' => 'ORD-91310', 'customer' => 'Khaled Mostafa', 'type' => 'Delivery', 'total' => 320.00, 'status' => 'Out for Delivery'],
+                ['number' => 'ORD-91311', 'customer' => 'Sara Emad', 'type' => 'Pickup', 'total' => 190.00, 'status' => 'Preparing'],
+                ['number' => 'ORD-91312', 'customer' => 'Omar Hany', 'type' => 'Delivery', 'total' => 275.00, 'status' => 'Confirmed'],
+                ['number' => 'ORD-91313', 'customer' => 'Nadine Fathy', 'type' => 'Delivery', 'total' => 415.50, 'status' => 'Delivered'],
+                ['number' => 'ORD-91314', 'customer' => 'Mariam Adel', 'type' => 'Pickup', 'total' => 165.00, 'status' => 'Ready'],
+            ],
+        ]);
     }
 
     public function exportSnapshot(Request $request): StreamedResponse
