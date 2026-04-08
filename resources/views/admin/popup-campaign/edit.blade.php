@@ -44,7 +44,7 @@
                 <input type="file" name="image" class="form-control">
                 @if($popup->image)
                     <div class="mt-2">
-                        <img src="{{ asset('storage/' . $popup->image) }}" alt="popup" style="max-width:180px; border-radius:12px;">
+                        <img src="{{ \App\Support\MediaUrl::fromPath($popup->image) }}" alt="popup" style="max-width:180px; border-radius:12px;">
                     </div>
                 @endif
             </div>

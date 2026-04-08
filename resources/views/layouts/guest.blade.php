@@ -148,7 +148,7 @@
 <body>
 @php
     $authSetting = \App\Models\Setting::query()->first();
-    $authLogo = $authSetting?->logo ? asset('storage/' . $authSetting->logo) : null;
+    $authLogo = \App\Support\MediaUrl::fromPath($authSetting?->logo);
 @endphp
 
 <div class="auth-shell">
