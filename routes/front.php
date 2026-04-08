@@ -30,6 +30,13 @@ Route::get('/faq', [PageController::class, 'faq'])->name('pages.faq');
 Route::get('/digital-menu/{slug}', [DigitalMenuController::class, 'show'])->name('digital.menu.show');
 Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
+    ->withoutMiddleware([
+        \App\Http\Middleware\SetLocale::class,
+        \App\Http\Middleware\SecurityHeaders::class,
+        \App\Http\Middleware\AuthenticateSessionFingerprint::class,
+        \App\Http\Middleware\EnforceSessionAbsoluteTimeout::class,
+        \App\Http\Middleware\StoreAuditLog::class,
+    ])
     ->name('media.show');
 
 Route::get('/locale/{locale}', function ($locale) {

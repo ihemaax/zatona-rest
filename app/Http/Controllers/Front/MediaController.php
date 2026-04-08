@@ -16,8 +16,10 @@ class MediaController extends Controller
         abort_unless(Storage::disk('public')->exists($normalizedPath), 404);
 
         $absolutePath = Storage::disk('public')->path($normalizedPath);
+        $mimeType = Storage::disk('public')->mimeType($normalizedPath) ?: 'application/octet-stream';
 
         return response()->file($absolutePath, [
+            'Content-Type' => $mimeType,
             'Cache-Control' => 'public, max-age=604800',
         ]);
     }
