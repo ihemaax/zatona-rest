@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->fallbackFromRedisIfExtensionMissing();
         $this->validateCriticalSecrets();
 
         Paginator::useBootstrapFive();
@@ -44,7 +45,18 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        View::share('setting', Cache::remember('global.setting.v1', now()->addMinutes(5), fn () => Setting::first()));
+        $sharedSetting = Setting::first();
+
+        try {
+            $sharedSetting = Cache::remember('global.setting.v1', now()->addMinutes(5), fn () => Setting::first());
+        } catch (\Throwable $exception) {
+            Log::warning('cache.setting_fallback', [
+                'driver' => config('cache.default'),
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        View::share('setting', $sharedSetting);
 
         RateLimiter::for('auth-login', function (Request $request) {
             $email = strtolower((string) $request->input('email'));
@@ -181,5 +193,34 @@ class AppServiceProvider extends ServiceProvider
                 'missing' => $missing,
             ]);
         }
+    }
+
+    protected function fallbackFromRedisIfExtensionMissing(): void
+    {
+        $redisClient = (string) config('database.redis.client', 'phpredis');
+        $redisExtensionMissing = $redisClient === 'phpredis' && !class_exists(\Redis::class);
+
+        if (!$redisExtensionMissing) {
+            return;
+        }
+
+        if ((string) config('cache.default') === 'redis') {
+            config(['cache.default' => 'database']);
+        }
+
+        if ((string) config('session.driver') === 'redis') {
+            config(['session.driver' => 'database']);
+            config(['session.store' => null]);
+        }
+
+        if ((string) config('queue.default') === 'redis') {
+            config(['queue.default' => 'database']);
+        }
+
+        Log::warning('redis.extension.missing_fallback_applied', [
+            'cache' => config('cache.default'),
+            'session' => config('session.driver'),
+            'queue' => config('queue.default'),
+        ]);
     }
 }
