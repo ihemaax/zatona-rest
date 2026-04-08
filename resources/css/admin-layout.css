@@ -1026,10 +1026,22 @@
 
             .admin-sidebar{
                 width:min(84vw, 292px);
-                transform:translateX(-110%);
+                transform:translateX(calc(-100% - 24px));
+                visibility:hidden;
+                pointer-events:none;
             }
 
             .admin-sidebar.show{
+                transform:translateX(0);
+                visibility:visible;
+                pointer-events:auto;
+            }
+
+            html[dir="rtl"] .admin-sidebar{
+                transform:translateX(calc(100% + 24px));
+            }
+
+            html[dir="rtl"] .admin-sidebar.show{
                 transform:translateX(0);
             }
 

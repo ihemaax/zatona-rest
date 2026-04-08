@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Cache;
 class InvalidateFrontCacheObserver
 {
     protected array $keys = [
-        'front.home.setting.v2',
-        'front.home.products.v2',
+        'front.home.setting.v3',
+        'front.home.products.v3',
         'front.home.popup.v2',
     ];
 

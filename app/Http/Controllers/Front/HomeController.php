@@ -64,19 +64,21 @@ class HomeController extends Controller
         $setting = $settingPayload ? new Setting($settingPayload) : null;
         $popupCampaign = $popupPayload ? new PopupCampaign($popupPayload) : null;
 
-        $products = Product::with([
-            'category',
-            'optionGroups' => function ($query) {
-                $query->orderBy('sort_order')->with([
-                    'items' => function ($q) {
-                        $q->where('is_active', 1)->orderBy('sort_order');
-                    },
-                ]);
-            },
-        ])
-            ->where('is_available', 1)
-            ->orderBy('id', 'desc')
-            ->get();
+        $products = Cache::remember('front.home.products.v3', now()->addMinutes(5), function () {
+            return Product::with([
+                'category',
+                'optionGroups' => function ($query) {
+                    $query->orderBy('sort_order')->with([
+                        'items' => function ($q) {
+                            $q->where('is_active', 1)->orderBy('sort_order');
+                        },
+                    ]);
+                },
+            ])
+                ->where('is_available', 1)
+                ->orderBy('id', 'desc')
+                ->get();
+        });
 
         return view('front.home', compact('products', 'setting', 'popupCampaign'));
     }
