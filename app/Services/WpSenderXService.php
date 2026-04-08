@@ -21,17 +21,10 @@ class WpSenderXService
             return $this->result(false, 'validation', 'رقم الهاتف غير صالح لإرسال كود التحقق.', 422, ['recipient' => $normalized]);
         }
 
-        $payload = ['recipient' => $normalized];
-        if ($message !== null && trim($message) !== '') {
-            $payload['message'] = $message;
-        }
-
-        $session = trim((string) ($sessionId ?: config('services.wpsenderx.session_id', '')));
-        if ($session !== '') {
-            $payload['session_id'] = $session;
-        }
-
-        return $this->request('POST', '/otp/send', $payload);
+        // مهم: مطابقة الطلب المرجعي الناجح من CMD (recipient فقط بلا حقول إضافية).
+        return $this->request('POST', '/otp/send', [
+            'recipient' => $normalized,
+        ]);
     }
 
     public function verifyOtp(string $recipient, string $otpCode): array
@@ -107,6 +100,16 @@ class WpSenderXService
         }
 
         $url = $this->baseUrl() . $endpoint;
+        $sanitizedPayload = $this->sanitizeForLog($payload);
+
+        Log::info('wpsenderx.request.outgoing', [
+            'method' => $method,
+            'url' => $url,
+            'payload_keys' => array_keys($payload),
+            'payload' => $sanitizedPayload,
+            'recipient' => (string) ($sanitizedPayload['recipient'] ?? ''),
+            'timeout_seconds' => $this->timeout(),
+        ]);
 
         try {
             $client = Http::timeout($this->timeout())
@@ -142,11 +145,20 @@ class WpSenderXService
     {
         $status = $response->status();
         $body = $response->body();
+        $contentType = (string) $response->header('Content-Type', '');
 
-        if ($this->looksLikeHtml($body)) {
+        Log::info('wpsenderx.response.received', [
+            'endpoint' => $endpoint,
+            'status' => $status,
+            'content_type' => $contentType,
+            'body_snippet' => mb_substr(trim(strip_tags($body)), 0, 250),
+        ]);
+
+        if ($this->looksLikeHtml($body, $contentType)) {
             Log::warning('wpsenderx.upstream_protection_detected', [
                 'endpoint' => $endpoint,
                 'status' => $status,
+                'content_type' => $contentType,
                 'snippet' => mb_substr(trim(strip_tags($body)), 0, 300),
             ]);
 
@@ -164,6 +176,7 @@ class WpSenderXService
             Log::warning('wpsenderx.non_json_response', [
                 'endpoint' => $endpoint,
                 'status' => $status,
+                'content_type' => $contentType,
                 'body' => mb_substr($body, 0, 500),
             ]);
 
@@ -172,17 +185,26 @@ class WpSenderXService
                 : $this->result(false, 'provider', 'فشل التحقق من الخدمة الخارجية.', $status);
         }
 
-        Log::info('wpsenderx.response', [
+        $normalizedProviderStatus = mb_strtolower((string) ($json['status'] ?? ''));
+        $providerSuccess = in_array($normalizedProviderStatus, ['success', 'ok'], true);
+        $message = (string) ($json['message'] ?? data_get($json, 'data.message') ?? '');
+
+        Log::info('wpsenderx.response.json', [
             'endpoint' => $endpoint,
             'status' => $status,
+            'provider_status' => $normalizedProviderStatus,
             'body' => $this->sanitizeForLog($json),
         ]);
 
         if (!$response->successful()) {
-            return $this->result(false, 'provider', (string) ($json['message'] ?? 'فشل تنفيذ الطلب على خدمة التحقق.'), $status, ['response' => $json]);
+            return $this->result(false, 'provider', $message !== '' ? $message : 'فشل تنفيذ الطلب على خدمة التحقق.', $status, ['response' => $json]);
         }
 
-        return $this->result(true, 'provider', (string) ($json['message'] ?? 'ok'), 200, ['response' => $json]);
+        if (!$providerSuccess) {
+            return $this->result(false, 'provider', $message !== '' ? $message : 'فشل التحقق من الخدمة الخارجية.', 422, ['response' => $json]);
+        }
+
+        return $this->result(true, 'provider', $message !== '' ? $message : 'ok', 200, ['response' => $json]);
     }
 
     protected function sanitizeForLog(array $data): array
@@ -198,9 +220,14 @@ class WpSenderXService
         return $data;
     }
 
-    protected function looksLikeHtml(string $body): bool
+    protected function looksLikeHtml(string $body, string $contentType = ''): bool
     {
         $lower = mb_strtolower($body);
+        $contentTypeLower = mb_strtolower($contentType);
+
+        if (str_contains($contentTypeLower, 'text/html')) {
+            return true;
+        }
 
         return str_contains($lower, '<html')
             || str_contains($lower, '<!doctype html')

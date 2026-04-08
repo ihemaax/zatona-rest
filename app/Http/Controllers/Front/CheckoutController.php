@@ -127,11 +127,7 @@ class CheckoutController extends Controller
             ], 422);
         }
 
-        $result = $otpService->sendOtp(
-            $normalizedPhone,
-            "كود تأكيد الطلب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
-            (string) config('services.wpsenderx.session_id', '')
-        );
+        $result = $otpService->sendOtp($normalizedPhone);
 
         if (!(bool) ($result['success'] ?? false)) {
             return response()->json([

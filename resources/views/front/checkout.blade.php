@@ -727,8 +727,7 @@
         if (!json.ok) {
             otpVerified = false;
             updateOtpUi();
-            const reason = json.type ? ` (${json.type})` : '';
-            setOtpMessage((json.message || 'تعذر إرسال كود التحقق الآن.') + reason, 'error');
+            setOtpMessage(json.message || 'تعذر إرسال كود التحقق الآن.', 'error');
             return;
         }
 
@@ -759,8 +758,7 @@
         if (!json.ok) {
             otpVerified = false;
             updateOtpUi();
-            const reason = json.type ? ` (${json.type})` : '';
-            setOtpMessage((json.message || 'الكود غير صحيح أو منتهي.') + reason, 'error');
+            setOtpMessage(json.message || 'الكود غير صحيح أو منتهي.', 'error');
             return;
         }
 
