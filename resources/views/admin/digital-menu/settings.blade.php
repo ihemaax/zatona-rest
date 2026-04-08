@@ -352,7 +352,7 @@
 
                         @if($setting->logo)
                             <div class="preview-box">
-                                <img src="{{ asset('storage/' . $setting->logo) }}" alt="logo" class="preview-thumb logo-thumb">
+                                <img src="{{ \App\Support\MediaUrl::fromPath( $setting->logo) }}" alt="logo" class="preview-thumb logo-thumb">
                             </div>
                         @endif
                     </div>
@@ -364,7 +364,7 @@
 
                         @if($setting->banner)
                             <div class="preview-box">
-                                <img src="{{ asset('storage/' . $setting->banner) }}" alt="banner" class="preview-thumb banner-thumb">
+                                <img src="{{ \App\Support\MediaUrl::fromPath( $setting->banner) }}" alt="banner" class="preview-thumb banner-thumb">
                             </div>
                         @endif
                     </div>

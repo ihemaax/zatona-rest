@@ -236,7 +236,7 @@
                         <button class="elite-cat active" type="button" data-category="all">
                             <div class="elite-cat-ring">
                                 <div class="elite-cat-inner">
-                                    <img src="{{ $coverImage ? asset('storage/' . $coverImage) : '' }}" alt="{{ __('home.all') }}">
+                                    <img src="{{ $coverImage ? \App\Support\MediaUrl::fromPath( $coverImage) : '' }}" alt="{{ __('home.all') }}">
                                 </div>
                             </div>
                             <div class="elite-cat-label">{{ __('home.all') }}</div>
@@ -246,7 +246,7 @@
                             @php
                                 $firstProduct = $categoryProducts->first();
                                 $categoryImage = $firstProduct && $firstProduct->image
-                                    ? asset('storage/' . $firstProduct->image)
+                                    ? \App\Support\MediaUrl::fromPath( $firstProduct->image)
                                     : 'https://via.placeholder.com/300x300?text=Food';
                             @endphp
 
@@ -280,7 +280,7 @@
                                             'name' => $product->name,
                                             'price' => $product->price,
                                             'description' => $product->description,
-                                            'image' => $product->image ? asset('storage/' . $product->image) : null,
+                                            'image' => $product->image ? \App\Support\MediaUrl::fromPath( $product->image) : null,
                                             'options' => $product->relationLoaded('optionGroups')
                                                 ? $product->optionGroups->map(function ($group) {
                                                     return [
@@ -306,7 +306,7 @@
                                     <article class="elite-product product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
                                         <div class="elite-product-media">
                                             <img
-                                                src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
+                                                src="{{ $product->image ? \App\Support\MediaUrl::fromPath( $product->image) : 'https://via.placeholder.com/600x400?text=Food' }}"
                                                 alt="{{ $product->name }}"
                                                 class="elite-product-image"
                                             >

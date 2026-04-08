@@ -603,7 +603,7 @@
                                     <tr>
                                         <td>
                                             @if($item->image)
-                                                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}" class="item-thumb">
+                                                <img src="{{ \App\Support\MediaUrl::fromPath( $item->image) }}" alt="{{ $item->name }}" class="item-thumb">
                                             @else
                                                 <div class="item-thumb-placeholder"></div>
                                             @endif
@@ -695,7 +695,7 @@
                         <div class="digital-item-card">
                             <div class="digital-item-head">
                                 @if($item->image)
-                                    <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}" class="digital-item-img">
+                                    <img src="{{ \App\Support\MediaUrl::fromPath( $item->image) }}" alt="{{ $item->name }}" class="digital-item-img">
                                 @else
                                     <div class="digital-item-placeholder"></div>
                                 @endif

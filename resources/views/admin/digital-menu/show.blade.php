@@ -149,7 +149,7 @@
         <div class="menu-hero">
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 @if($setting->logo)
-                    <img src="{{ asset('storage/' . $setting->logo) }}" class="menu-logo" alt="{{ $setting->title }}">
+                    <img src="{{ \App\Support\MediaUrl::fromPath( $setting->logo) }}" class="menu-logo" alt="{{ $setting->title }}">
                 @endif
 
                 <div>
@@ -167,7 +167,7 @@
             </div>
 
             @if($setting->banner)
-                <img src="{{ asset('storage/' . $setting->banner) }}" class="menu-banner" alt="{{ $setting->title }}">
+                <img src="{{ \App\Support\MediaUrl::fromPath( $setting->banner) }}" class="menu-banner" alt="{{ $setting->title }}">
             @endif
         </div>
 
@@ -185,7 +185,7 @@
                     @foreach($category->items as $item)
                         <div class="menu-card">
                             @if($item->image)
-                                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}">
+                                <img src="{{ \App\Support\MediaUrl::fromPath( $item->image) }}" alt="{{ $item->name }}">
                             @endif
 
                             <div class="menu-card-body">
