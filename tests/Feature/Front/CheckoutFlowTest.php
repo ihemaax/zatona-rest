@@ -7,11 +7,23 @@ use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CheckoutFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'services.wpsenderx.enabled' => false,
+            'services.wpsenderx.api_key' => 'test-key',
+            'services.wpsenderx.base_url' => 'https://backendapi.wpsenderx.com/api',
+        ]);
+    }
 
     public function test_guest_can_complete_delivery_checkout_flow(): void
     {
@@ -40,7 +52,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -92,7 +104,7 @@ class CheckoutFlowTest extends TestCase
         $this->post(route('checkout.store'), [
             'order_type' => 'delivery',
             'customer_name' => 'Guest User',
-            'customer_phone' => '01000000000',
+            'customer_phone' => '1000000000',
             'address_line' => 'Alex Street 1',
             'area' => 'Alex',
             'latitude' => 31.2,
@@ -110,5 +122,110 @@ class CheckoutFlowTest extends TestCase
             'code' => 'SAVE10',
             'used_count' => 1,
         ]);
+    }
+
+    public function test_checkout_is_blocked_when_otp_not_verified(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        $this->seedCheckoutData();
+
+        $this->post(route('checkout.store'), $this->checkoutPayload())
+            ->assertSessionHas('error', 'لازم تأكد رقم الموبايل بكود واتساب قبل تأكيد الطلب.');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_otp_send_success(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        Http::fake([
+            'backendapi.wpsenderx.com/*' => Http::response(['status' => 'success', 'message' => 'sent'], 200),
+        ]);
+
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+    }
+
+    public function test_otp_verify_success_allows_checkout(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        $this->seedCheckoutData();
+
+        Http::fake([
+            'backendapi.wpsenderx.com/api/otp/send' => Http::response(['status' => 'success'], 200),
+            'backendapi.wpsenderx.com/api/otp/verify' => Http::response(['status' => 'success'], 200),
+        ]);
+
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
+            ->assertOk();
+
+        $this->postJson(route('checkout.otp.verify'), [
+            'customer_phone' => '1000000000',
+            'otp_code' => '123456',
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $this->post(route('checkout.store'), $this->checkoutPayload())
+            ->assertRedirect();
+
+        $this->assertDatabaseCount('orders', 1);
+    }
+
+    public function test_invalid_phone_format_is_rejected_for_otp_send(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '12345'])
+            ->assertStatus(422);
+    }
+
+    public function test_provider_failure_is_handled_gracefully(): void
+    {
+        config(['services.wpsenderx.enabled' => true]);
+        Http::fake([
+            'backendapi.wpsenderx.com/*' => Http::response('<html>Just a moment...</html>', 403, ['Content-Type' => 'text/html']),
+        ]);
+
+        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
+            ->assertStatus(403)
+            ->assertJson(['ok' => false]);
+    }
+
+    protected function seedCheckoutData(): void
+    {
+        Setting::create([
+            'restaurant_name' => 'Test Restaurant',
+            'delivery_fee' => 20,
+            'is_open' => true,
+        ]);
+
+        $category = Category::create([
+            'name' => 'Pizza',
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Margherita',
+            'price' => 100,
+            'is_available' => true,
+        ]);
+
+        $this->post(route('cart.add', $product), [
+            'quantity' => 2,
+        ])->assertRedirect();
+    }
+
+    protected function checkoutPayload(): array
+    {
+        return [
+            'order_type' => 'delivery',
+            'customer_name' => 'Guest User',
+            'customer_phone' => '1000000000',
+            'address_line' => 'Alex Street 1',
+            'area' => 'Alex',
+            'latitude' => 31.2,
+            'longitude' => 29.9,
+        ];
     }
 }
