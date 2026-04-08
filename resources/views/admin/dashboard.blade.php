@@ -210,6 +210,46 @@
         gap:10px;
     }
 
+    .ops-filter-box{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        background:#fff;
+        border:1px solid #e3d9cc;
+        border-radius:999px;
+        padding:6px 8px;
+        box-shadow:0 8px 20px rgba(35,31,27,.06);
+    }
+
+    .ops-filter-box label{
+        font-size:.72rem;
+        font-weight:800;
+        color:#6f6a61;
+        margin:0;
+        white-space:nowrap;
+    }
+
+    .ops-filter-select{
+        min-width:180px;
+        border:1px solid #dfd3c3;
+        border-radius:999px;
+        padding:6px 12px;
+        font-size:.8rem;
+        font-weight:700;
+        color:#231f1b;
+        background:#fffdfa;
+    }
+
+    .ops-filter-apply{
+        border:none;
+        border-radius:999px;
+        padding:7px 12px;
+        font-size:.78rem;
+        font-weight:800;
+        color:#fff;
+        background:linear-gradient(135deg,#6f7f5f 0%,#8d9d7c 100%);
+    }
+
     .ops-action{
         display:inline-flex;
         align-items:center;
@@ -629,9 +669,10 @@
                 <a href="{{ route($dashboardBaseRoute, array_merge($queryFilters, ['range' => '7d'])) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
                 <a href="{{ route($dashboardBaseRoute, array_merge($queryFilters, ['range' => '30d'])) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
                 @if($branchFilterOptions->isNotEmpty())
-                    <form action="{{ route($dashboardBaseRoute) }}" method="GET" class="d-flex align-items-center gap-2">
+                    <form id="dashboardBranchFilterForm" action="{{ route($dashboardBaseRoute) }}" method="GET" class="ops-filter-box">
                         <input type="hidden" name="range" value="{{ $range }}">
-                        <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="تصفية حسب الفرع">
+                        <label for="dashboardBranchFilter">الفرع</label>
+                        <select id="dashboardBranchFilter" name="branch_id" class="ops-filter-select" aria-label="تصفية حسب الفرع">
                             <option value="">{{ __('كل الفروع') }}</option>
                             @foreach($branchFilterOptions as $branch)
                                 <option value="{{ $branch->id }}" {{ (int) $selectedBranchId === (int) $branch->id ? 'selected' : '' }}>
@@ -639,6 +680,7 @@
                                 </option>
                             @endforeach
                         </select>
+                        <button type="submit" class="ops-filter-apply">تطبيق</button>
                     </form>
                 @endif
             </div>
@@ -1174,6 +1216,14 @@ document.addEventListener('DOMContentLoaded', function () {
     let fetching  = false;
     const range = @json($range ?? 'today');
     const selectedBranchId = @json($selectedBranchId > 0 ? (int) $selectedBranchId : null);
+    const branchFilterSelect = $('dashboardBranchFilter');
+    const branchFilterForm = $('dashboardBranchFilterForm');
+
+    if (branchFilterSelect && branchFilterForm) {
+        branchFilterSelect.addEventListener('change', () => {
+            branchFilterForm.submit();
+        });
+    }
 
     const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const money = v => `${Number(v).toFixed(2)} ج.م`;
