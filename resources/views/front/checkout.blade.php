@@ -298,7 +298,7 @@
                 </div>
             </header>
 
-            <form action="{{ route('checkout.store') }}" method="POST" class="elite-checkout-form">
+            <form id="checkoutForm" action="{{ route('checkout.store') }}" method="POST" class="elite-checkout-form">
                 @csrf
                 <input type="hidden" name="order_type" id="orderTypeSelect" value="{{ $activeOrderType }}">
 
@@ -314,10 +314,28 @@
                         </div>
                         <div>
                             <label class="elite-checkout-label">{{ __('checkout.phone_number') }}</label>
-                            <input type="text" name="customer_phone" class="form-control" value="{{ old('customer_phone') }}" required>
+                            <input type="text" name="customer_phone" id="customerPhoneInput" class="form-control" value="{{ old('customer_phone') }}" required>
                         </div>
                     </div>
                 </div>
+
+                @if((bool) config('services.wpsenderx.enabled', true))
+                <div class="elite-checkout-card" id="otpCard">
+                    <div class="elite-checkout-head">
+                        <h3>تأكيد رقم الموبايل عبر واتساب OTP</h3>
+                        <span class="elite-checkout-note" id="otpStatusText">لم يتم التحقق بعد</span>
+                    </div>
+                    <div class="elite-checkout-2">
+                        <button type="button" id="sendOtpBtn" class="btn btn-outline-secondary">إرسال كود التحقق</button>
+                        <button type="button" id="resendOtpBtn" class="btn btn-outline-secondary">إعادة إرسال الكود</button>
+                    </div>
+                    <div class="elite-checkout-2 mt-2">
+                        <input type="text" id="otpCodeInput" class="form-control" maxlength="6" placeholder="اكتب كود التحقق">
+                        <button type="button" id="verifyOtpBtn" class="btn btn-brand">تأكيد الكود</button>
+                    </div>
+                    <div class="small mt-2 text-muted" id="otpMessageBox"></div>
+                </div>
+                @endif
 
                 <div class="elite-checkout-card pickup-fields" id="pickupFields">
                     <div class="elite-checkout-head">
@@ -410,7 +428,7 @@
                     <div class="elite-checkout-note mt-2">{{ __('checkout.coupon_hint') }}</div>
                 </div>
 
-                <button class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
+                <button id="confirmOrderBtn" class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
             </form>
         </section>
 
@@ -477,6 +495,20 @@
     const finalTotalText = document.getElementById('finalTotalText');
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
+    const checkoutForm = document.getElementById('checkoutForm');
+    const customerPhoneInput = document.getElementById('customerPhoneInput');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const otpCodeInput = document.getElementById('otpCodeInput');
+    const otpMessageBox = document.getElementById('otpMessageBox');
+    const otpStatusText = document.getElementById('otpStatusText');
+    const confirmOrderBtn = document.getElementById('confirmOrderBtn');
+    const otpSendUrl = @json(route('checkout.otp.send'));
+    const otpVerifyUrl = @json(route('checkout.otp.verify'));
+    const csrfToken = @json(csrf_token());
+    const otpEnabled = @json((bool) config('services.wpsenderx.enabled', true));
+    let otpVerified = false;
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
@@ -630,6 +662,123 @@
                 updateLatLng(lat, lng);
             }
         });
+    }
+
+    function setOtpMessage(message, type = 'muted') {
+        if (!otpMessageBox) return;
+        otpMessageBox.className = 'small mt-2';
+        otpMessageBox.classList.add(type === 'error' ? 'text-danger' : (type === 'success' ? 'text-success' : 'text-muted'));
+        otpMessageBox.textContent = message || '';
+    }
+
+    function updateOtpUi() {
+        if (!confirmOrderBtn || !otpStatusText) return;
+        if (!otpEnabled) {
+            confirmOrderBtn.disabled = false;
+            otpStatusText.textContent = 'التحقق غير مطلوب حالياً';
+            otpStatusText.className = 'elite-checkout-note text-success';
+            return;
+        }
+        confirmOrderBtn.disabled = !otpVerified;
+        otpStatusText.textContent = otpVerified ? 'تم التحقق من الرقم ✅' : 'لم يتم التحقق بعد';
+        otpStatusText.className = 'elite-checkout-note ' + (otpVerified ? 'text-success' : 'text-danger');
+    }
+
+    async function postJson(url, payload) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const json = await response.json().catch(() => ({ ok: false, message: 'استجابة غير متوقعة من الخادم.' }));
+        return { response, json };
+    }
+
+    async function sendOtpRequest() {
+        const phone = customerPhoneInput?.value?.trim() || '';
+        if (!phone) {
+            setOtpMessage('من فضلك اكتب رقم الموبايل أولًا.', 'error');
+            return;
+        }
+
+        setOtpMessage('جاري إرسال الكود...');
+        const { json } = await postJson(otpSendUrl, { customer_phone: phone });
+
+        if (!json.ok) {
+            otpVerified = false;
+            updateOtpUi();
+            setOtpMessage(json.message || 'تعذر إرسال كود التحقق الآن.', 'error');
+            return;
+        }
+
+        otpVerified = false;
+        updateOtpUi();
+        setOtpMessage(json.message || 'تم إرسال كود التحقق.', 'success');
+    }
+
+    async function verifyOtpRequest() {
+        const phone = customerPhoneInput?.value?.trim() || '';
+        const otp = otpCodeInput?.value?.trim() || '';
+
+        if (!phone || !otp) {
+            setOtpMessage('اكتب رقم الهاتف وكود التحقق.', 'error');
+            return;
+        }
+
+        setOtpMessage('جاري التحقق من الكود...');
+        const { json } = await postJson(otpVerifyUrl, {
+            customer_phone: phone,
+            otp_code: otp
+        });
+
+        if (!json.ok) {
+            otpVerified = false;
+            updateOtpUi();
+            setOtpMessage(json.message || 'الكود غير صحيح أو منتهي.', 'error');
+            return;
+        }
+
+        otpVerified = true;
+        updateOtpUi();
+        setOtpMessage(json.message || 'تم التحقق بنجاح.', 'success');
+    }
+
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', sendOtpRequest);
+    }
+
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', sendOtpRequest);
+    }
+
+    if (verifyOtpBtn) {
+        verifyOtpBtn.addEventListener('click', verifyOtpRequest);
+    }
+
+    if (customerPhoneInput) {
+        customerPhoneInput.addEventListener('input', function () {
+            otpVerified = false;
+            updateOtpUi();
+            setOtpMessage('تم تغيير رقم الهاتف، لازم تعيد التحقق.', 'muted');
+        });
+    }
+
+    if (otpEnabled && checkoutForm && confirmOrderBtn && sendOtpBtn) {
+        checkoutForm.addEventListener('submit', function (event) {
+            if (!otpVerified) {
+                event.preventDefault();
+                setOtpMessage('لازم تأكد رقم الموبايل قبل تأكيد الطلب.', 'error');
+            }
+        });
+    }
+
+    if (confirmOrderBtn) {
+        updateOtpUi();
     }
 </script>
 @endsection
