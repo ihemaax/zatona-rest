@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\WpSenderOtpService;
+use App\Services\WpSenderXService;
 use App\Support\ContactValidation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -65,7 +65,7 @@ class RegisteredUserController extends Controller
         ]);
 
         session(['registration_pending_user' => $user->id]);
-        if (!$this->issueRegistrationOtp($user, app(WpSenderOtpService::class))) {
+        if (!$this->issueRegistrationOtp($user, app(WpSenderXService::class))) {
             $user->delete();
 
             return back()->withInput($request->except('password', 'password_confirmation'))
@@ -98,8 +98,9 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        if (!app(WpSenderOtpService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code)) {
-            return back()->with('error', 'الكود غير صحيح أو منتهي.');
+        $result = app(WpSenderXService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code);
+        if (!(bool) ($result['ok'] ?? false)) {
+            return back()->with('error', (string) ($result['message'] ?? 'الكود غير صحيح أو منتهي.'));
         }
 
         session()->forget('registration_pending_user');
@@ -111,7 +112,7 @@ class RegisteredUserController extends Controller
         return redirect()->route('home')->with('success', 'تم تفعيل رقم واتساب بنجاح.');
     }
 
-    public function resendPhoneOtp(WpSenderOtpService $otpService): RedirectResponse
+    public function resendPhoneOtp(WpSenderXService $otpService): RedirectResponse
     {
         $user = $this->getPendingRegistrationUser();
         if (!$user) {
@@ -125,12 +126,15 @@ class RegisteredUserController extends Controller
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
 
-    protected function issueRegistrationOtp(User $user, WpSenderOtpService $otpService): bool
+    protected function issueRegistrationOtp(User $user, WpSenderXService $otpService): bool
     {
-        return $otpService->sendOtp(
+        $result = $otpService->sendOtp(
             (string) $user->phone,
-            "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق."
+            "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
+            (string) config('services.wpsenderx.session_id', '')
         );
+
+        return (bool) ($result['ok'] ?? false);
     }
 
     protected function getPendingRegistrationUser(): ?User

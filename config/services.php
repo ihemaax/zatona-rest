@@ -30,7 +30,9 @@ return [
     'wpsenderx' => [
         'base_url' => env('WPSENDERX_BASE_URL', 'https://backendapi.wpsenderx.com/api'),
         'api_key' => env('WPSENDERX_API_KEY'),
-        'fallback_base_url' => env('WPSENDERX_FALLBACK_BASE_URL', 'https://www.wpsenderx.com/api'),
+        'session_id' => env('WPSENDERX_SESSION_ID'),
+        'timeout' => env('WPSENDERX_TIMEOUT', 20),
+        'enabled' => env('WPSENDERX_ENABLED', true),
     ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
