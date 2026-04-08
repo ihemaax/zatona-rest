@@ -251,31 +251,98 @@ class DashboardController extends Controller
 
     public function demo(Request $request)
     {
-        return view('demo.admin-dashboard-standalone', [
-            'demoUpdatedAt' => now()->format('Y-m-d h:i A'),
-            'cards' => [
+        $range = $request->query('range', 'today');
+        if (!in_array($range, ['today', '7d', '30d'], true)) {
+            $range = 'today';
+        }
+
+        $now = now();
+
+        $latestOrders = collect([
+            (object) ['id' => 9001, 'order_number' => 'ORD-91310', 'customer_name' => 'Khaled Mostafa', 'order_type' => 'delivery', 'total' => 320.00, 'status' => 'out_for_delivery', 'is_seen_by_admin' => false, 'created_at' => $now->copy()->subMinutes(4), 'branch' => (object) ['name' => 'مدينة نصر']],
+            (object) ['id' => 9002, 'order_number' => 'ORD-91311', 'customer_name' => 'Sara Emad', 'order_type' => 'pickup', 'total' => 190.00, 'status' => 'preparing', 'is_seen_by_admin' => false, 'created_at' => $now->copy()->subMinutes(9), 'branch' => (object) ['name' => 'المعادي']],
+            (object) ['id' => 9003, 'order_number' => 'ORD-91312', 'customer_name' => 'Omar Hany', 'order_type' => 'delivery', 'total' => 275.00, 'status' => 'confirmed', 'is_seen_by_admin' => true, 'created_at' => $now->copy()->subMinutes(17), 'branch' => (object) ['name' => 'التجمع']],
+            (object) ['id' => 9004, 'order_number' => 'ORD-91313', 'customer_name' => 'Nadine Fathy', 'order_type' => 'delivery', 'total' => 415.50, 'status' => 'delivered', 'is_seen_by_admin' => true, 'created_at' => $now->copy()->subMinutes(31), 'branch' => (object) ['name' => '6 أكتوبر']],
+            (object) ['id' => 9005, 'order_number' => 'ORD-91314', 'customer_name' => 'Mariam Adel', 'order_type' => 'pickup', 'total' => 165.00, 'status' => 'pending', 'is_seen_by_admin' => false, 'created_at' => $now->copy()->subMinutes(42), 'branch' => (object) ['name' => 'حلوان']],
+            (object) ['id' => 9006, 'order_number' => 'ORD-91315', 'customer_name' => 'Amr Magdy', 'order_type' => 'delivery', 'total' => 286.00, 'status' => 'preparing', 'is_seen_by_admin' => true, 'created_at' => $now->copy()->subMinutes(55), 'branch' => (object) ['name' => 'المقطم']],
+        ]);
+
+        $deliveryLatest = $latestOrders->where('order_type', 'delivery')->values();
+        $pickupLatest = $latestOrders->where('order_type', 'pickup')->values();
+        $notifications = $latestOrders->where('is_seen_by_admin', false)->values();
+
+        $statusBreakdown = [
+            'pending' => 21,
+            'confirmed' => 31,
+            'preparing' => 44,
+            'out_for_delivery' => 38,
+            'delivered' => 697,
+            'cancelled' => 11,
+        ];
+
+        $weeklyTrend = collect(range(6, 0))->map(function ($daysAgo) use ($now) {
+            $date = $now->copy()->subDays($daysAgo);
+            $orders = [94, 101, 117, 123, 136, 128, 143][6 - $daysAgo];
+            $sales = [16420.00, 17880.00, 20410.00, 21750.00, 24190.00, 22640.00, 25830.00][6 - $daysAgo];
+
+            return [
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->format('D'),
+                'orders' => $orders,
+                'sales' => $sales,
+            ];
+        })->values();
+
+        $branchesStats = collect([
+            (object) ['name' => 'مدينة نصر', 'address' => 'شارع الطيران', 'orders_count' => 166],
+            (object) ['name' => 'المعادي', 'address' => 'زهراء المعادي', 'orders_count' => 142],
+            (object) ['name' => 'التجمع الخامس', 'address' => 'شارع التسعين', 'orders_count' => 174],
+            (object) ['name' => '6 أكتوبر', 'address' => 'المحور المركزي', 'orders_count' => 133],
+            (object) ['name' => 'حلوان', 'address' => 'شارع منصور', 'orders_count' => 111],
+        ]);
+
+        $topProducts = collect([
+            (object) ['product_name' => 'زنجر سبايسي', 'total_quantity' => 268],
+            (object) ['product_name' => 'تشيكن كرنش', 'total_quantity' => 241],
+            (object) ['product_name' => 'كومبو فيليه', 'total_quantity' => 190],
+            (object) ['product_name' => 'وجبة شاورما', 'total_quantity' => 177],
+            (object) ['product_name' => 'بطاطس تشيزي', 'total_quantity' => 153],
+        ]);
+
+        return view('admin.dashboard', [
+            'range' => $range,
+            'ordersCount' => 842,
+            'todayOrders' => 842,
+            'newOrders' => 67,
+            'pendingOrders' => 21,
+            'deliveryOrders' => 569,
+            'pickupOrders' => 273,
+            'todaySales' => 154320.50,
+            'deliverySales' => 109740.25,
+            'pickupSales' => 44580.25,
+            'latestOrders' => $latestOrders,
+            'deliveryLatest' => $deliveryLatest,
+            'pickupLatest' => $pickupLatest,
+            'branchesStats' => $branchesStats,
+            'notifications' => $notifications,
+            'statusBreakdown' => $statusBreakdown,
+            'weeklyTrend' => $weeklyTrend,
+            'kpis' => [
+                'prep_sla_minutes' => 18.4,
+                'avg_delivery_minutes' => 26.1,
+                'cancellation_rate' => 1.31,
+                'completion_rate' => 98.45,
+            ],
+            'shiftSummary' => [
                 'orders_count' => 842,
-                'new_orders' => 67,
-                'pending_orders' => 21,
-                'branches_count' => 12,
-                'today_sales' => 154320.50,
-                'delivery_sales' => 109740.25,
-                'pickup_sales' => 44580.25,
+                'sales_total' => 154320.50,
                 'avg_order_value' => 183.28,
             ],
-            'branches' => [
-                ['name' => 'فرع مدينة نصر', 'orders' => 166, 'sales' => 29840.00, 'sla' => '22 دقيقة'],
-                ['name' => 'فرع المعادي', 'orders' => 142, 'sales' => 25610.50, 'sla' => '24 دقيقة'],
-                ['name' => 'فرع التجمع الخامس', 'orders' => 174, 'sales' => 32220.00, 'sla' => '21 دقيقة'],
-                ['name' => 'فرع 6 أكتوبر', 'orders' => 133, 'sales' => 24890.00, 'sla' => '25 دقيقة'],
-            ],
-            'latestOrders' => [
-                ['number' => 'ORD-91310', 'customer' => 'Khaled Mostafa', 'type' => 'Delivery', 'total' => 320.00, 'status' => 'Out for Delivery'],
-                ['number' => 'ORD-91311', 'customer' => 'Sara Emad', 'type' => 'Pickup', 'total' => 190.00, 'status' => 'Preparing'],
-                ['number' => 'ORD-91312', 'customer' => 'Omar Hany', 'type' => 'Delivery', 'total' => 275.00, 'status' => 'Confirmed'],
-                ['number' => 'ORD-91313', 'customer' => 'Nadine Fathy', 'type' => 'Delivery', 'total' => 415.50, 'status' => 'Delivered'],
-                ['number' => 'ORD-91314', 'customer' => 'Mariam Adel', 'type' => 'Pickup', 'total' => 165.00, 'status' => 'Ready'],
-            ],
+            'topProducts' => $topProducts,
+            'dashboardBaseRoute' => 'admin.dashboard.demo',
+            'dashboardPollRoute' => null,
+            'dashboardExportRoute' => null,
+            'isDemoDashboard' => true,
         ]);
     }
 
