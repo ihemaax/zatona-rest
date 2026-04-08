@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
+use App\Support\ContactValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -48,12 +49,12 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => [...ContactValidation::emailRules(), 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', Rule::in(array_keys(User::availableRoles()))],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'is_active' => ['nullable', 'boolean'],
-        ]);
+        ], ContactValidation::messages());
 
         User::create([
             'name' => $validated['name'],
@@ -94,12 +95,12 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staff->id)],
+            'email' => [...ContactValidation::emailRules(), Rule::unique('users', 'email')->ignore($staff->id)],
             'password' => ['nullable', 'string', 'min:6'],
             'role' => ['required', Rule::in(array_keys(User::availableRoles()))],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'is_active' => ['nullable', 'boolean'],
-        ]);
+        ], ContactValidation::messages());
 
         $data = [
             'name' => $validated['name'],
