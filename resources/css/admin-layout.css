@@ -1041,6 +1041,10 @@
                 transform:translateX(calc(100% + 24px));
             }
 
+            html[dir="rtl"] .admin-sidebar.show{
+                transform:translateX(0);
+            }
+
             .admin-main{
                 margin-left:0 !important;
                 margin-right:0 !important;
