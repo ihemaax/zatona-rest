@@ -22,6 +22,6 @@ class MediaUrl
             }
         }
 
-        return asset('storage/' . ltrim($normalized, '/'));
+        return route('media.show', ['path' => ltrim($normalized, '/')]);
     }
 }
