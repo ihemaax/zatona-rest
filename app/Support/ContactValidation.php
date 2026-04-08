@@ -38,13 +38,32 @@ class ContactValidation
         return [
             $requiredRule,
             'string',
-            'regex:/^01[0125][0-9]{8}$/',
+            'regex:/^1[0125][0-9]{8}$/',
         ];
     }
 
     public static function normalizeEgyptianMobile(string $phone): string
     {
-        return preg_replace('/\D+/', '', $phone) ?? '';
+        $trimmed = trim($phone);
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+
+        if ($digits === '') {
+            return '';
+        }
+
+        if (strlen($digits) === 10 && str_starts_with($digits, '1')) {
+            return '+20' . $digits;
+        }
+
+        if (strlen($digits) === 11 && str_starts_with($digits, '01')) {
+            return '+2' . $digits;
+        }
+
+        if (strlen($digits) === 12 && str_starts_with($digits, '20')) {
+            return '+' . $digits;
+        }
+
+        return '+' . ltrim($digits, '+');
     }
 
     public static function messages(): array
@@ -55,10 +74,10 @@ class ContactValidation
             'email.max' => 'البريد الإلكتروني طويل جدًا.',
 
             'phone.required' => 'من فضلك اكتب رقم الموبايل.',
-            'phone.regex' => 'رقم الموبايل غير صحيح. يجب أن يكون 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015.',
+            'phone.regex' => 'رقم الموبايل غير صحيح. اكتب 10 أرقام بدون +20 (مثال: 1206628718).',
 
             'customer_phone.required' => 'من فضلك اكتب رقم الموبايل.',
-            'customer_phone.regex' => 'رقم الموبايل غير صحيح. يجب أن يكون 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015.',
+            'customer_phone.regex' => 'رقم الموبايل غير صحيح. اكتب 10 أرقام بدون +20 (مثال: 1206628718).',
         ];
     }
 }
