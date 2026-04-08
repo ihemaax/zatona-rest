@@ -7,7 +7,6 @@ use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CheckoutFlowTest extends TestCase
@@ -185,19 +184,6 @@ class CheckoutFlowTest extends TestCase
     {
         config(['services.wpsenderx.enabled' => true]);
         $this->seedCheckoutData();
-
-        Http::fake([
-            'backendapi.wpsenderx.com/api/otp/send' => Http::response(['status' => 'success'], 200),
-            'backendapi.wpsenderx.com/api/otp/verify' => Http::response(['status' => 'success'], 200),
-        ]);
-
-        $this->postJson(route('checkout.otp.send'), ['customer_phone' => '1000000000'])
-            ->assertOk();
-
-        $this->postJson(route('checkout.otp.verify'), [
-            'customer_phone' => '1000000000',
-            'otp_code' => '123456',
-        ])->assertOk()->assertJson(['ok' => true]);
 
         $this->post(route('checkout.store'), $this->checkoutPayload())
             ->assertRedirect();

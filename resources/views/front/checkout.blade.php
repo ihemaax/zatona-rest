@@ -323,24 +323,6 @@
                     </div>
                 </div>
 
-                @if((bool) config('services.wpsenderx.enabled', true))
-                <div class="elite-checkout-card" id="otpCard">
-                    <div class="elite-checkout-head">
-                        <h3>تأكيد رقم الموبايل عبر واتساب OTP</h3>
-                        <span class="elite-checkout-note" id="otpStatusText">لم يتم التحقق بعد</span>
-                    </div>
-                    <div class="elite-checkout-2">
-                        <button type="button" id="sendOtpBtn" class="btn btn-outline-secondary">إرسال كود التحقق</button>
-                        <button type="button" id="resendOtpBtn" class="btn btn-outline-secondary">إعادة إرسال الكود</button>
-                    </div>
-                    <div class="elite-checkout-2 mt-2">
-                        <input type="text" id="otpCodeInput" class="form-control" maxlength="6" placeholder="اكتب كود التحقق">
-                        <button type="button" id="verifyOtpBtn" class="btn btn-brand">تأكيد الكود</button>
-                    </div>
-                    <div class="small mt-2 text-muted" id="otpMessageBox"></div>
-                </div>
-                @endif
-
                 <div class="elite-checkout-card pickup-fields" id="pickupFields">
                     <div class="elite-checkout-head">
                         <h3>{{ __('checkout.choose_branch') }}</h3>
@@ -499,20 +481,7 @@
     const finalTotalText = document.getElementById('finalTotalText');
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
-    const checkoutForm = document.getElementById('checkoutForm');
     const customerPhoneInput = document.getElementById('customerPhoneInput');
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const resendOtpBtn = document.getElementById('resendOtpBtn');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const otpCodeInput = document.getElementById('otpCodeInput');
-    const otpMessageBox = document.getElementById('otpMessageBox');
-    const otpStatusText = document.getElementById('otpStatusText');
-    const confirmOrderBtn = document.getElementById('confirmOrderBtn');
-    const otpSendUrl = @json(route('checkout.otp.send'));
-    const otpVerifyUrl = @json(route('checkout.otp.verify'));
-    const csrfToken = @json(csrf_token());
-    const otpEnabled = @json((bool) config('services.wpsenderx.enabled', true));
-    let otpVerified = false;
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
@@ -668,13 +637,6 @@
         });
     }
 
-    function setOtpMessage(message, type = 'muted') {
-        if (!otpMessageBox) return;
-        otpMessageBox.className = 'small mt-2';
-        otpMessageBox.classList.add(type === 'error' ? 'text-danger' : (type === 'success' ? 'text-success' : 'text-muted'));
-        otpMessageBox.textContent = message || '';
-    }
-
     function sanitizeLocalEgyptianPhone(value) {
         const digits = (value || '').replace(/\D/g, '');
         return digits.slice(0, 10);
@@ -783,23 +745,7 @@
         customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
         customerPhoneInput.addEventListener('input', function () {
             customerPhoneInput.value = sanitizeLocalEgyptianPhone(customerPhoneInput.value);
-            otpVerified = false;
-            updateOtpUi();
-            setOtpMessage('تم تغيير رقم الهاتف، لازم تعيد التحقق.', 'muted');
         });
-    }
-
-    if (otpEnabled && checkoutForm && confirmOrderBtn && sendOtpBtn) {
-        checkoutForm.addEventListener('submit', function (event) {
-            if (!otpVerified) {
-                event.preventDefault();
-                setOtpMessage('لازم تأكد رقم الموبايل قبل تأكيد الطلب.', 'error');
-            }
-        });
-    }
-
-    if (confirmOrderBtn) {
-        updateOtpUi();
     }
 </script>
 @endsection
