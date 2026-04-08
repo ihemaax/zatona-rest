@@ -39,6 +39,15 @@
     $newOrdersCount = $layoutNewOrdersCount ?? 0;
     $cartCount = count(session('cart', []));
     $currentRoute = Route::currentRouteName();
+    $shouldBlockDevtools = request()->routeIs([
+        'home',
+        'products.show',
+        'cart.*',
+        'checkout.*',
+        'order.success',
+        'digital.menu.show',
+        'my.orders*',
+    ]);
 @endphp
 
 <nav class="navbar navbar-expand-lg main-navbar" id="mainNavbar">
@@ -340,6 +349,31 @@
 </div>
 
 <script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+
+@if($shouldBlockDevtools)
+    <script nonce="{{ $cspNonce }}">
+        (function () {
+            const blockedCombinations = new Set(['i', 'j', 'c', 'u', 's']);
+
+            document.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+            });
+
+            document.addEventListener('keydown', function (event) {
+                const key = (event.key || '').toLowerCase();
+                const isF12 = event.key === 'F12';
+                const isDevtoolsCombo = (event.ctrlKey || event.metaKey) && event.shiftKey && blockedCombinations.has(key);
+                const isViewSource = (event.ctrlKey || event.metaKey) && key === 'u';
+                const isSaveShortcut = (event.ctrlKey || event.metaKey) && key === 's';
+
+                if (isF12 || isDevtoolsCombo || isViewSource || isSaveShortcut) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }, true);
+        })();
+    </script>
+@endif
 
 @stack('scripts')
 </body>
