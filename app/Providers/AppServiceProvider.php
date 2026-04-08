@@ -171,10 +171,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $wpsApiKey = (string) config('services.wpsenderx.api_key');
-        $wpsBearer = (string) config('services.wpsenderx.bearer_token');
-
-        if ($wpsApiKey === '' && $wpsBearer === '') {
-            $missing[] = 'WPSENDERX_API_KEY or WPSENDERX_BEARER_TOKEN';
+        if ($wpsApiKey === '') {
+            $missing[] = 'WPSENDERX_API_KEY';
         }
 
         if ($missing !== []) {

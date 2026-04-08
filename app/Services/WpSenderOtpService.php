@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\Response;
 use RuntimeException;
 use Throwable;
 
@@ -13,19 +14,18 @@ class WpSenderOtpService
     {
         try {
             $normalizedPhone = $this->normalizePhone($phone);
-
-            $response = Http::timeout(20)
-                ->withHeaders($this->headers())
-                ->post($this->baseUrl() . '/otp/send', array_filter([
-                    'recipient' => $normalizedPhone,
-                    'message' => $message,
-                ], static fn ($value) => $value !== null && $value !== ''));
+            $payload = array_filter([
+                'recipient' => $normalizedPhone,
+                'message' => $message,
+            ], static fn ($value) => $value !== null && $value !== '');
+            $response = $this->postWithFallback('/otp/send', $payload);
 
             if (!$response->successful()) {
                 Log::warning('wpsenderx.otp.send_failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'recipient' => $normalizedPhone,
+                    'url' => (string) $response->effectiveUri(),
                 ]);
 
                 return false;
@@ -46,18 +46,17 @@ class WpSenderOtpService
     {
         try {
             $normalizedPhone = $this->normalizePhone($phone);
-            $response = Http::timeout(20)
-                ->withHeaders($this->headers())
-                ->post($this->baseUrl() . '/otp/verify', [
-                    'recipient' => $normalizedPhone,
-                    'otp_code' => trim($otpCode),
-                ]);
+            $response = $this->postWithFallback('/otp/verify', [
+                'recipient' => $normalizedPhone,
+                'otp_code' => trim($otpCode),
+            ]);
 
             if (!$response->successful()) {
                 Log::warning('wpsenderx.otp.verify_failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'recipient' => $normalizedPhone,
+                    'url' => (string) $response->effectiveUri(),
                 ]);
 
                 return false;
@@ -83,23 +82,75 @@ class WpSenderOtpService
     protected function headers(): array
     {
         $apiKey = (string) config('services.wpsenderx.api_key');
-        $bearerToken = (string) config('services.wpsenderx.bearer_token');
-
-        if ($apiKey === '' && $bearerToken === '') {
-            throw new RuntimeException('WP Sender credentials are not configured.');
+        if ($apiKey === '') {
+            throw new RuntimeException('WP Sender API key is not configured.');
         }
 
-        return array_filter([
-            'X-API-Key' => $apiKey !== '' ? $apiKey : null,
-            'Authorization' => $bearerToken !== '' ? ('Bearer ' . $bearerToken) : null,
+        return [
+            'X-API-Key' => $apiKey,
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ], static fn ($value) => $value !== null && $value !== '');
+        ];
     }
 
     protected function baseUrl(): string
     {
         return rtrim((string) config('services.wpsenderx.base_url', 'https://backendapi.wpsenderx.com/api'), '/');
+    }
+
+    protected function fallbackBaseUrl(): string
+    {
+        return rtrim((string) config('services.wpsenderx.fallback_base_url', 'https://www.wpsenderx.com/api'), '/');
+    }
+
+    protected function postWithFallback(string $endpoint, array $payload): Response
+    {
+        $primary = $this->post($this->baseUrl(), $endpoint, $payload);
+
+        if ($primary->successful()) {
+            return $primary;
+        }
+
+        if (!$this->isCloudflareChallenge($primary)) {
+            return $primary;
+        }
+
+        $fallbackBase = $this->fallbackBaseUrl();
+        if ($fallbackBase === '' || $fallbackBase === $this->baseUrl()) {
+            return $primary;
+        }
+
+        $fallback = $this->post($fallbackBase, $endpoint, $payload);
+
+        if ($fallback->successful()) {
+            Log::info('wpsenderx.fallback_base_url_used', [
+                'endpoint' => $endpoint,
+                'primary_url' => $this->baseUrl() . $endpoint,
+                'fallback_url' => $fallbackBase . $endpoint,
+            ]);
+        }
+
+        return $fallback;
+    }
+
+    protected function post(string $baseUrl, string $endpoint, array $payload): Response
+    {
+        return Http::timeout(20)
+            ->withHeaders($this->headers())
+            ->post(rtrim($baseUrl, '/') . $endpoint, $payload);
+    }
+
+    protected function isCloudflareChallenge(Response $response): bool
+    {
+        if ($response->status() !== 403) {
+            return false;
+        }
+
+        $body = mb_strtolower($response->body());
+
+        return str_contains($body, 'just a moment')
+            || str_contains($body, 'challenge-platform')
+            || str_contains($body, '__cf_chl');
     }
 
     protected function normalizePhone(string $phone): string
