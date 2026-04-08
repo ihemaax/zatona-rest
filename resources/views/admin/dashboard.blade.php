@@ -7,6 +7,12 @@
     $dashboardPollRoute ??= 'admin.dashboard.poll';
     $dashboardExportRoute ??= 'admin.dashboard.export-snapshot';
     $isDemoDashboard ??= false;
+    $selectedBranchId = (int) ($selectedBranchId ?? 0);
+    $branchFilterOptions = $branchFilterOptions ?? collect();
+    $queryFilters = ['range' => $range];
+    if ($selectedBranchId > 0) {
+        $queryFilters['branch_id'] = $selectedBranchId;
+    }
     $ordersIndexUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders']) : route('admin.orders.index');
     $ordersDeliveryUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-delivery']) : route('admin.orders.delivery');
     $ordersPickupUrl = $isDemoDashboard ? route('admin.demo.module', ['path' => 'orders-pickup']) : route('admin.orders.pickup');
@@ -618,15 +624,28 @@
 
     <section class="ops-card" style="padding:14px 18px;">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route($dashboardBaseRoute, ['range' => 'today']) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
-                <a href="{{ route($dashboardBaseRoute, ['range' => '7d']) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
-                <a href="{{ route($dashboardBaseRoute, ['range' => '30d']) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a href="{{ route($dashboardBaseRoute, array_merge($queryFilters, ['range' => 'today'])) }}" class="ops-mini-btn {{ $range === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route($dashboardBaseRoute, array_merge($queryFilters, ['range' => '7d'])) }}" class="ops-mini-btn {{ $range === '7d' ? 'active' : '' }}">7D</a>
+                <a href="{{ route($dashboardBaseRoute, array_merge($queryFilters, ['range' => '30d'])) }}" class="ops-mini-btn {{ $range === '30d' ? 'active' : '' }}">30D</a>
+                @if($branchFilterOptions->isNotEmpty())
+                    <form action="{{ route($dashboardBaseRoute) }}" method="GET" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="range" value="{{ $range }}">
+                        <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="تصفية حسب الفرع">
+                            <option value="">{{ __('كل الفروع') }}</option>
+                            @foreach($branchFilterOptions as $branch)
+                                <option value="{{ $branch->id }}" {{ (int) $selectedBranchId === (int) $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
             </div>
             @if($isDemoDashboard)
                 <span class="ops-mini-btn active">نسخة تجريبية للعرض فقط</span>
             @else
-                <a href="{{ route($dashboardExportRoute, ['range' => $range]) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
+                <a href="{{ route($dashboardExportRoute, $queryFilters) }}" class="ops-mini-btn">Export Snapshot (CSV)</a>
             @endif
         </div>
     </section>
@@ -1154,6 +1173,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let lastCount = parseInt(els.newOrders?.textContent || '0', 10);
     let fetching  = false;
     const range = @json($range ?? 'today');
+    const selectedBranchId = @json($selectedBranchId > 0 ? (int) $selectedBranchId : null);
 
     const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const money = v => `${Number(v).toFixed(2)} ج.م`;
@@ -1335,7 +1355,12 @@ document.addEventListener('DOMContentLoaded', function () {
         fetching = true;
 
         try {
-            const res = await fetch(`{{ route($dashboardPollRoute ?? 'admin.dashboard.poll', absolute: false) }}?range=${encodeURIComponent(range)}`, {
+            const params = new URLSearchParams({ range: String(range) });
+            if (selectedBranchId) {
+                params.set('branch_id', String(selectedBranchId));
+            }
+
+            const res = await fetch(`{{ route($dashboardPollRoute ?? 'admin.dashboard.poll', absolute: false) }}?${params.toString()}`, {
                 headers: {
                     'X-Requested-With':'XMLHttpRequest',
                     'Accept':'application/json'
