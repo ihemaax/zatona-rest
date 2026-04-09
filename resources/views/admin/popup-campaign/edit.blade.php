@@ -24,19 +24,9 @@
                 <input type="text" name="title" class="form-control" value="{{ old('title', $popup->title) }}">
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-bold">نص الزر</label>
-                <input type="text" name="button_text" class="form-control" value="{{ old('button_text', $popup->button_text) }}">
-            </div>
-
             <div class="col-12">
                 <label class="form-label fw-bold">وصف الإعلان</label>
                 <textarea name="description" class="form-control" rows="4">{{ old('description', $popup->description) }}</textarea>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label fw-bold">رابط الزر</label>
-                <input type="text" name="button_url" class="form-control" value="{{ old('button_url', $popup->button_url) }}" placeholder="/offers أو رابط كامل">
             </div>
 
             <div class="col-md-6">

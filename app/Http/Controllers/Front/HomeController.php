@@ -53,8 +53,6 @@ class HomeController extends Controller
                 'subtitle' => $popup->subtitle,
                 'description' => $popup->description,
                 'image' => $popup->image,
-                'button_text' => $popup->button_text,
-                'button_url' => $popup->button_url,
                 'show_once' => (bool) $popup->show_once,
                 'starts_at' => optional($popup->starts_at)->toDateTimeString(),
                 'ends_at' => optional($popup->ends_at)->toDateTimeString(),

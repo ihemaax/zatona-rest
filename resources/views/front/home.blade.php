@@ -429,12 +429,6 @@
                 <div class="offer-popup-desc">{{ $popupCampaign->description }}</div>
             @endif
 
-            @if($popupCampaign->button_text && $popupCampaign->button_url)
-                <a href="{{ $popupCampaign->button_url }}" class="offer-popup-btn">
-                    {{ $popupCampaign->button_text }}
-                </a>
-            @endif
-
             <button type="button" class="offer-popup-close" id="offerPopupCloseBtn">
                 {{ __('home.close') }}
             </button>
