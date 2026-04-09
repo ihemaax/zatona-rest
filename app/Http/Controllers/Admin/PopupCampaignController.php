@@ -23,8 +23,6 @@ class PopupCampaignController extends Controller
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'button_text' => 'nullable|string|max:100',
-            'button_url' => 'nullable|string|max:500',
             'image' => 'nullable|image|max:4096',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
