@@ -322,9 +322,11 @@ class CheckoutController extends Controller
             return back()->with('error', 'انتهت صلاحية الكود. اطلب كود جديد.');
         }
 
-        $result = $otpService->verifyOtp($normalizedPhone, (string) $data['otp_code']);
-        if (!(bool) ($result['success'] ?? false)) {
-            return back()->with('error', (string) ($result['message'] ?? 'كود التحقق غير صحيح أو منتهي.'));
+        if (!$this->isOtpCodeValid((string) ($payload['otp_hash'] ?? ''), (string) $data['otp_code'])) {
+            $payload['attempts'] = ((int) ($payload['attempts'] ?? 0)) + 1;
+            Cache::put($cacheKey, $payload, now()->addMinutes($this->otpTtlMinutes));
+
+            return back()->with('error', 'كود التحقق غير صحيح أو منتهي.');
         }
 
         $payload['verified'] = true;
@@ -443,10 +445,12 @@ class CheckoutController extends Controller
 
     protected function issueOtp(Request $request, string $normalizedPhone, WapilotService $otpService): bool
     {
+        $existingPayload = Cache::get($this->otpCacheKey($request));
+        $otpCode = $this->generateOtpCode();
         $result = $otpService->sendOtp(
             $normalizedPhone,
+            $otpCode,
             "كود تأكيد الطلب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
-            (string) config('services.wapilot.session_id', '')
         );
 
         if (!(bool) ($result['success'] ?? false)) {
@@ -455,9 +459,12 @@ class CheckoutController extends Controller
 
         Cache::put($this->otpCacheKey($request), [
             'phone' => $normalizedPhone,
+            'otp_hash' => $this->hashOtpCode($otpCode),
             'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
             'verified' => false,
             'verified_at' => null,
+            'attempts' => 0,
+            'resends' => ((int) data_get($existingPayload, 'resends', 0)) + 1,
         ], now()->addMinutes($this->otpTtlMinutes));
 
         session()->forget('checkout_phone_verified');
@@ -468,5 +475,24 @@ class CheckoutController extends Controller
     protected function isOtpFeatureEnabled(): bool
     {
         return (bool) config('services.wapilot.enabled', true);
+    }
+
+    protected function generateOtpCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    protected function hashOtpCode(string $otpCode): string
+    {
+        return hash('sha256', trim($otpCode) . '|' . config('app.key'));
+    }
+
+    protected function isOtpCodeValid(string $storedHash, string $candidateCode): bool
+    {
+        if ($storedHash === '') {
+            return false;
+        }
+
+        return hash_equals($storedHash, $this->hashOtpCode($candidateCode));
     }
 }

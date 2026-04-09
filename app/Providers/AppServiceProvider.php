@@ -172,8 +172,12 @@ class AppServiceProvider extends ServiceProvider
 
         $wpsEnabled = (bool) config('services.wapilot.enabled', true);
         $wpsApiKey = (string) config('services.wapilot.api_token');
+        $wpsInstanceId = (string) config('services.wapilot.instance_id');
         if ($wpsEnabled && $wpsApiKey === '') {
             $missing[] = 'WAPILOT_API_TOKEN';
+        }
+        if ($wpsEnabled && $wpsInstanceId === '') {
+            $missing[] = 'WAPILOT_INSTANCE_ID';
         }
 
         if ($missing !== []) {

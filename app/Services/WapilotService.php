@@ -10,7 +10,7 @@ use Throwable;
 
 class WapilotService
 {
-    public function sendOtp(string $recipient, ?string $message = null, ?string $sessionId = null): array
+    public function sendOtp(string $recipient, string $otpCode, ?string $context = null): array
     {
         if (!$this->isEnabled()) {
             return $this->result(true, 'disabled', 'Wapilot disabled by configuration.', 200, ['skipped' => true]);
@@ -21,27 +21,22 @@ class WapilotService
             return $this->result(false, 'validation', 'رقم الهاتف غير صالح لإرسال كود التحقق.', 422, ['recipient' => $normalized]);
         }
 
-        return $this->request('POST', $this->otpSendEndpoint(), array_filter([
-            'recipient' => $normalized,
-            'message' => $message !== null ? trim($message) : null,
-            'session_id' => $sessionId !== null ? trim($sessionId) : null,
-        ], static fn ($value) => $value !== null && $value !== ''));
-    }
-
-    public function verifyOtp(string $recipient, string $otpCode): array
-    {
-        if (!$this->isEnabled()) {
-            return $this->result(true, 'disabled', 'Wapilot disabled by configuration.', 200, ['skipped' => true]);
+        $chatId = $this->toChatId($normalized);
+        $text = trim($context ?? '');
+        if ($text === '') {
+            $text = "كود تأكيد الطلب: {$otpCode}";
+        } else {
+            $text = str_replace('{OTP}', $otpCode, $text);
         }
 
-        $normalized = $this->normalizePhone($recipient);
-        if (!$this->isEgyptianMobileForOtp($normalized)) {
-            return $this->result(false, 'validation', 'رقم الهاتف غير صالح.', 422, ['recipient' => $normalized]);
+        $instanceId = trim((string) config('services.wapilot.instance_id', ''));
+        if ($instanceId === '') {
+            return $this->result(false, 'local', 'Wapilot instance id is missing.', 500);
         }
 
-        return $this->request('POST', $this->otpVerifyEndpoint(), [
-            'recipient' => $normalized,
-            'otp_code' => trim($otpCode),
+        return $this->request('POST', $this->sendMessageEndpoint($instanceId), [
+            'chat_id' => $chatId,
+            'text' => $text,
         ]);
     }
 
@@ -98,7 +93,7 @@ class WapilotService
             'url' => $url,
             'payload_keys' => array_keys($payload),
             'payload' => $sanitizedPayload,
-            'recipient' => (string) ($sanitizedPayload['recipient'] ?? ''),
+            'chat_id' => (string) ($sanitizedPayload['chat_id'] ?? ''),
             'timeout_seconds' => $this->timeout(),
         ]);
 
@@ -240,17 +235,12 @@ class WapilotService
 
     protected function baseUrl(): string
     {
-        return rtrim((string) config('services.wapilot.base_url', 'https://app.wapilot.net/api/v2'), '/');
+        return rtrim((string) config('services.wapilot.base_url', 'https://api.wapilot.net/api/v2'), '/');
     }
 
-    protected function otpSendEndpoint(): string
+    protected function sendMessageEndpoint(string $instanceId): string
     {
-        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.otp_send', '/otp/send'));
-    }
-
-    protected function otpVerifyEndpoint(): string
-    {
-        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.otp_verify', '/otp/verify'));
+        return $this->normalizeEndpoint('/' . $instanceId . '/send-message');
     }
 
     protected function normalizeEndpoint(string $endpoint): string
@@ -266,13 +256,17 @@ class WapilotService
 
     protected function requestHeaders(string $apiToken): array
     {
-        $headerName = (string) config('services.wapilot.auth_header', 'Authorization');
-        $headerPrefix = (string) config('services.wapilot.auth_prefix', 'Bearer ');
-
         return [
-            $headerName => $headerPrefix . $apiToken,
+            'token' => $apiToken,
             'Content-Type' => 'application/json',
         ];
+    }
+
+    protected function toChatId(string $normalizedPhone): string
+    {
+        $digits = preg_replace('/\D+/', '', $normalizedPhone) ?? '';
+
+        return $digits . '@c.us';
     }
 
     protected function result(bool $success, string $type, string $message, int $status = 200, array $extra = []): array
