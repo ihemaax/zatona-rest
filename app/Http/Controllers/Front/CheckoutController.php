@@ -130,15 +130,8 @@ class CheckoutController extends Controller
                 'make_default',
                 'coupon_code',
             ])]);
-
-            if (!$this->issueOtpIfNeeded($request, $normalizedPhone)) {
-                return redirect()->route('checkout.index', ['order_type' => $request->order_type])
-                    ->withInput()
-                    ->with('error', 'تعذر إرسال كود التحقق الآن. حاول مرة أخرى بعد قليل.');
-            }
-
             return redirect()->route('checkout.otp.page')
-                ->with('info', 'هنبعتلك كود بس علشان نتأكد إنك جعان 😄');
+                ->with('info', 'أدخل كود التحقق اللي هيوصلك على واتساب لإكمال الطلب.');
         }
 
         if ($request->order_type === 'delivery' && empty($request->address_line)) {
@@ -293,8 +286,12 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', 'لا يوجد طلب بانتظار التحقق.');
         }
 
+        $normalizedPhone = app(WapilotService::class)->normalizePhone((string) $pending['customer_phone']);
+        $otpSent = $this->issueOtpIfNeeded($request, $normalizedPhone);
+
         return view('front.checkout-otp', [
-            'phone' => $pending['customer_phone'],
+            'phone' => $normalizedPhone,
+            'otpSent' => $otpSent,
         ]);
     }
 
