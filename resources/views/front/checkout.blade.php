@@ -415,6 +415,7 @@
                 </div>
 
                 <button id="confirmOrderBtn" class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
+                <div class="elite-checkout-note mt-2">بعد تأكيد الطلب هنحوّلك مباشرة لصفحة التحقق على واتساب.</div>
             </form>
         </section>
 
@@ -640,105 +641,6 @@
     function sanitizeLocalEgyptianPhone(value) {
         const digits = (value || '').replace(/\D/g, '');
         return digits.slice(0, 10);
-    }
-
-    function updateOtpUi() {
-        if (!confirmOrderBtn || !otpStatusText) return;
-        if (!otpEnabled) {
-            confirmOrderBtn.disabled = false;
-            otpStatusText.textContent = 'التحقق غير مطلوب حالياً';
-            otpStatusText.className = 'elite-checkout-note text-success';
-            return;
-        }
-        confirmOrderBtn.disabled = !otpVerified;
-        otpStatusText.textContent = otpVerified ? 'تم التحقق من الرقم ✅' : 'لم يتم التحقق بعد';
-        otpStatusText.className = 'elite-checkout-note ' + (otpVerified ? 'text-success' : 'text-danger');
-    }
-
-    async function postJson(url, payload) {
-        const response = await fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify(payload),
-        });
-
-        const json = await response.json().catch(() => ({ ok: false, message: 'استجابة غير متوقعة من الخادم.' }));
-        return { response, json };
-    }
-
-    async function sendOtpRequest() {
-        let phone = customerPhoneInput?.value?.trim() || '';
-        if (customerPhoneInput) {
-            customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
-            phone = customerPhoneInput.value;
-        }
-        if (!phone) {
-            setOtpMessage('من فضلك اكتب رقم الموبايل أولًا.', 'error');
-            return;
-        }
-
-        setOtpMessage('جاري إرسال الكود...');
-        const { json } = await postJson(otpSendUrl, { customer_phone: phone });
-
-        if (!json.ok) {
-            otpVerified = false;
-            updateOtpUi();
-            setOtpMessage(json.message || 'تعذر إرسال كود التحقق الآن.', 'error');
-            return;
-        }
-
-        otpVerified = false;
-        updateOtpUi();
-        setOtpMessage(json.message || 'تم إرسال كود التحقق.', 'success');
-    }
-
-    async function verifyOtpRequest() {
-        let phone = customerPhoneInput?.value?.trim() || '';
-        if (customerPhoneInput) {
-            customerPhoneInput.value = sanitizeLocalEgyptianPhone(phone);
-            phone = customerPhoneInput.value;
-        }
-        const otp = otpCodeInput?.value?.trim() || '';
-
-        if (!phone || !otp) {
-            setOtpMessage('اكتب رقم الهاتف وكود التحقق.', 'error');
-            return;
-        }
-
-        setOtpMessage('جاري التحقق من الكود...');
-        const { json } = await postJson(otpVerifyUrl, {
-            customer_phone: phone,
-            otp_code: otp
-        });
-
-        if (!json.ok) {
-            otpVerified = false;
-            updateOtpUi();
-            setOtpMessage(json.message || 'الكود غير صحيح أو منتهي.', 'error');
-            return;
-        }
-
-        otpVerified = true;
-        updateOtpUi();
-        setOtpMessage(json.message || 'تم التحقق بنجاح.', 'success');
-    }
-
-    if (sendOtpBtn) {
-        sendOtpBtn.addEventListener('click', sendOtpRequest);
-    }
-
-    if (resendOtpBtn) {
-        resendOtpBtn.addEventListener('click', sendOtpRequest);
-    }
-
-    if (verifyOtpBtn) {
-        verifyOtpBtn.addEventListener('click', verifyOtpRequest);
     }
 
     if (customerPhoneInput) {

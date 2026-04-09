@@ -27,12 +27,18 @@ return [
     'api_key' => env('GEMINI_API_KEY'),
     'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
 ],
-    'wpsenderx' => [
-        'base_url' => env('WPSENDERX_BASE_URL', 'https://backendapi.wpsenderx.com/api'),
-        'api_key' => env('WPSENDERX_API_KEY'),
-        'session_id' => env('WPSENDERX_SESSION_ID'),
-        'timeout' => env('WPSENDERX_TIMEOUT', 20),
-        'enabled' => env('WPSENDERX_ENABLED', true),
+    'wapilot' => [
+        'base_url' => env('WAPILOT_BASE_URL', 'https://app.wapilot.net/api/v2'),
+        'api_token' => env('WAPILOT_API_TOKEN'),
+        'session_id' => env('WAPILOT_SESSION_ID'),
+        'timeout' => env('WAPILOT_TIMEOUT', 20),
+        'enabled' => env('WAPILOT_ENABLED', true),
+        'auth_header' => env('WAPILOT_AUTH_HEADER', 'Authorization'),
+        'auth_prefix' => env('WAPILOT_AUTH_PREFIX', 'Bearer '),
+        'endpoints' => [
+            'otp_send' => env('WAPILOT_ENDPOINT_OTP_SEND', '/otp/send'),
+            'otp_verify' => env('WAPILOT_ENDPOINT_OTP_VERIFY', '/otp/verify'),
+        ],
     ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
