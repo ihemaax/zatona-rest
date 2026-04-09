@@ -15,154 +15,101 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     .elite-checkout {
-        --zaatar: #0f3a2f;
-        --zaatar-dark: #0b2c24;
-        --olive: #2f6f5f;
-        --olive-soft: #e8f2ee;
-        --cream: #f7f3ea;
-        --sand: #e6dbc8;
-        --text: #14211c;
-        --muted: #5c6a64;
-        max-width: 1240px;
-        margin: 0 auto;
-        padding: 0 12px 110px;
-        color: var(--text);
-        position: relative;
-        font-family: 'Instrument Sans', 'Cairo', sans-serif;
+        --green-900:#0b2b23;
+        --green-800:#0f3a2f;
+        --green-700:#1f5f4f;
+        --green-100:#e6f1ec;
+        --cream-100:#fbf7ef;
+        --cream-200:#f5eddc;
+        --cream-300:#eadcc2;
+        --ink:#16241f;
+        --muted:#5f655d;
+        max-width: 1240px;margin:0 auto;padding:8px 14px 120px;position:relative;color:var(--ink);
     }
 
     .elite-checkout::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
+        content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
         background:
-            radial-gradient(circle at 8% 0%, rgba(16, 89, 73, .16), transparent 28%),
-            radial-gradient(circle at 92% 10%, rgba(195, 154, 99, .16), transparent 34%);
+            radial-gradient(circle at 6% 3%, rgba(16,89,73,.16), transparent 32%),
+            radial-gradient(circle at 95% 12%, rgba(181,139,82,.18), transparent 34%);
     }
 
-    .elite-checkout-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 370px;
-        gap: 18px;
-        align-items: start;
-    }
+    .elite-checkout-grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:20px;align-items:start}
 
     .elite-checkout-main,
     .elite-checkout-summary {
-        background: var(--cream);
-        border: 1px solid #deceb4;
-        border-radius: 26px;
-        box-shadow: 0 16px 30px rgba(20, 33, 28, .12);
-        overflow: hidden;
+        background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.66));
+        border:1px solid rgba(24,74,62,.14);
+        border-radius:28px;
+        box-shadow:0 20px 42px rgba(18,44,37,.12);
+        overflow:hidden;
+        backdrop-filter:blur(6px);
     }
 
     .elite-checkout-hero {
-        background: linear-gradient(128deg, #0b2c24 0%, #0f3a2f 45%, #2f6f5f 100%);
-        color: #fff;
-        padding: 22px;
-        border-bottom: 1px solid rgba(255, 255, 255, .2);
+        background:linear-gradient(125deg,var(--green-900),var(--green-800) 48%,var(--green-700));
+        color:#fff;padding:26px;border-bottom:1px solid rgba(255,255,255,.18);position:relative;
+    }
+
+    .elite-checkout-hero::after{
+        content:"";position:absolute;inset:auto -40px -90px auto;width:240px;height:240px;border-radius:50%;
+        background:radial-gradient(circle,rgba(255,255,255,.2),transparent 62%);
     }
 
     .elite-checkout-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 999px;
-        padding: 8px 12px;
-        background: rgba(247, 243, 234, .14);
-        border: 1px solid rgba(247, 243, 234, .34);
-        font-size: .78rem;
-        font-weight: 900;
-        margin-bottom: 10px;
+        display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;background:rgba(251,247,239,.14);
+        border:1px solid rgba(251,247,239,.38);font-size:.78rem;font-weight:900;margin-bottom:12px;
     }
 
     .elite-checkout-title {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 900;
-        letter-spacing: -.02em;
+        margin:0;font-size:2rem;font-weight:900;letter-spacing:-.03em;
     }
 
     .elite-checkout-sub {
-        margin: 8px 0 0;
-        color: #dce9e4;
-        font-weight: 700;
-        font-size: .9rem;
+        margin:9px 0 0;color:#dbebe5;font-weight:700;font-size:.9rem;
     }
 
     .elite-checkout-switch {
-        margin-top: 14px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;
     }
 
     .elite-checkout-switch a {
-        text-decoration: none;
-        border-radius: 12px;
-        padding: 9px 12px;
-        border: 1px solid rgba(247, 243, 234, .35);
-        color: #f7f3ea;
-        background: rgba(8, 24, 20, .32);
-        font-size: .83rem;
-        font-weight: 900;
+        text-decoration:none;border-radius:12px;padding:10px 14px;border:1px solid rgba(251,247,239,.38);color:#f7f3ea;
+        background:rgba(9,25,21,.38);font-size:.83rem;font-weight:900;transition:all .2s ease;
     }
 
     .elite-checkout-switch a.active {
-        background: #f6e8d0;
-        color: #18302a;
-        border-color: #e4cfab;
+        background:#f7e6c8;color:#17342c;border-color:#ecd0a0;
     }
 
     .elite-checkout-form {
-        padding: 16px;
-        display: grid;
-        gap: 14px;
+        padding:18px;display:grid;gap:14px;
     }
 
     .elite-checkout-card {
-        border: 1px solid #deceb4;
-        border-radius: 18px;
-        background: #fffdf8;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
-        padding: 14px;
+        border:1px solid #e6d8c1;border-radius:20px;background:linear-gradient(180deg,#fffefb,#fdf8ef);
+        box-shadow:0 8px 18px rgba(19,47,38,.06), inset 0 1px 0 rgba(255,255,255,.9);padding:16px;
     }
 
     .elite-checkout-card h3 {
-        margin: 0;
-        font-size: .98rem;
-        font-weight: 900;
-        color: #1c2d26;
+        margin:0;font-size:1.02rem;font-weight:900;color:#17322a;
     }
 
     .elite-checkout-head {
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
+        margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;
     }
 
     .elite-checkout-note {
-        font-size: .77rem;
-        font-weight: 800;
-        color: #6f675a;
+        font-size:.77rem;font-weight:800;color:#6f675a;
     }
 
     .elite-checkout-label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: .8rem;
-        font-weight: 800;
-        color: #4b5a53;
+        display:block;margin-bottom:7px;font-size:.82rem;font-weight:800;color:#496058;
     }
 
     .elite-checkout-2,
     .elite-checkout-3 {
-        display: grid;
-        gap: 10px;
+        display:grid;gap:10px;
     }
 
     .elite-checkout-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -170,114 +117,95 @@
 
     .elite-checkout .form-control,
     .elite-checkout .form-select {
-        border: 1px solid #dfccb2;
-        background: #fdf7ed;
-        border-radius: 12px;
-        min-height: 44px;
-        font-weight: 700;
+        border:1px solid #dfceb6;background:#fffdf8;border-radius:13px;min-height:46px;font-weight:700;
+        box-shadow:inset 0 1px 2px rgba(32,64,53,.04);
+    }
+
+    .elite-checkout .form-control:focus,
+    .elite-checkout .form-select:focus{
+        border-color:#8cb8aa;box-shadow:0 0 0 .18rem rgba(47,111,95,.14);
+    }
+
+    .elite-checkout .input-group-text{
+        background:#f7efe0;border:1px solid #dfceb6;border-radius:13px 0 0 13px;font-weight:900;color:#3a5249;
     }
 
     .elite-checkout .btn-brand {
-        background: linear-gradient(135deg, var(--zaatar-dark), var(--olive));
-        border: 1px solid #225243;
-        border-radius: 12px;
-        font-weight: 900;
-        color: #fff;
+        background:linear-gradient(135deg,var(--green-900),var(--green-700));border:1px solid #275446;border-radius:13px;
+        font-weight:900;color:#fff;min-height:46px;
     }
 
     .elite-checkout .btn-outline-secondary {
-        border-radius: 12px;
-        border-color: #d7c3a3;
-        color: #4e473d;
-        font-weight: 900;
-        background: #fff8ec;
+        border-radius:13px;border-color:#dcc8a9;color:#4e473d;font-weight:900;background:#fff8eb;
     }
 
     .elite-checkout-map {
-        height: 315px;
-        border-radius: 14px;
-        border: 1px solid #e3d5c0;
-        overflow: hidden;
+        height:325px;border-radius:16px;border:1px solid #e4d7c2;overflow:hidden;
     }
 
     .delivery-fields,
     .pickup-fields { display: none; }
 
     .elite-checkout-summary {
-        position: sticky;
-        top: 90px;
-        padding: 16px;
+        position:sticky;top:90px;padding:18px;
     }
 
     .elite-checkout-summary h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 900;
+        margin:0;font-size:1.03rem;font-weight:900;color:#17342c;
     }
 
     .elite-checkout-items {
-        margin-top: 12px;
-        display: grid;
-        gap: 8px;
-        max-height: 260px;
-        overflow: auto;
-        padding-right: 4px;
+        margin-top:12px;display:grid;gap:8px;max-height:260px;overflow:auto;padding-inline-end:4px;
     }
 
     .elite-checkout-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        border-bottom: 1px dashed #d8c8af;
-        padding-bottom: 6px;
-        font-size: .83rem;
-        font-weight: 800;
-        color: #3f4d47;
+        display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed #dccdb5;padding-bottom:7px;
+        font-size:.84rem;font-weight:800;color:#3f4d47;
     }
 
     .elite-checkout-calc {
-        margin-top: 12px;
-        border-top: 1px solid #dfccb2;
-        padding-top: 12px;
-        display: grid;
-        gap: 8px;
+        margin-top:12px;border-top:1px solid #dfccb2;padding-top:12px;display:grid;gap:8px;
     }
 
     .elite-checkout-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: .85rem;
-        font-weight: 800;
-        color: #33423d;
+        display:flex;justify-content:space-between;font-size:.87rem;font-weight:800;color:#33423d;
     }
 
     .elite-checkout-row.total {
-        font-size: 1rem;
-        color: #13211c;
+        margin-top:3px;font-size:1.04rem;color:#13211c;
     }
 
     .elite-checkout-change {
-        margin-top: 12px;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-        border-radius: 12px;
-        padding: 10px;
-        font-weight: 900;
-        color: #21463b;
-        background: #edf5f1;
-        border: 1px solid #c8dfd5;
+        margin-top:14px;text-decoration:none;display:block;text-align:center;border-radius:13px;padding:10px;font-weight:900;
+        color:#21463b;background:#edf5f1;border:1px solid #c8dfd5;
+    }
+
+    .elite-checkout-submit{
+        border:0;border-radius:14px;padding:14px 18px;background:linear-gradient(135deg,var(--green-900),var(--green-700));
+        color:#fff;font-size:1.02rem;font-weight:900;box-shadow:0 16px 28px rgba(13,58,46,.23);
+    }
+
+    .elite-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .elite-section-divider{
+        margin:4px 0 2px;padding-top:2px;font-size:.74rem;font-weight:900;color:#6e685d;letter-spacing:.02em;
     }
 
     @media (max-width: 991.98px) {
-        .elite-checkout-grid { grid-template-columns: 1fr; }
+        .elite-checkout-grid { grid-template-columns: 1fr; gap:14px; }
         .elite-checkout-summary { position: static; }
     }
 
     @media (max-width: 767.98px) {
-        .elite-checkout-title { font-size: 1.28rem; }
+        .elite-checkout{padding:0 6px 94px}
+        .elite-checkout-main,.elite-checkout-summary{border-radius:20px}
+        .elite-checkout-hero{padding:18px}
+        .elite-checkout-title { font-size: 1.38rem; }
+        .elite-checkout-sub{font-size:.82rem}
         .elite-checkout-2,
         .elite-checkout-3 { grid-template-columns: 1fr; }
+        .elite-checkout-form{padding:12px}
+        .elite-mini-grid{grid-template-columns:1fr}
     }
 </style>
 
@@ -367,9 +295,9 @@
                         </div>
                     </div>
 
-                    <div class="elite-checkout-2 mt-3">
+                    <div class="elite-mini-grid mt-3">
                         <button type="button" id="useCurrentLocationBtn" class="btn btn-brand w-100">{{ __('checkout.use_current_location') }}</button>
-                        <div class="elite-checkout-note" id="locationStatus"></div>
+                        <div class="elite-checkout-note d-flex align-items-center" id="locationStatus"></div>
                     </div>
 
                     <div class="mt-3">
@@ -414,7 +342,7 @@
                     <div class="elite-checkout-note mt-2">{{ __('checkout.coupon_hint') }}</div>
                 </div>
 
-                <button id="confirmOrderBtn" class="btn btn-brand btn-lg w-100">{{ __('checkout.confirm_order') }}</button>
+                <button id="confirmOrderBtn" class="elite-checkout-submit w-100">{{ __('checkout.confirm_order') }}</button>
                 <div class="elite-checkout-note mt-2">بعد تأكيد الطلب هنحوّلك مباشرة لصفحة التحقق على واتساب.</div>
             </form>
         </section>
