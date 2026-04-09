@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -106,12 +107,17 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        $result = app(WapilotService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code);
-        if (!(bool) ($result['ok'] ?? false)) {
-            return back()->with('error', (string) ($result['message'] ?? 'الكود غير صحيح أو منتهي.'));
+        $payload = Cache::get($this->registrationOtpCacheKey($user->id));
+        if (!$payload || (int) ($payload['expires_at'] ?? 0) < now()->timestamp) {
+            return back()->with('error', 'الكود غير صحيح أو منتهي.');
+        }
+
+        if (!$this->isOtpCodeValid((string) ($payload['otp_hash'] ?? ''), (string) $request->otp_code)) {
+            return back()->with('error', 'الكود غير صحيح أو منتهي.');
         }
 
         session()->forget('registration_pending_user');
+        Cache::forget($this->registrationOtpCacheKey($user->id));
 
         $user->update(['phone_verified_at' => now()]);
         event(new Registered($user));
@@ -136,9 +142,23 @@ class RegisteredUserController extends Controller
 
     protected function issueRegistrationOtp(User $user, WapilotService $otpService): bool
     {
-        $result = $otpService->sendOtp((string) $user->phone);
+        $otpCode = $this->generateOtpCode();
+        $result = $otpService->sendOtp(
+            (string) $user->phone,
+            $otpCode,
+            "كود تفعيل الحساب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
+        );
 
-        return (bool) ($result['ok'] ?? false);
+        if (!(bool) ($result['ok'] ?? false)) {
+            return false;
+        }
+
+        Cache::put($this->registrationOtpCacheKey($user->id), [
+            'otp_hash' => $this->hashOtpCode($otpCode),
+            'expires_at' => now()->addMinutes($this->otpTtlMinutes)->timestamp,
+        ], now()->addMinutes($this->otpTtlMinutes));
+
+        return true;
     }
 
     protected function getPendingRegistrationUser(): ?User
@@ -149,5 +169,29 @@ class RegisteredUserController extends Controller
         }
 
         return User::find($id);
+    }
+
+    protected function registrationOtpCacheKey(int $userId): string
+    {
+        return 'registration_otp:' . $userId;
+    }
+
+    protected function generateOtpCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    protected function hashOtpCode(string $otpCode): string
+    {
+        return hash('sha256', trim($otpCode) . '|' . config('app.key'));
+    }
+
+    protected function isOtpCodeValid(string $storedHash, string $candidateCode): bool
+    {
+        if ($storedHash === '') {
+            return false;
+        }
+
+        return hash_equals($storedHash, $this->hashOtpCode($candidateCode));
     }
 }
