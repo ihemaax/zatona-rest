@@ -170,10 +170,10 @@ class AppServiceProvider extends ServiceProvider
             $missing[] = 'APP_KEY';
         }
 
-        $wpsEnabled = (bool) config('services.wpsenderx.enabled', true);
-        $wpsApiKey = (string) config('services.wpsenderx.api_key');
+        $wpsEnabled = (bool) config('services.wapilot.enabled', true);
+        $wpsApiKey = (string) config('services.wapilot.api_token');
         if ($wpsEnabled && $wpsApiKey === '') {
-            $missing[] = 'WPSENDERX_API_KEY';
+            $missing[] = 'WAPILOT_API_TOKEN';
         }
 
         if ($missing !== []) {

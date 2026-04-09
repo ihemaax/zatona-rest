@@ -21,8 +21,7 @@ class WpSenderXService
             return $this->result(false, 'validation', 'رقم الهاتف غير صالح لإرسال كود التحقق.', 422, ['recipient' => $normalized]);
         }
 
-        // مهم: مطابقة الطلب المرجعي الناجح من CMD (recipient فقط بلا حقول إضافية).
-        return $this->request('POST', '/otp/send', [
+        return $this->request('POST', $this->otpSendEndpoint(), [
             'recipient' => $normalized,
         ]);
     }
@@ -38,7 +37,7 @@ class WpSenderXService
             return $this->result(false, 'validation', 'رقم الهاتف غير صالح.', 422, ['recipient' => $normalized]);
         }
 
-        return $this->request('POST', '/otp/verify', [
+        return $this->request('POST', $this->otpVerifyEndpoint(), [
             'recipient' => $normalized,
             'otp_code' => trim($otpCode),
         ]);
@@ -46,12 +45,18 @@ class WpSenderXService
 
     public function listSessions(): array
     {
-        return $this->request('GET', '/whatsapp-session/list');
+        return $this->request('GET', $this->sessionsListEndpoint());
     }
 
     public function getSessionStatus(string $sessionId): array
     {
-        return $this->request('GET', '/whatsapp-session/' . rawurlencode(trim($sessionId)) . '/status');
+        $sessionStatusEndpoint = str_replace(
+            '{sessionId}',
+            rawurlencode(trim($sessionId)),
+            $this->sessionStatusEndpoint()
+        );
+
+        return $this->request('GET', $sessionStatusEndpoint);
     }
 
     public function normalizePhone(string $phone): string
@@ -94,9 +99,9 @@ class WpSenderXService
             return $this->result(true, 'disabled', 'WPSenderX disabled by configuration.', 200, ['skipped' => true]);
         }
 
-        $apiKey = trim((string) config('services.wpsenderx.api_key'));
-        if ($apiKey === '') {
-            return $this->result(false, 'local', 'WPSenderX API key is missing.', 500);
+        $apiToken = trim((string) config('services.wapilot.api_token'));
+        if ($apiToken === '') {
+            return $this->result(false, 'local', 'Wapilot API token is missing.', 500);
         }
 
         $url = $this->baseUrl() . $endpoint;
@@ -114,10 +119,7 @@ class WpSenderXService
         try {
             $client = Http::timeout($this->timeout())
                 ->acceptJson()
-                ->withHeaders([
-                    'X-API-Key' => $apiKey,
-                    'Content-Type' => 'application/json',
-                ]);
+                ->withHeaders($this->requestHeaders($apiToken));
 
             $response = $method === 'GET'
                 ? $client->get($url, $payload)
@@ -186,7 +188,9 @@ class WpSenderXService
         }
 
         $normalizedProviderStatus = mb_strtolower((string) ($json['status'] ?? ''));
-        $providerSuccess = in_array($normalizedProviderStatus, ['success', 'ok'], true);
+        $providerSuccess = (bool) ($json['success'] ?? $json['ok'] ?? false)
+            || in_array($normalizedProviderStatus, ['success', 'ok', 'true'], true)
+            || (int) ($json['code'] ?? 0) === 200;
         $message = (string) ($json['message'] ?? data_get($json, 'data.message') ?? '');
 
         Log::info('wpsenderx.response.json', [
@@ -238,19 +242,61 @@ class WpSenderXService
 
     protected function isEnabled(): bool
     {
-        return (bool) config('services.wpsenderx.enabled', true);
+        return (bool) config('services.wapilot.enabled', true);
     }
 
     protected function timeout(): int
     {
-        $value = (int) config('services.wpsenderx.timeout', 20);
+        $value = (int) config('services.wapilot.timeout', 20);
 
         return $value > 0 ? $value : 20;
     }
 
     protected function baseUrl(): string
     {
-        return rtrim((string) config('services.wpsenderx.base_url', 'https://backendapi.wpsenderx.com/api'), '/');
+        return rtrim((string) config('services.wapilot.base_url', 'https://app.wapilot.net/api/v2'), '/');
+    }
+
+    protected function otpSendEndpoint(): string
+    {
+        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.otp_send', '/otp/send'));
+    }
+
+    protected function otpVerifyEndpoint(): string
+    {
+        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.otp_verify', '/otp/verify'));
+    }
+
+    protected function sessionsListEndpoint(): string
+    {
+        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.sessions_list', '/whatsapp-session/list'));
+    }
+
+    protected function sessionStatusEndpoint(): string
+    {
+        return $this->normalizeEndpoint((string) config('services.wapilot.endpoints.session_status', '/whatsapp-session/{sessionId}/status'));
+    }
+
+    protected function normalizeEndpoint(string $endpoint): string
+    {
+        $trimmed = trim($endpoint);
+
+        if ($trimmed === '') {
+            return '/';
+        }
+
+        return '/' . ltrim($trimmed, '/');
+    }
+
+    protected function requestHeaders(string $apiToken): array
+    {
+        $headerName = (string) config('services.wapilot.auth_header', 'Authorization');
+        $headerPrefix = (string) config('services.wapilot.auth_prefix', 'Bearer ');
+
+        return [
+            $headerName => $headerPrefix . $apiToken,
+            'Content-Type' => 'application/json',
+        ];
     }
 
     protected function result(bool $success, string $type, string $message, int $status = 200, array $extra = []): array
