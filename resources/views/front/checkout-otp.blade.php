@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-5" style="max-width:560px">
     <div class="otp-whatsapp-note mb-3">
-        بعتنالك كود على واتساب علشان نتأكد إنك معانا 👌
+        بعتنالك كود على واتساب علشان نتأكد انك جعان
     </div>
 
     @if(session('info'))
@@ -44,11 +44,11 @@
                 </div>
 
                 <p id="otpButtonHint" class="otp-hint text-muted small mb-2">
-                    الزرار بيتحرك لحد ما تكتب كود التحقق كامل.
+                    الزرار بيتحرك يمين وشمال ومش هتعرف تدوس عليه غير بعد كتابة الكود كامل.
                 </p>
 
-                <div id="otpButtonZone" class="otp-button-zone">
-                    <button id="otpConfirmButton" type="submit" class="btn btn-brand otp-confirm-btn">تأكيد وإكمال الطلب</button>
+                <div id="otpButtonTrack" class="otp-button-track">
+                    <button id="otpConfirmButton" type="submit" class="btn btn-brand otp-confirm-btn is-evasive">تأكيد وإكمال الطلب</button>
                 </div>
             </form>
 
@@ -73,34 +73,31 @@
         text-align: center;
     }
 
-    .otp-button-zone {
+    .otp-button-track {
         position: relative;
-        min-height: 82px;
-        border-radius: 16px;
-        border: 1px dashed rgba(9, 84, 67, .35);
-        background: linear-gradient(180deg, rgba(9, 84, 67, .03), rgba(9, 84, 67, .08));
-        overflow: hidden;
+        min-height: 54px;
     }
 
     .otp-confirm-btn {
-        position: absolute;
-        inset-inline-start: 50%;
-        top: 50%;
-        width: calc(100% - 1.25rem);
-        max-width: 460px;
-        transform: translate(-50%, -50%);
-        transition: top .45s ease, inset-inline-start .45s ease, transform .45s ease, box-shadow .25s ease;
+        width: 100%;
+        transition: transform .22s ease, box-shadow .25s ease;
         box-shadow: 0 8px 20px rgba(9, 84, 67, .22);
-        z-index: 2;
     }
 
     .otp-confirm-btn.is-evasive {
-        animation: otpPulse 1.2s ease-in-out infinite alternate;
+        animation: otpHorizontalRun .7s linear infinite alternate, otpPulse 1.05s ease-in-out infinite alternate;
+        will-change: transform;
+        cursor: not-allowed;
     }
 
     @keyframes otpPulse {
         from { box-shadow: 0 8px 20px rgba(9, 84, 67, .16); }
         to { box-shadow: 0 14px 26px rgba(9, 84, 67, .28); }
+    }
+
+    @keyframes otpHorizontalRun {
+        from { transform: translateX(-38%); }
+        to { transform: translateX(38%); }
     }
 </style>
 
@@ -108,75 +105,57 @@
     (() => {
         const codeInput = document.getElementById('otpCodeInput');
         const button = document.getElementById('otpConfirmButton');
-        const zone = document.getElementById('otpButtonZone');
+        const form = button?.closest('form');
         const hint = document.getElementById('otpButtonHint');
 
-        if (!codeInput || !button || !zone || !hint) return;
+        if (!codeInput || !button || !hint || !form) return;
 
         const hasCompleteCode = () => /^\d{6}$/.test(codeInput.value.trim());
-        const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-        let moveTimer = null;
-
-        const placeButton = (xRatio, yRatio) => {
-            const zoneRect = zone.getBoundingClientRect();
-            const buttonRect = button.getBoundingClientRect();
-            const padding = 8;
-            const maxX = Math.max(zoneRect.width - buttonRect.width - (padding * 2), 0);
-            const maxY = Math.max(zoneRect.height - buttonRect.height - (padding * 2), 0);
-
-            const nextX = (maxX * xRatio) + padding;
-            const nextY = (maxY * yRatio) + padding;
-
-            button.style.insetInlineStart = `${nextX + (buttonRect.width / 2)}px`;
-            button.style.top = `${nextY + (buttonRect.height / 2)}px`;
-            button.style.transform = 'translate(-50%, -50%)';
-        };
-
-        const randomMove = () => {
-            if (hasCompleteCode()) return;
-            placeButton(Math.random(), Math.random());
-        };
 
         const activateEvasiveMode = () => {
+            if (hasCompleteCode()) return;
             button.classList.add('is-evasive');
-            hint.textContent = 'الزرار هيثبت أول ما تكتب كود التحقق كامل.';
-            randomMove();
-
-            if (moveTimer) window.clearInterval(moveTimer);
-            moveTimer = window.setInterval(randomMove, 1050);
+            button.classList.remove('is-locked');
+            hint.textContent = 'الزرار هيثبت لما تكتب كود التحقق كامل.';
         };
 
         const lockButton = () => {
             button.classList.remove('is-evasive');
-            if (moveTimer) window.clearInterval(moveTimer);
-            moveTimer = null;
-
-            button.style.insetInlineStart = '50%';
-            button.style.top = '50%';
-            button.style.transform = 'translate(-50%, -50%)';
+            button.classList.add('is-locked');
+            button.style.transform = 'translateX(0)';
             hint.textContent = 'كدا تقدر تدوس على الزرار ✅';
+        };
+
+        const evadeCursor = (event) => {
+            if (hasCompleteCode()) return;
+            const rect = button.getBoundingClientRect();
+            const x = event.clientX;
+            const closeToButton = x >= (rect.left - 80) && x <= (rect.right + 80);
+
+            if (!closeToButton) return;
+
+            const runLeft = Math.random() > 0.5 ? -1 : 1;
+            const distance = (button.parentElement?.clientWidth || rect.width) * 0.34 * runLeft;
+            button.style.transform = `translateX(${distance}px)`;
         };
 
         const syncButtonState = () => {
             if (hasCompleteCode()) {
                 lockButton();
-            } else if (!isTouchDevice) {
-                activateEvasiveMode();
             } else {
-                hint.textContent = 'اكتب كود التحقق كامل علشان تقدر تأكد الطلب.';
+                activateEvasiveMode();
             }
         };
 
-        if (!isTouchDevice) {
-            button.addEventListener('mouseenter', () => {
-                if (!hasCompleteCode()) randomMove();
-            });
-        }
+        form.addEventListener('submit', (event) => {
+            if (!hasCompleteCode()) {
+                event.preventDefault();
+                activateEvasiveMode();
+            }
+        });
 
         codeInput.addEventListener('input', syncButtonState);
-        window.addEventListener('resize', () => {
-            if (!hasCompleteCode() && !isTouchDevice) randomMove();
-        });
+        document.addEventListener('mousemove', evadeCursor);
 
         syncButtonState();
     })();
