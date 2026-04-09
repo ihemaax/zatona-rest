@@ -15,96 +15,185 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     .elite-checkout {
+        --green-950:#08221b;
         --green-900:#0b2b23;
         --green-800:#0f3a2f;
         --green-700:#1f5f4f;
         --green-100:#e6f1ec;
-        --cream-100:#fbf7ef;
-        --cream-200:#f5eddc;
-        --cream-300:#eadcc2;
+        --cream-100:#fffdf8;
+        --cream-200:#f8f2e4;
+        --cream-300:#e8dac0;
         --ink:#16241f;
         --muted:#5f655d;
-        max-width: 1240px;margin:0 auto;padding:8px 14px 120px;position:relative;color:var(--ink);
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px 16px 120px;
+        position: relative;
+        color: var(--ink);
     }
 
     .elite-checkout::before {
-        content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+        content:"";
+        position:fixed;
+        inset:0;
+        z-index:-1;
+        pointer-events:none;
         background:
-            radial-gradient(circle at 6% 3%, rgba(16,89,73,.16), transparent 32%),
-            radial-gradient(circle at 95% 12%, rgba(181,139,82,.18), transparent 34%);
+            radial-gradient(circle at 7% 4%, rgba(16,89,73,.18), transparent 34%),
+            radial-gradient(circle at 94% 11%, rgba(181,139,82,.2), transparent 35%),
+            linear-gradient(180deg, #fdfbf5 0%, #f8f5ed 50%, #f4f1e8 100%);
     }
 
-    .elite-checkout-grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:20px;align-items:start}
+    .elite-checkout-grid{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) 360px;
+        gap:22px;
+        align-items:start;
+    }
 
     .elite-checkout-main,
     .elite-checkout-summary {
-        background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.66));
-        border:1px solid rgba(24,74,62,.14);
-        border-radius:28px;
-        box-shadow:0 20px 42px rgba(18,44,37,.12);
+        background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.82));
+        border:1px solid rgba(24,74,62,.13);
+        border-radius:30px;
+        box-shadow:
+            0 24px 44px rgba(18,44,37,.12),
+            0 8px 18px rgba(30,52,43,.08),
+            inset 0 1px 0 rgba(255,255,255,.75);
         overflow:hidden;
-        backdrop-filter:blur(6px);
+        backdrop-filter:blur(9px);
     }
 
     .elite-checkout-hero {
-        background:linear-gradient(125deg,var(--green-900),var(--green-800) 48%,var(--green-700));
-        color:#fff;padding:26px;border-bottom:1px solid rgba(255,255,255,.18);position:relative;
+        background:
+            radial-gradient(circle at 80% 5%, rgba(255,255,255,.2), transparent 25%),
+            linear-gradient(124deg,var(--green-950),var(--green-900) 35%,var(--green-800) 70%,var(--green-700));
+        color:#fff;
+        padding:30px 28px 26px;
+        border-bottom:1px solid rgba(255,255,255,.15);
+        position:relative;
     }
 
     .elite-checkout-hero::after{
-        content:"";position:absolute;inset:auto -40px -90px auto;width:240px;height:240px;border-radius:50%;
-        background:radial-gradient(circle,rgba(255,255,255,.2),transparent 62%);
+        content:"";
+        position:absolute;
+        inset:auto -52px -98px auto;
+        width:250px;
+        height:250px;
+        border-radius:50%;
+        background:radial-gradient(circle,rgba(255,255,255,.17),transparent 65%);
+    }
+
+    .elite-checkout-topline{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:14px;
+        flex-wrap:wrap;
     }
 
     .elite-checkout-badge {
-        display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;background:rgba(251,247,239,.14);
-        border:1px solid rgba(251,247,239,.38);font-size:.78rem;font-weight:900;margin-bottom:12px;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        border-radius:999px;
+        padding:8px 14px;
+        background:rgba(251,247,239,.14);
+        border:1px solid rgba(251,247,239,.36);
+        font-size:.78rem;
+        font-weight:900;
+        backdrop-filter: blur(4px);
     }
 
     .elite-checkout-title {
-        margin:0;font-size:2rem;font-weight:900;letter-spacing:-.03em;
+        margin:2px 0 0;
+        font-size:2.18rem;
+        font-weight:900;
+        letter-spacing:-.03em;
+        line-height:1.1;
     }
 
     .elite-checkout-sub {
-        margin:9px 0 0;color:#dbebe5;font-weight:700;font-size:.9rem;
+        margin:11px 0 0;
+        color:#dbebe5;
+        font-weight:700;
+        font-size:.9rem;
+        max-width:680px;
     }
 
     .elite-checkout-switch {
-        margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;
+        margin-top:18px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:9px;
+        padding:8px;
+        border-radius:16px;
+        background:rgba(8,25,20,.33);
+        border:1px solid rgba(241,232,215,.2);
+        width:max-content;
     }
 
     .elite-checkout-switch a {
-        text-decoration:none;border-radius:12px;padding:10px 14px;border:1px solid rgba(251,247,239,.38);color:#f7f3ea;
-        background:rgba(9,25,21,.38);font-size:.83rem;font-weight:900;transition:all .2s ease;
+        text-decoration:none;
+        border-radius:12px;
+        padding:10px 15px;
+        border:1px solid rgba(251,247,239,.34);
+        color:#f7f3ea;
+        background:rgba(9,25,21,.38);
+        font-size:.83rem;
+        font-weight:900;
+        transition:all .2s ease;
     }
 
     .elite-checkout-switch a.active {
-        background:#f7e6c8;color:#17342c;border-color:#ecd0a0;
+        background:#f7e6c8;
+        color:#17342c;
+        border-color:#ecd0a0;
+        box-shadow:0 6px 15px rgba(16,39,32,.22);
     }
 
     .elite-checkout-form {
-        padding:18px;display:grid;gap:14px;
+        padding:22px;
+        display:grid;
+        gap:16px;
     }
 
     .elite-checkout-card {
-        border:1px solid #e6d8c1;border-radius:20px;background:linear-gradient(180deg,#fffefb,#fdf8ef);
-        box-shadow:0 8px 18px rgba(19,47,38,.06), inset 0 1px 0 rgba(255,255,255,.9);padding:16px;
+        border:1px solid #e5d8c3;
+        border-radius:22px;
+        background:linear-gradient(180deg,#fffefb,#fdf8ef);
+        box-shadow:0 8px 18px rgba(19,47,38,.06), inset 0 1px 0 rgba(255,255,255,.9);
+        padding:18px;
     }
 
     .elite-checkout-card h3 {
-        margin:0;font-size:1.02rem;font-weight:900;color:#17322a;
+        margin:0;
+        font-size:1.04rem;
+        font-weight:900;
+        color:#17322a;
     }
 
     .elite-checkout-head {
-        margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+        margin-bottom:13px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
     }
 
     .elite-checkout-note {
-        font-size:.77rem;font-weight:800;color:#6f675a;
+        font-size:.77rem;
+        font-weight:800;
+        color:#6f675a;
     }
 
     .elite-checkout-label {
-        display:block;margin-bottom:7px;font-size:.82rem;font-weight:800;color:#496058;
+        display:block;
+        margin-bottom:8px;
+        font-size:.82rem;
+        font-weight:800;
+        color:#496058;
     }
 
     .elite-checkout-2,
@@ -117,8 +206,13 @@
 
     .elite-checkout .form-control,
     .elite-checkout .form-select {
-        border:1px solid #dfceb6;background:#fffdf8;border-radius:13px;min-height:46px;font-weight:700;
+        border:1px solid #dfceb6;
+        background:#fffdf8;
+        border-radius:14px;
+        min-height:48px;
+        font-weight:700;
         box-shadow:inset 0 1px 2px rgba(32,64,53,.04);
+        padding-inline:13px;
     }
 
     .elite-checkout .form-control:focus,
@@ -127,44 +221,84 @@
     }
 
     .elite-checkout .input-group-text{
-        background:#f7efe0;border:1px solid #dfceb6;border-radius:13px 0 0 13px;font-weight:900;color:#3a5249;
+        background:#f7efe0;
+        border:1px solid #dfceb6;
+        border-radius:14px 0 0 14px;
+        font-weight:900;
+        color:#3a5249;
+        min-width:66px;
+        justify-content:center;
     }
 
     .elite-checkout .btn-brand {
-        background:linear-gradient(135deg,var(--green-900),var(--green-700));border:1px solid #275446;border-radius:13px;
-        font-weight:900;color:#fff;min-height:46px;
+        background:linear-gradient(135deg,var(--green-900),var(--green-700));
+        border:1px solid #275446;
+        border-radius:14px;
+        font-weight:900;
+        color:#fff;
+        min-height:48px;
+        box-shadow:0 10px 22px rgba(20,62,50,.2);
     }
 
     .elite-checkout .btn-outline-secondary {
-        border-radius:13px;border-color:#dcc8a9;color:#4e473d;font-weight:900;background:#fff8eb;
+        border-radius:14px;
+        border-color:#dcc8a9;
+        color:#4e473d;
+        font-weight:900;
+        background:#fff8eb;
+        min-height:48px;
     }
 
     .elite-checkout-map {
-        height:325px;border-radius:16px;border:1px solid #e4d7c2;overflow:hidden;
+        height:335px;
+        border-radius:16px;
+        border:1px solid #e4d7c2;
+        overflow:hidden;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.6);
     }
 
     .delivery-fields,
     .pickup-fields { display: none; }
 
     .elite-checkout-summary {
-        position:sticky;top:90px;padding:18px;
+        position:sticky;
+        top:90px;
+        padding:20px;
     }
 
     .elite-checkout-summary h3 {
-        margin:0;font-size:1.03rem;font-weight:900;color:#17342c;
+        margin:0;
+        font-size:1.04rem;
+        font-weight:900;
+        color:#17342c;
     }
 
     .elite-checkout-items {
-        margin-top:12px;display:grid;gap:8px;max-height:260px;overflow:auto;padding-inline-end:4px;
+        margin-top:13px;
+        display:grid;
+        gap:8px;
+        max-height:280px;
+        overflow:auto;
+        padding-inline-end:4px;
     }
 
     .elite-checkout-item {
-        display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed #dccdb5;padding-bottom:7px;
-        font-size:.84rem;font-weight:800;color:#3f4d47;
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+        border-bottom:1px dashed #dccdb5;
+        padding-bottom:8px;
+        font-size:.84rem;
+        font-weight:800;
+        color:#3f4d47;
     }
 
     .elite-checkout-calc {
-        margin-top:12px;border-top:1px solid #dfccb2;padding-top:12px;display:grid;gap:8px;
+        margin-top:13px;
+        border-top:1px solid #dfccb2;
+        padding-top:13px;
+        display:grid;
+        gap:8px;
     }
 
     .elite-checkout-row {
@@ -172,40 +306,129 @@
     }
 
     .elite-checkout-row.total {
-        margin-top:3px;font-size:1.04rem;color:#13211c;
+        margin-top:4px;
+        font-size:1.08rem;
+        color:#13211c;
     }
 
     .elite-checkout-change {
-        margin-top:14px;text-decoration:none;display:block;text-align:center;border-radius:13px;padding:10px;font-weight:900;
-        color:#21463b;background:#edf5f1;border:1px solid #c8dfd5;
+        margin-top:16px;
+        text-decoration:none;
+        display:block;
+        text-align:center;
+        border-radius:14px;
+        padding:11px;
+        font-weight:900;
+        color:#21463b;
+        background:#edf5f1;
+        border:1px solid #c8dfd5;
     }
 
     .elite-checkout-submit{
-        border:0;border-radius:14px;padding:14px 18px;background:linear-gradient(135deg,var(--green-900),var(--green-700));
-        color:#fff;font-size:1.02rem;font-weight:900;box-shadow:0 16px 28px rgba(13,58,46,.23);
+        border:0;
+        border-radius:16px;
+        padding:15px 20px;
+        background:linear-gradient(135deg,var(--green-900),var(--green-700));
+        color:#fff;
+        font-size:1.03rem;
+        font-weight:900;
+        box-shadow:0 16px 28px rgba(13,58,46,.24);
     }
 
     .elite-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
     .elite-section-divider{
-        margin:4px 0 2px;padding-top:2px;font-size:.74rem;font-weight:900;color:#6e685d;letter-spacing:.02em;
+        margin:6px 0 3px;
+        padding-top:2px;
+        font-size:.74rem;
+        font-weight:900;
+        color:#6e685d;
+        letter-spacing:.02em;
+    }
+
+    .elite-summary-header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        margin-bottom:10px;
+    }
+
+    .elite-summary-badge{
+        border-radius:999px;
+        padding:6px 12px;
+        font-size:.74rem;
+        font-weight:900;
+        color:#184437;
+        background:linear-gradient(120deg,#ecf5f1,#fdf8eb);
+        border:1px solid #d0e3da;
+    }
+
+    .elite-checkout-divider{
+        height:1px;
+        margin:2px 0 10px;
+        background:linear-gradient(90deg, transparent, rgba(23,62,51,.2), transparent);
+    }
+
+    .elite-section-intro{
+        font-size:.8rem;
+        color:#6f675a;
+        font-weight:700;
+        margin:2px 0 0;
+    }
+
+    .elite-note-muted{
+        border-radius:12px;
+        padding:9px 11px;
+        background:#f8f3e8;
+        border:1px solid #ebdec7;
+    }
+
+    .elite-order-meta{
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-top:14px;
+    }
+
+    .elite-order-meta span{
+        border-radius:999px;
+        padding:6px 11px;
+        background:rgba(251,247,239,.15);
+        border:1px solid rgba(251,247,239,.3);
+        font-size:.75rem;
+        font-weight:800;
+        color:#e8f2ee;
     }
 
     @media (max-width: 991.98px) {
-        .elite-checkout-grid { grid-template-columns: 1fr; gap:14px; }
-        .elite-checkout-summary { position: static; }
+        .elite-checkout-grid { grid-template-columns: 1fr; gap:15px; }
+        .elite-checkout-main,.elite-checkout-summary{border-radius:24px}
+        .elite-checkout-summary { position: static; order:-1; }
+        .elite-checkout-form{padding:16px}
     }
 
     @media (max-width: 767.98px) {
         .elite-checkout{padding:0 6px 94px}
         .elite-checkout-main,.elite-checkout-summary{border-radius:20px}
-        .elite-checkout-hero{padding:18px}
-        .elite-checkout-title { font-size: 1.38rem; }
+        .elite-checkout-hero{padding:19px 16px 17px}
+        .elite-checkout-topline{align-items:center}
+        .elite-checkout-title { font-size: 1.48rem; }
         .elite-checkout-sub{font-size:.82rem}
         .elite-checkout-2,
         .elite-checkout-3 { grid-template-columns: 1fr; }
         .elite-checkout-form{padding:12px}
+        .elite-checkout-card{padding:14px;border-radius:18px}
         .elite-mini-grid{grid-template-columns:1fr}
+        .elite-checkout-switch{
+            width:100%;
+            justify-content:center;
+            padding:7px;
+        }
+        .elite-checkout-switch a{
+            flex:1;
+            text-align:center;
+        }
     }
 </style>
 
@@ -213,16 +436,24 @@
     <div class="elite-checkout-grid">
         <section class="elite-checkout-main">
             <header class="elite-checkout-hero">
-                <span class="elite-checkout-badge">
-                    @if($activeOrderType === 'pickup') 🏬 {{ __('checkout.pickup_from_restaurant') }}
-                    @else 🚚 {{ __('checkout.delivery_to_address') }} @endif
-                </span>
-                <h1 class="elite-checkout-title">{{ __('checkout.complete_order') }}</h1>
-                <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }} {{ __('checkout.cash_on_delivery') }}</p>
+                <div class="elite-checkout-topline">
+                    <div>
+                        <span class="elite-checkout-badge">
+                            @if($activeOrderType === 'pickup') 🏬 {{ __('checkout.pickup_from_restaurant') }}
+                            @else 🚚 {{ __('checkout.delivery_to_address') }} @endif
+                        </span>
+                        <h1 class="elite-checkout-title">{{ __('checkout.complete_order') }}</h1>
+                        <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }} {{ __('checkout.cash_on_delivery') }}</p>
+                    </div>
+                </div>
 
                 <div class="elite-checkout-switch">
                     <a href="{{ route('checkout.index', ['order_type' => 'delivery']) }}" class="{{ $activeOrderType === 'delivery' ? 'active' : '' }}">🚚 {{ __('checkout.delivery_to_address') }}</a>
                     <a href="{{ route('checkout.index', ['order_type' => 'pickup']) }}" class="{{ $activeOrderType === 'pickup' ? 'active' : '' }}">🏬 {{ __('checkout.pickup_from_restaurant') }}</a>
+                </div>
+                <div class="elite-order-meta">
+                    <span>{{ __('checkout.confirm_order') }}</span>
+                    <span>{{ __('checkout.currency_egp') }} • Premium experience</span>
                 </div>
             </header>
 
@@ -235,6 +466,7 @@
                         <h3>{{ __('checkout.customer_name') }} & {{ __('checkout.phone_number') }}</h3>
                         <span class="elite-checkout-note">{{ __('checkout.confirm_order') }}</span>
                     </div>
+                    <p class="elite-section-intro">{{ __('checkout.customer_name') }} {{ __('checkout.phone_number') }} لضمان تأكيد الطلب سريعًا.</p>
                     <div class="elite-checkout-2">
                         <div>
                             <label class="elite-checkout-label">{{ __('checkout.customer_name') }}</label>
@@ -246,7 +478,7 @@
                                 <span class="input-group-text" dir="ltr">+20</span>
                                 <input type="text" name="customer_phone" id="customerPhoneInput" class="form-control" value="{{ old('customer_phone') }}" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="1206628718" required>
                             </div>
-                            <div class="elite-checkout-note mt-1">اكتب 10 أرقام فقط بدون +20</div>
+                            <div class="elite-checkout-note elite-note-muted mt-2">اكتب 10 أرقام فقط بدون +20</div>
                         </div>
                     </div>
                 </div>
@@ -271,6 +503,7 @@
                         <h3>{{ __('checkout.delivery_to_address') }}</h3>
                         <span class="elite-checkout-note">{{ __('checkout.network_issue_hint') }}</span>
                     </div>
+                    <div class="elite-checkout-divider"></div>
 
                     @if($savedAddresses->count())
                         <label class="elite-checkout-label">{{ __('checkout.choose_saved_address') }}</label>
@@ -348,7 +581,10 @@
         </section>
 
         <aside class="elite-checkout-summary">
-            <h3>{{ __('checkout.order_summary') }}</h3>
+            <div class="elite-summary-header">
+                <h3>{{ __('checkout.order_summary') }}</h3>
+                <span class="elite-summary-badge">{{ count($cart) }}</span>
+            </div>
             <div class="elite-checkout-items">
                 @foreach($cart as $item)
                     <div class="elite-checkout-item">
