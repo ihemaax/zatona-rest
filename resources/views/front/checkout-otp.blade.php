@@ -14,13 +14,19 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
+    @if(isset($otpSent) && !$otpSent)
+        <div class="alert alert-warning">
+            تعذر إرسال الكود تلقائيًا حاليًا. اضغط «إعادة إرسال الكود» وجرب مرة ثانية.
+        </div>
+    @endif
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
             <h1 class="h4 mb-2">تأكيد رقم واتساب</h1>
-            <p class="text-muted mb-4">هنبعتلك كود بس علشان نتأكد إنك جعان 😄</p>
+            <p class="text-muted mb-4">تم تسجيل بيانات الطلب. فضلاً أكمل التحقق بالكود لإرسال الطلب.</p>
 
             <div class="mb-3 text-muted">
-                الرقم: <strong dir="ltr">+20{{ $phone }}</strong>
+                رقم واتساب: <strong dir="ltr">{{ $phone }}</strong>
             </div>
 
             <form method="POST" action="{{ route('checkout.otp.verify') }}">

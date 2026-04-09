@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\WpSenderXService;
+use App\Services\WapilotService;
 use App\Support\ContactValidation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -73,7 +73,7 @@ class RegisteredUserController extends Controller
         ]);
 
         session(['registration_pending_user' => $user->id]);
-        if (!$this->issueRegistrationOtp($user, app(WpSenderXService::class))) {
+        if (!$this->issueRegistrationOtp($user, app(WapilotService::class))) {
             $user->delete();
 
             return back()->withInput($request->except('password', 'password_confirmation'))
@@ -106,7 +106,7 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')->with('error', 'انتهت جلسة التحقق. سجل من جديد.');
         }
 
-        $result = app(WpSenderXService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code);
+        $result = app(WapilotService::class)->verifyOtp((string) $user->phone, (string) $request->otp_code);
         if (!(bool) ($result['ok'] ?? false)) {
             return back()->with('error', (string) ($result['message'] ?? 'الكود غير صحيح أو منتهي.'));
         }
@@ -120,7 +120,7 @@ class RegisteredUserController extends Controller
         return redirect()->route('home')->with('success', 'تم تفعيل رقم واتساب بنجاح.');
     }
 
-    public function resendPhoneOtp(WpSenderXService $otpService): RedirectResponse
+    public function resendPhoneOtp(WapilotService $otpService): RedirectResponse
     {
         $user = $this->getPendingRegistrationUser();
         if (!$user) {
@@ -134,7 +134,7 @@ class RegisteredUserController extends Controller
         return back()->with('success', 'تم إرسال كود جديد على واتساب.');
     }
 
-    protected function issueRegistrationOtp(User $user, WpSenderXService $otpService): bool
+    protected function issueRegistrationOtp(User $user, WapilotService $otpService): bool
     {
         $result = $otpService->sendOtp((string) $user->phone);
 
