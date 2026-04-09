@@ -578,7 +578,7 @@ class CheckoutController extends Controller
         $result = $otpService->sendOtp(
             $normalizedPhone,
             "كود تأكيد الطلب: {OTP}\nالكود صالح لمدة {$this->otpTtlMinutes} دقائق.",
-            (string) config('services.wpsenderx.session_id', '')
+            (string) config('services.wapilot.session_id', '')
         );
 
         if (!(bool) ($result['success'] ?? false)) {
@@ -599,6 +599,6 @@ class CheckoutController extends Controller
 
     protected function isOtpFeatureEnabled(): bool
     {
-        return (bool) config('services.wpsenderx.enabled', true);
+        return (bool) config('services.wapilot.enabled', true);
     }
 }
