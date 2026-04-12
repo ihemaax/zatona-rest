@@ -20,7 +20,6 @@
     });
 
     $allProducts = $products->values();
-    $mostOrderedProducts = $allProducts->take(8);
     $featuredProducts = $allProducts->filter(fn ($product) => !empty($product->image))->take(5);
 
     if ($featuredProducts->isEmpty()) {
@@ -409,7 +408,9 @@
         <section class="stories-wrap">
             <div class="stories-row" id="storiesRow">
                 <button type="button" class="story-chip active" data-story-target="all">الكل</button>
-                <button type="button" class="story-chip" data-story-target="most-ordered">الأكثر طلبًا</button>
+                @if(($offers ?? collect())->isNotEmpty())
+                    <button type="button" class="story-chip" data-story-target="offers">العروض</button>
+                @endif
                 <button type="button" class="story-chip" data-story-target="featured">مميزة</button>
                 @foreach($storyItems as $story)
                     <button type="button" class="story-chip" data-story-target="{{ $story['key'] }}">{{ $story['label'] }}</button>
@@ -419,52 +420,37 @@
 
         <main class="page-feed" id="menu-area">
             @if($products->count())
-                <section class="section-card product-section" data-category="most-ordered" id="section-most-ordered">
+                @if(($offers ?? collect())->isNotEmpty())
+                <section class="section-card product-section" data-category="offers" id="section-offers">
                     <div class="section-head">
                         <div>
-                            <h3 class="section-title">الأكثر طلبًا</h3>
-                            <p class="section-sub">ترشيحات سريعة بناءً على عناصر المنيو الشائعة.</p>
+                            <h3 class="section-title">العروض</h3>
+                            <p class="section-sub">أفضل العروض المتاحة حالياً.</p>
                         </div>
                     </div>
 
                     <div class="most-row">
-                        @foreach($mostOrderedProducts as $product)
-                            @php
-                                $productPayload = [
-                                    'id' => $product->id,
-                                    'name' => $product->name,
-                                    'price' => $product->price,
-                                    'description' => $product->description,
-                                    'image' => $product->image ? \App\Support\MediaUrl::fromPath($product->image) : null,
-                                    'options' => $product->relationLoaded('optionGroups')
-                                        ? $product->optionGroups->map(function ($group) {
-                                            return [
-                                                'id' => $group->id,
-                                                'name' => $group->name,
-                                                'type' => $group->type ?? 'single',
-                                                'is_required' => (bool) ($group->is_required ?? false),
-                                                'items' => $group->relationLoaded('items')
-                                                    ? $group->items->map(fn ($item) => ['id' => $item->id, 'name' => $item->name, 'price' => $item->price ?? 0])->values()->toArray()
-                                                    : [],
-                                            ];
-                                        })->values()->toArray()
-                                        : [],
-                                ];
-                            @endphp
-                            <article class="most-card product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
-                                <img src="{{ $product->image ? \App\Support\MediaUrl::fromPath($product->image) : 'https://via.placeholder.com/600x400?text=Food' }}" class="most-image" alt="{{ $product->name }}">
+                        @foreach($offers as $offer)
+                            <article class="most-card product-card-item" data-name="{{ strtolower($offer->name . ' ' . ($offer->short_description ?? '')) }}">
+                                <img src="{{ $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer' }}" class="most-image" alt="{{ $offer->name }}">
                                 <div class="most-body">
-                                    <h4 class="most-title">{{ $product->name }}</h4>
-                                    <p class="most-desc">{{ $product->description ?: __('home.default_product_description') }}</p>
+                                    <h4 class="most-title">{{ $offer->name }}</h4>
+                                    <p class="most-desc">{{ $offer->short_description ?: 'استفد من العرض الحالي قبل انتهاء الفترة المحددة.' }}</p>
                                     <div class="most-footer">
-                                        <span class="price">{{ number_format($product->price, 2) }} {{ __('home.currency_egp') }}</span>
-                                        <button type="button" class="add-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>{{ __('home.add_to_cart') }}</button>
+                                        <span class="price">
+                                            @if(!is_null($offer->old_price))
+                                                <small class="text-muted text-decoration-line-through d-block">{{ number_format((float) $offer->old_price, 2) }} {{ __('home.currency_egp') }}</small>
+                                            @endif
+                                            {{ number_format((float) $offer->new_price, 2) }} {{ __('home.currency_egp') }}
+                                        </span>
+                                        <a href="#section-featured" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
                                     </div>
                                 </div>
                             </article>
                         @endforeach
                     </div>
                 </section>
+                @endif
 
                 <section class="section-card product-section" data-category="featured" id="section-featured">
                     <div class="section-head">

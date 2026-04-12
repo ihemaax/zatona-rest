@@ -6,6 +6,7 @@ use App\Observers\InvalidateFrontCacheObserver;
 use App\Models\ProductOptionItem;
 use App\Models\ProductOptionGroup;
 use App\Models\Product;
+use App\Models\Offer;
 use App\Models\PopupCampaign;
 use App\Models\Category;
 use App\Models\Setting;
@@ -36,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
         Setting::observe(InvalidateFrontCacheObserver::class);
         PopupCampaign::observe(InvalidateFrontCacheObserver::class);
         Product::observe(InvalidateFrontCacheObserver::class);
+        Offer::observe(InvalidateFrontCacheObserver::class);
         Category::observe(InvalidateFrontCacheObserver::class);
         ProductOptionGroup::observe(InvalidateFrontCacheObserver::class);
         ProductOptionItem::observe(InvalidateFrontCacheObserver::class);

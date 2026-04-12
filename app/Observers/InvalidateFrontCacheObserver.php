@@ -10,6 +10,7 @@ class InvalidateFrontCacheObserver
         'front.home.setting.v3',
         'front.home.products.v3',
         'front.home.popup.v2',
+        'front.home.offers.v1',
     ];
 
     public function saved($model): void
