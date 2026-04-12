@@ -118,7 +118,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('branch', 'items', 'deliveryUser');
+        $order->load('branch', 'items', 'deliveryUser', 'payment');
         $user = auth()->user();
 
         if ($user->role === User::ROLE_KITCHEN) {
