@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DigitalMenuQrController;
 use App\Http\Controllers\Admin\DigitalMenuSettingController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductOptionGroupController;
@@ -58,6 +59,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])
             ->middleware('throttle:admin-actions')
             ->name('admin.popup-campaign.update');
+
+        Route::resource('offers', OfferController::class)->except(['show', 'create']);
     });
 
     Route::middleware('permission:manage_branches')->group(function () {

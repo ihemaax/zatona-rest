@@ -66,6 +66,7 @@
         request()->routeIs('admin.products.*') ||
         request()->routeIs('admin.cashier.index') ||
         request()->routeIs('admin.coupons.*') ||
+        request()->routeIs('admin.offers.*') ||
         request()->routeIs('admin.settings.*') ||
         request()->routeIs('admin.staff.*') ||
         request()->routeIs('admin.reports.*') ||
@@ -233,6 +234,13 @@
                         <span class="sb-sublink-dot"></span>
                         <span>كوبونات الخصم</span>
                     </a>
+
+                    @if($hasAdminPermission('manage_settings'))
+                        <a href="{{ $demoOrAdminUrl('offers', route('admin.offers.index')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>العروض</span>
+                        </a>
+                    @endif
 
                     @if($hasAdminPermission('manage_settings'))
                         <a href="{{ $demoOrAdminUrl('settings', route('admin.settings.edit')) }}" class="sb-sublink {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
