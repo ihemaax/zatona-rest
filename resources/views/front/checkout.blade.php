@@ -443,7 +443,7 @@
                             @else 🚚 {{ __('checkout.delivery_to_address') }} @endif
                         </span>
                         <h1 class="elite-checkout-title">{{ __('checkout.complete_order') }}</h1>
-                        <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }} {{ __('checkout.cash_on_delivery') }}</p>
+                        <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }}</p>
                     </div>
                 </div>
 
@@ -554,6 +554,21 @@
                             <label class="elite-checkout-label">{{ __('checkout.address_name') }}</label>
                             <input type="text" name="address_label" class="form-control" placeholder="{{ __('checkout.address_name_placeholder') }}">
                         </div>
+                    </div>
+                </div>
+
+
+                <div class="elite-checkout-card">
+                    <h3 class="mb-2">{{ __('checkout.payment_method') }}</h3>
+                    <div class="elite-checkout-2">
+                        <label class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ __('checkout.cash_on_delivery') }}</span>
+                        </label>
+                        <label class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" value="paymob" {{ old('payment_method') === 'paymob' ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ __('checkout.paymob') }}</span>
+                        </label>
                     </div>
                 </div>
 
