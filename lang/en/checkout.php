@@ -22,6 +22,7 @@ return [
     'notes' => 'Notes',
     'payment_method' => 'Payment Method',
     'cash_on_delivery' => 'Cash on Delivery',
+    'paymob' => 'Online Payment (Paymob)',
     'coupon_code' => 'Coupon Code',
     'coupon_code_placeholder' => 'Enter discount code',
     'apply_coupon' => 'Apply',
