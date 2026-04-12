@@ -22,6 +22,7 @@ return [
     'notes' => 'ملاحظات',
     'payment_method' => 'طريقة الدفع',
     'cash_on_delivery' => 'كاش عند الاستلام',
+    'paymob' => 'دفع إلكتروني (Paymob)',
     'coupon_code' => 'كوبون الخصم',
     'coupon_code_placeholder' => 'اكتب كود الخصم',
     'apply_coupon' => 'تطبيق',

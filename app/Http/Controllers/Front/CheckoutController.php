@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\WapilotService;
@@ -94,6 +95,8 @@ class CheckoutController extends Controller
             return redirect()->route('home')->with('error', 'المطعم مغلق حاليًا ولا يمكن استقبال طلبات جديدة');
         }
 
+        Log::info('checkout.begin', ['user_id' => auth()->id(), 'ip' => $request->ip()]);
+
         $request->validate([
             'order_type' => 'required|in:delivery,pickup',
             'branch_id' => 'nullable|exists:branches,id',
@@ -111,7 +114,13 @@ class CheckoutController extends Controller
             'address_label'  => 'nullable|string|max:255',
             'make_default'   => 'nullable|boolean',
             'coupon_code'    => 'nullable|string|max:40',
+            'payment_method' => 'required|in:cash,paymob',
         ], ContactValidation::messages());
+
+
+        if ($request->payment_method === 'paymob' && !config('paymob.enabled')) {
+            return redirect()->back()->with('error', 'الدفع الإلكتروني غير متاح حالياً.');
+        }
 
         $normalizedPhone = app(WapilotService::class)->normalizePhone((string) $request->customer_phone);
         if ($this->isOtpFeatureEnabled() && !$this->isOtpVerifiedForPhone($request, $normalizedPhone)) {
@@ -129,6 +138,7 @@ class CheckoutController extends Controller
                 'address_label',
                 'make_default',
                 'coupon_code',
+                'payment_method',
             ])]);
             return redirect()->route('checkout.otp.page')
                 ->with('info', 'أدخل كود التحقق اللي هيوصلك على واتساب لإكمال الطلب.');
@@ -208,7 +218,7 @@ class CheckoutController extends Controller
                 'discount_amount'            => $discountAmount,
                 'delivery_fee'               => $deliveryFee,
                 'total'                      => $total,
-                'payment_method'             => 'cash',
+                'payment_method'             => $request->payment_method,
                 'status'                     => 'pending',
                 'estimated_delivery_minutes' => $etaMinutes,
                 'estimated_delivery_at'      => now()->addMinutes($etaMinutes),
@@ -226,6 +236,15 @@ class CheckoutController extends Controller
                     'selected_options' => $item['selected_options'] ?? [],
                 ]);
             }
+
+            Payment::create([
+                'order_id' => $order->id,
+                'provider' => $request->payment_method === 'paymob' ? 'paymob' : 'cash',
+                'status' => $request->payment_method === 'paymob' ? 'pending' : 'paid',
+                'amount' => $total,
+                'currency' => 'EGP',
+                'paid_at' => $request->payment_method === 'cash' ? now() : null,
+            ]);
 
             if ($couponData['coupon']) {
                 $couponData['coupon']->increment('used_count');
@@ -252,6 +271,16 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+
+            if ($request->payment_method === 'paymob') {
+                $startRouteParams = ['order' => $order->id];
+                if ($guestToken) {
+                    $startRouteParams['token'] = $guestToken;
+                }
+
+                return redirect()->route('checkout.paymob.start', $startRouteParams)
+                    ->with('success', 'تم إنشاء الطلب. سيتم تحويلك لصفحة الدفع.');
+            }
 
             session()->forget('cart');
             session()->forget('checkout_coupon_code');

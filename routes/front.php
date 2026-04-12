@@ -6,6 +6,7 @@ use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\MediaController;
 use App\Http\Controllers\Front\MyOrderController;
+use App\Http\Controllers\Front\PaymobPaymentController;
 use App\Http\Controllers\Front\PageController;
 use App\Http\Controllers\Demo\SalesDemoController;
 use App\Http\Controllers\ProfileController;
@@ -80,6 +81,12 @@ Route::post('/checkout/otp/resend', [CheckoutController::class, 'resendOtp'])
 Route::post('/checkout', [CheckoutController::class, 'store'])
     ->middleware('throttle:checkout-store')
     ->name('checkout.store');
+
+Route::match(['get', 'post'], '/checkout/paymob/start/{order}', [PaymobPaymentController::class, 'start'])->name('checkout.paymob.start');
+Route::get('/payment/paymob/success', [PaymobPaymentController::class, 'success'])->name('payment.paymob.success');
+Route::get('/payment/paymob/fail', [PaymobPaymentController::class, 'fail'])->name('payment.paymob.fail');
+Route::get('/payment/paymob/pending', [PaymobPaymentController::class, 'pending'])->name('payment.paymob.pending');
+Route::post('/payment/paymob/webhook', [PaymobPaymentController::class, 'webhook'])->name('payment.paymob.webhook');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
 
 /*
