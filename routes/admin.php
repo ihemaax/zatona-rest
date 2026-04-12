@@ -60,7 +60,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             ->middleware('throttle:admin-actions')
             ->name('admin.popup-campaign.update');
 
-        Route::resource('offers', OfferController::class)->except(['show', 'create']);
+        Route::resource('offers', OfferController::class)
+            ->except(['show', 'create'])
+            ->names('admin.offers');
     });
 
     Route::middleware('permission:manage_branches')->group(function () {
