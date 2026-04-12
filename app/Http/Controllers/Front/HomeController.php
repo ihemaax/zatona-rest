@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Offer;
 use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
@@ -62,6 +63,42 @@ class HomeController extends Controller
         $setting = $settingPayload ? new Setting($settingPayload) : null;
         $popupCampaign = $popupPayload ? new PopupCampaign($popupPayload) : null;
 
+        $offersPayload = Cache::remember('front.home.offers.v1', now()->addMinutes(3), function () {
+            return Offer::query()
+                ->activeNow()
+                ->orderByRaw('sort_order IS NULL, sort_order ASC')
+                ->orderByDesc('id')
+                ->get([
+                    'id',
+                    'name',
+                    'short_description',
+                    'image',
+                    'old_price',
+                    'new_price',
+                    'sort_order',
+                    'starts_at',
+                    'ends_at',
+                    'is_active',
+                ])
+                ->map(function (Offer $offer) {
+                    return [
+                        'id' => $offer->id,
+                        'name' => $offer->name,
+                        'short_description' => $offer->short_description,
+                        'image' => $offer->image,
+                        'old_price' => $offer->old_price,
+                        'new_price' => $offer->new_price,
+                        'sort_order' => $offer->sort_order,
+                        'starts_at' => optional($offer->starts_at)->toDateTimeString(),
+                        'ends_at' => optional($offer->ends_at)->toDateTimeString(),
+                        'is_active' => (bool) $offer->is_active,
+                    ];
+                })
+                ->all();
+        });
+
+        $offers = collect($offersPayload)->map(fn (array $payload) => new Offer($payload));
+
         $products = Product::with([
             'category',
             'optionGroups' => function ($query) {
@@ -76,6 +113,6 @@ class HomeController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('front.home', compact('products', 'setting', 'popupCampaign'));
+        return view('front.home', compact('products', 'setting', 'popupCampaign', 'offers'));
     }
 }
