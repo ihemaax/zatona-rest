@@ -250,14 +250,7 @@
                     @endif
 
                     @if($hasAdminPermission('manage_settings'))
-                        <a href="{{ $demoOrAdminUrl('offers', url('/admin/offers')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
-                            <span class="sb-sublink-dot"></span>
-                            <span>العروض</span>
-                        </a>
-                    @endif
-
-                    @if($hasAdminPermission('manage_settings'))
-                        <a href="{{ $demoOrAdminUrl('offers', url('/admin/offers')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
+                        <a href="{{ $demoOrAdminUrl('offers', Route::has('admin.offers.index') ? route('admin.offers.index') : url('/admin/offers')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
                             <span>العروض</span>
                         </a>
