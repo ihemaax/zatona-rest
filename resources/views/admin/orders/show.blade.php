@@ -27,6 +27,7 @@
     $paymentLabel = match($order->payment_method) {
         'cash' => 'الدفع نقداً',
         'cash_on_delivery' => 'الدفع عند الاستلام',
+        'paymob' => 'Paymob',
         default => $order->payment_method ?: 'غير محدد',
     };
 @endphp
@@ -525,7 +526,18 @@
 
                     <div class="order-info-card">
                         <div class="order-info-label">طريقة الدفع</div>
-                        <div class="order-info-value">{{ $paymentLabel }}</div>
+                        <div class="order-info-value">
+                            {{ $paymentLabel }}
+                            @if($order->payment)
+                                <div class="mt-1 text-muted fw-semibold">الحالة: {{ $order->payment->status }}</div>
+                                @if($order->payment->provider_reference)
+                                    <div class="mt-1 text-muted fw-semibold">مرجع المزود: {{ $order->payment->provider_reference }}</div>
+                                @endif
+                                @if($order->payment->paid_at)
+                                    <div class="mt-1 text-muted fw-semibold">تاريخ الدفع: {{ $order->payment->paid_at->format('Y-m-d h:i A') }}</div>
+                                @endif
+                            @endif
+                        </div>
                     </div>
 
                     <div class="order-info-card">

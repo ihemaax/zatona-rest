@@ -173,6 +173,14 @@
         color:#17322a;
     }
 
+    .payment-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .payment-choice{position:relative;border:1px solid #e1d2bb;background:#fffdf9;border-radius:16px;padding:14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:.2s}
+    .payment-choice input{position:absolute;opacity:0;pointer-events:none}
+    .payment-choice .icon{width:40px;height:40px;border-radius:12px;background:#f3e9d8;display:flex;align-items:center;justify-content:center;color:#86683f}
+    .payment-choice .title{font-weight:900;color:#143a31;display:block}
+    .payment-choice .desc{font-size:.78rem;color:#6f6659;font-weight:700}
+    .payment-choice.active{border-color:#2e7462;background:#eef6f2;box-shadow:0 0 0 2px rgba(46,116,98,.18)}
+
     .elite-checkout-head {
         margin-bottom:13px;
         display:flex;
@@ -443,7 +451,7 @@
                             @else 🚚 {{ __('checkout.delivery_to_address') }} @endif
                         </span>
                         <h1 class="elite-checkout-title">{{ __('checkout.complete_order') }}</h1>
-                        <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }} {{ __('checkout.cash_on_delivery') }}</p>
+                        <p class="elite-checkout-sub">{{ __('checkout.receiving_method_label') }} • {{ __('checkout.payment_method') }}</p>
                     </div>
                 </div>
 
@@ -557,6 +565,29 @@
                     </div>
                 </div>
 
+
+                <div class="elite-checkout-card">
+                    <h3 class="mb-2">{{ __('checkout.payment_method') }}</h3>
+                    <div class="payment-choices">
+                        <label class="payment-choice">
+                            <input type="radio" name="payment_method" value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'checked' : '' }}>
+                            <span class="icon"><i class="bi bi-cash-coin"></i></span>
+                            <span>
+                                <span class="title">{{ __('checkout.cash_on_delivery') }}</span>
+                                <span class="desc">الدفع عند الاستلام بكل بساطة</span>
+                            </span>
+                        </label>
+                        <label class="payment-choice">
+                            <input type="radio" name="payment_method" value="paymob" {{ old('payment_method') === 'paymob' ? 'checked' : '' }}>
+                            <span class="icon"><i class="bi bi-credit-card-2-front"></i></span>
+                            <span>
+                                <span class="title">دفع إلكتروني</span>
+                                <span class="desc">عبر Paymob</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="elite-checkout-card">
                     <h3 class="mb-2">{{ __('checkout.notes') }}</h3>
                     <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
@@ -647,6 +678,26 @@
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
     const customerPhoneInput = document.getElementById('customerPhoneInput');
+
+
+    const paymentChoices = Array.from(document.querySelectorAll('.payment-choice'));
+    const syncPaymentCards = () => {
+        paymentChoices.forEach((choice) => {
+            const input = choice.querySelector('input[name="payment_method"]');
+            choice.classList.toggle('active', !!input?.checked);
+        });
+    };
+
+    paymentChoices.forEach((choice) => {
+        choice.addEventListener('click', () => {
+            const input = choice.querySelector('input[name="payment_method"]');
+            if (!input) return;
+            input.checked = true;
+            syncPaymentCards();
+        });
+    });
+
+    syncPaymentCards();
 
     latInput.value = defaultLat;
     lngInput.value = defaultLng;
