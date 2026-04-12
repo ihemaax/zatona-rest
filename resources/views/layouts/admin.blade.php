@@ -235,6 +235,20 @@
                         <span>كوبونات الخصم</span>
                     </a>
 
+                    @if($hasAdminPermission('manage_settings') && Route::has('admin.offers.index'))
+                        <a href="{{ $demoOrAdminUrl('offers', route('admin.offers.index')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>العروض</span>
+                        </a>
+                    @endif
+
+                    @if($hasAdminPermission('manage_settings'))
+                        <a href="{{ $demoOrAdminUrl('offers', route('admin.offers.index')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
+                            <span class="sb-sublink-dot"></span>
+                            <span>العروض</span>
+                        </a>
+                    @endif
+
                     @if($hasAdminPermission('manage_settings'))
                         <a href="{{ $demoOrAdminUrl('offers', Route::has('admin.offers.index') ? route('admin.offers.index') : url('/admin/offers')) }}" class="sb-sublink {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
                             <span class="sb-sublink-dot"></span>
