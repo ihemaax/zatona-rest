@@ -417,7 +417,7 @@
     }
 
     @media (max-width: 767.98px) {
-        .elite-checkout{padding:0 6px 94px}
+        .elite-checkout{padding:0 6px calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 24px)}
         .elite-checkout-main,.elite-checkout-summary{border-radius:20px}
         .elite-checkout-hero{padding:19px 16px 17px}
         .elite-checkout-topline{align-items:center}

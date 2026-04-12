@@ -42,7 +42,7 @@
     .cartx-empty{max-width:720px;margin:24px auto;background:#fffdf8;border:1px solid #e5d8c4;border-radius:24px;padding:34px 20px;text-align:center;box-shadow:0 8px 18px rgba(18,39,32,.08)}
 
     @media (max-width:991.98px){.cartx-layout{grid-template-columns:1fr}.cartx-summary{position:static}}
-    @media (max-width:767.98px){.cartx{padding:10px 10px 105px}.cartx-head{border-radius:18px;padding:15px}.cartx-head h1{font-size:1.25rem}.cartx-head-actions{display:grid;grid-template-columns:1fr 1fr}.cartx-item{grid-template-columns:1fr}.cartx-total{text-align:start}}
+    @media (max-width:767.98px){.cartx{padding:10px 10px calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 28px)}.cartx-head{border-radius:18px;padding:15px}.cartx-head h1{font-size:1.25rem}.cartx-head-actions{display:grid;grid-template-columns:1fr 1fr}.cartx-item{grid-template-columns:1fr}.cartx-total{text-align:start}}
 </style>
 
 <div class="cartx">

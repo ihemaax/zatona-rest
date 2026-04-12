@@ -78,7 +78,7 @@
     .elite-floating-cart-value{font-size:.9rem;font-weight:900;color:#fff}
     .elite-floating-cart-btn{color:#18302a !important;text-decoration:none;border-radius:12px;padding:10px 14px;background:#f6e8d0 !important;border:1px solid #e4cfab;font-weight:900}
 
-    .offer-popup-btn{display:block;width:100%;border:none;text-decoration:none;border-radius:14px;padding:12px 15px;color:#fff !important;background:linear-gradient(135deg,#0b2c24,#2f6f5f);font-weight:900;margin-bottom:10px}
+    .quick-modal .modal-dialog{max-width:820px}.quick-modal .modal-content{border-radius:18px;border:1px solid #e3d6c3}.quick-product-media img{width:100%;height:240px;object-fit:cover;border-radius:14px}.quick-product-name{font-size:1.2rem;font-weight:900}.quick-product-price{font-size:1rem;font-weight:900;color:#1f6554;margin:6px 0}.quick-product-desc{font-size:.88rem;color:#6f675a;line-height:1.7;margin-bottom:10px}.offer-popup-btn{display:block;width:100%;border:none;text-decoration:none;border-radius:14px;padding:12px 15px;color:#fff !important;background:linear-gradient(135deg,#0b2c24,#2f6f5f);font-weight:900;margin-bottom:10px}
     .offer-popup-overlay{position:fixed;inset:0;background:rgba(8,12,10,.64);display:none;align-items:center;justify-content:center;padding:16px;z-index:999999}
     .offer-popup-overlay.show{display:flex}
     .offer-popup-card{max-width:440px;width:100%;background:#fff;border:1px solid #e5d7c4;border-radius:22px;overflow:hidden;box-shadow:0 28px 64px rgba(0,0,0,.3)}
@@ -101,6 +101,11 @@
         .elite-box-body{padding:12px}
         .elite-product{grid-template-columns:84px minmax(0,1fr);padding:8px}
         .elite-product-image{height:84px}
+        .elite-floating-cart{bottom:calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 8px)}
+        .quick-modal .modal-dialog{margin:0;min-height:100dvh;align-items:flex-end;display:flex}
+        .quick-modal .modal-content{border-radius:20px 20px 0 0;max-height:86dvh;overflow:hidden}
+        .quick-modal .modal-body{overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+        .quick-product-media img{height:160px;border-radius:12px}
     }
 </style>
 
@@ -239,6 +244,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const heroCartCount = document.getElementById('heroCartCount');
     const modalElement = document.getElementById('productQuickAddModal');
     const productModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    modalElement?.addEventListener('show.bs.modal', () => {
+        document.body.classList.add('mobile-modal-open');
+    });
+
+    modalElement?.addEventListener('hidden.bs.modal', () => {
+        document.body.classList.remove('mobile-modal-open');
+    });
     let currentCartCount = {{ $cartCount }};
     let currentCartTotal = {{ (float) $cartTotal }};
 
