@@ -1,0 +1,408 @@
+.elite-product-page{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding-bottom: 90px;
+    }
+
+    .elite-product-wrap{
+        display: grid;
+        grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+        gap: 22px;
+        align-items: start;
+    }
+
+    .elite-product-media-card,
+    .elite-product-info-card,
+    .elite-option-card,
+    .elite-summary-card,
+    .elite-success-card{
+        background: var(--fb-card);
+        border: 1px solid var(--fb-border);
+        border-radius: 26px;
+        box-shadow: var(--fb-shadow);
+        overflow: hidden;
+    }
+
+    .elite-product-media-card{
+        padding: 14px;
+    }
+
+    .elite-product-image{
+        width: 100%;
+        min-height: 520px;
+        max-height: 700px;
+        object-fit: cover;
+        display: block;
+        border-radius: 22px;
+        background: #f3efe8;
+    }
+
+    .elite-product-info-card{
+        padding: 22px;
+    }
+
+    .elite-product-category{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #eef2e8;
+        color: var(--fb-primary);
+        font-size: .76rem;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .elite-product-title{
+        margin: 0 0 10px;
+        font-size: 2rem;
+        line-height: 1.18;
+        font-weight: 900;
+        color: var(--fb-text);
+        letter-spacing: -.02em;
+    }
+
+    .elite-product-desc{
+        margin: 0 0 18px;
+        color: var(--fb-muted);
+        font-size: .94rem;
+        line-height: 1.9;
+        font-weight: 700;
+    }
+
+    .elite-price-box{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #fffdfa 0%, #f8f4ee 100%);
+        border: 1px solid #ebe3d7;
+        margin-bottom: 18px;
+    }
+
+    .elite-price-box-label{
+        color: #8a847a;
+        font-size: .76rem;
+        font-weight: 800;
+    }
+
+    .elite-price-box-value{
+        color: var(--fb-text);
+        font-size: 1.2rem;
+        font-weight: 900;
+    }
+
+    .elite-options-stack{
+        display: grid;
+        gap: 14px;
+    }
+
+    .elite-option-card{
+        padding: 16px;
+    }
+
+    .elite-option-head{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .elite-option-title{
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--fb-text);
+    }
+
+    .elite-option-note{
+        color: #8a847a;
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .elite-option-list{
+        display: grid;
+        gap: 8px;
+    }
+
+    .elite-option-item{
+        position: relative;
+        border: 1px solid #ece5da;
+        background: #fcfaf7;
+        border-radius: 16px;
+        padding: 12px 14px;
+        transition: .18s ease;
+    }
+
+    .elite-option-item:hover{
+        border-color: #d9d1c5;
+        background: #fffdfa;
+    }
+
+    .elite-option-item .form-check{
+        margin: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .elite-option-item .form-check-input{
+        margin-top: .25rem;
+        flex-shrink: 0;
+    }
+
+    .elite-option-item .form-check-label{
+        flex: 1;
+        color: #4d4a45;
+        font-size: .88rem;
+        font-weight: 800;
+        line-height: 1.7;
+    }
+
+    .elite-option-price{
+        color: #b45309;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .elite-qty-wrap{
+        margin-top: 6px;
+    }
+
+    .elite-qty-label{
+        display: block;
+        margin-bottom: 8px;
+        color: var(--fb-text);
+        font-size: .88rem;
+        font-weight: 900;
+    }
+
+    .elite-qty-input{
+        height: 52px;
+        border-radius: 16px;
+        border: 1px solid #ddd7cc;
+        background: #faf7f2;
+        font-weight: 800;
+        box-shadow: none !important;
+    }
+
+    .elite-qty-input:focus{
+        background: #fff;
+        border-color: #c6d2ba;
+    }
+
+    .elite-summary-card{
+        padding: 16px 18px;
+        margin-top: 16px;
+        background: linear-gradient(180deg, #fffdfa 0%, #f8f4ee 100%);
+    }
+
+    .elite-summary-row{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .elite-summary-label{
+        color: #6f6a61;
+        font-size: .88rem;
+        font-weight: 800;
+    }
+
+    .elite-summary-value{
+        color: var(--fb-text);
+        font-size: 1.06rem;
+        font-weight: 900;
+    }
+
+    .elite-submit-btn{
+        width: 100%;
+        min-height: 54px;
+        border: none;
+        border-radius: 16px;
+        margin-top: 16px;
+        background: linear-gradient(135deg, var(--fb-primary-dark) 0%, var(--fb-primary) 100%);
+        color: #fff;
+        font-size: .92rem;
+        font-weight: 900;
+        box-shadow: 0 14px 26px rgba(111,127,95,.16);
+    }
+
+    .elite-submit-btn:hover{
+        color: #fff;
+        opacity: .98;
+    }
+
+    .elite-success-card{
+        padding: 16px;
+        margin-top: 16px;
+        border-color: #d7ebdc;
+        background: #f7fcf8;
+    }
+
+    .elite-success-title{
+        margin: 0 0 12px;
+        color: #166534;
+        font-size: .96rem;
+        font-weight: 900;
+    }
+
+    .elite-success-actions{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .elite-secondary-link,
+    .elite-primary-link{
+        min-height: 44px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: .84rem;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .elite-secondary-link{
+        background: #f3efe8;
+        border: 1px solid #e7e0d4;
+        color: var(--fb-text);
+    }
+
+    .elite-secondary-link:hover{
+        color: var(--fb-text);
+        background: #ebe4d9;
+    }
+
+    .elite-primary-link{
+        background: linear-gradient(135deg, var(--fb-primary-dark) 0%, var(--fb-primary) 100%);
+        color: #fff;
+    }
+
+    .elite-primary-link:hover{
+        color: #fff;
+        opacity: .98;
+    }
+
+    @media (max-width: 991.98px){
+        .elite-product-wrap{
+            grid-template-columns: 1fr;
+        }
+
+        .elite-product-image{
+            min-height: 360px;
+            max-height: 460px;
+        }
+    }
+
+    @media (max-width: 767.98px){
+        .elite-product-page{
+            padding-bottom: 70px;
+        }
+
+        .elite-product-wrap{
+            gap: 16px;
+        }
+
+        .elite-product-media-card,
+        .elite-product-info-card,
+        .elite-option-card,
+        .elite-summary-card,
+        .elite-success-card{
+            border-radius: 20px;
+        }
+
+        .elite-product-media-card{
+            padding: 10px;
+        }
+
+        .elite-product-image{
+            min-height: 240px;
+            max-height: 320px;
+            border-radius: 16px;
+        }
+
+        .elite-product-info-card{
+            padding: 16px;
+        }
+
+        .elite-product-title{
+            font-size: 1.24rem;
+            line-height: 1.3;
+        }
+
+        .elite-product-desc{
+            font-size: .84rem;
+            line-height: 1.8;
+        }
+
+        .elite-price-box{
+            padding: 12px 14px;
+            border-radius: 16px;
+        }
+
+        .elite-price-box-value{
+            font-size: 1rem;
+        }
+
+        .elite-option-card{
+            padding: 14px;
+        }
+
+        .elite-option-title{
+            font-size: .92rem;
+        }
+
+        .elite-option-note{
+            font-size: .72rem;
+        }
+
+        .elite-option-item{
+            border-radius: 14px;
+            padding: 10px 12px;
+        }
+
+        .elite-option-item .form-check-label{
+            font-size: .82rem;
+        }
+
+        .elite-qty-input{
+            height: 48px;
+            border-radius: 14px;
+        }
+
+        .elite-summary-card{
+            padding: 14px;
+        }
+
+        .elite-summary-value{
+            font-size: .96rem;
+        }
+
+        .elite-submit-btn{
+            min-height: 50px;
+            font-size: .86rem;
+            border-radius: 14px;
+        }
+
+        .elite-success-actions{
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .elite-secondary-link,
+        .elite-primary-link{
+            width: 100%;
+        }
+    }
