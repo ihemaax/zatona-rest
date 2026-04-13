@@ -262,7 +262,7 @@
 
             @if(Route::has('my.orders'))
                 <div class="mobile-bottom-item">
-                    <a href="{{ route('my.orders') }}" class="mobile-bottom-link {{ request()->routeIs('my.orders') ? 'active' : '' }}">
+                    <a href="{{ route('my.orders') }}" class="mobile-bottom-link {{ request()->routeIs('my.orders*') ? 'active' : '' }}">
                         <i class="bi bi-receipt-cutoff"></i>
                         <span>طلباتي</span>
                     </a>
