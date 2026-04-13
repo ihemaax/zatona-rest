@@ -258,8 +258,12 @@
 
 <div class="floating-cart" id="floatingCheckout" style="{{ $cartCount > 0 ? '' : 'display:none;' }}">
     <div class="floating-cart-inner">
+        <a href="{{ route('cart.index') }}" class="floating-cart-icon-link" aria-label="{{ __('site.cart') }}">
+            <i class="bi bi-bag-check-fill"></i>
+            <span class="floating-cart-badge" id="floatingCheckoutCount">{{ $cartCount }}</span>
+        </a>
         <div class="floating-cart-total" id="floatingCheckoutValue">{{ $cartCount }} {{ __('home.product') }} • {{ number_format($cartTotal, 2) }} {{ __('home.currency_egp') }}</div>
-        <a href="{{ route('cart.index') }}">{{ __('home.continue_order') }}</a>
+        <a href="{{ route('cart.index') }}" class="floating-cart-cta">{{ __('home.continue_order') }}</a>
     </div>
 </div>
 

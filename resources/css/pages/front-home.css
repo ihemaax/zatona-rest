@@ -191,6 +191,27 @@
         color: #18352d; font-size: .72rem; font-weight: 900;
     }
 
+    .floating-cart-icon-link { display: none; }
+
+    .floating-cart-badge {
+        position: absolute;
+        top: -5px;
+        inset-inline-end: -4px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #df4c40;
+        color: #fff;
+        font-size: .66rem;
+        font-weight: 900;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+    }
+
 
 
 
@@ -282,3 +303,54 @@
         .menu-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
         .menu-item { grid-template-columns: 102px minmax(0,1fr); }
         .menu-item img { height: 102px; }
+
+        .floating-cart {
+            inset-inline: auto;
+            inset-inline-end: 26px;
+            bottom: 26px;
+            z-index: 46;
+            pointer-events: auto;
+        }
+
+        .floating-cart-inner {
+            width: auto;
+            max-width: none;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .floating-cart-total,
+        .floating-cart-cta {
+            display: none;
+        }
+
+        .floating-cart-icon-link {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1px solid #eadfce;
+            color: #1d4f42;
+            box-shadow: 0 14px 28px rgba(16, 43, 35, 0.18);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+
+        .floating-cart-icon-link:hover {
+            transform: translateY(-2px);
+            border-color: #d9ccb8;
+            box-shadow: 0 18px 30px rgba(16, 43, 35, 0.22);
+            color: #174339;
+        }
+
+        .floating-cart-icon-link i {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+    }
