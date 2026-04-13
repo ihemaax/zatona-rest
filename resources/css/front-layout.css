@@ -589,6 +589,12 @@
             }
         }
 
+        @media (max-width: 991.98px){
+            .main-navbar{
+                display:none !important;
+            }
+        }
+
         @media (max-width: 390px){
             .brand-logo span:last-child{
                 max-width: 120px;

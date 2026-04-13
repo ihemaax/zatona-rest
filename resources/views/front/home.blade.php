@@ -19,21 +19,21 @@
         return $product->category->name ?? __('home.menu');
     });
 
-    $allProducts = $products->values();
-    $featuredProducts = $allProducts->filter(fn ($product) => !empty($product->image))->take(5);
-
-    if ($featuredProducts->isEmpty()) {
-        $featuredProducts = $allProducts->take(5);
-    }
-
     $coverImageUrl = \App\Support\MediaUrl::fromPath($setting->banner ?? $setting->cover_image ?? null);
     $logoImageUrl = \App\Support\MediaUrl::fromPath($setting->logo ?? null);
     $popupImageUrl = \App\Support\MediaUrl::fromPath($popupCampaign?->image);
+    $storyPlaceholder = asset('images/placeholders/image-placeholder.svg');
+    $firstCategoryKey = \Illuminate\Support\Str::slug((string) $groupedProducts->keys()->first());
+    $productsSectionTarget = $firstCategoryKey ? "#section-{$firstCategoryKey}" : (($offers ?? collect())->isNotEmpty() ? '#section-offers' : '#menu-area');
 
-    $storyItems = $groupedProducts->keys()->map(function ($name) {
+    $storyItems = $groupedProducts->map(function ($categoryProducts, $name) use ($storyPlaceholder) {
+        $firstProduct = $categoryProducts->first();
+        $storyImage = $firstProduct?->image ? \App\Support\MediaUrl::fromPath($firstProduct->image) : null;
+
         return [
             'key' => \Illuminate\Support\Str::slug($name),
             'label' => \Illuminate\Support\Str::limit($name, 16, ''),
+            'image' => $storyImage ?: $storyPlaceholder,
         ];
     })->values();
 @endphp
@@ -95,7 +95,7 @@
 
             <nav class="desktop-tabs" aria-label="روابط الصفحة">
                 <a href="{{ route('home') }}" class="active">الرئيسية</a>
-                <a href="#section-featured" data-story-target="featured">المنتجات</a>
+                <a href="{{ $productsSectionTarget }}">المنتجات</a>
                 <a href="{{ Route::has('my.orders') ? route('my.orders') : route('pages.contact') }}">الطلبات</a>
                 <a href="{{ Route::has('pages.about') ? route('pages.about') : route('pages.contact') }}">الحساب</a>
                 <a href="{{ route('cart.index') }}">السلة</a>
@@ -109,13 +109,30 @@
 
         <section class="stories-wrap">
             <div class="stories-row" id="storiesRow">
-                <button type="button" class="story-chip active" data-story-target="all">الكل</button>
+                <button type="button" class="story-chip active" data-story-target="all">
+                    <span class="story-thumb">
+                        <img src="{{ $storyPlaceholder }}" alt="الكل" loading="lazy">
+                    </span>
+                    <span class="story-label">الكل</span>
+                </button>
                 @if(($offers ?? collect())->isNotEmpty())
-                    <button type="button" class="story-chip" data-story-target="offers">العروض</button>
+                    @php
+                        $offersStoryImage = ($offers->first()?->image) ? \App\Support\MediaUrl::fromPath($offers->first()->image) : $storyPlaceholder;
+                    @endphp
+                    <button type="button" class="story-chip" data-story-target="offers">
+                        <span class="story-thumb">
+                            <img src="{{ $offersStoryImage }}" alt="العروض" loading="lazy">
+                        </span>
+                        <span class="story-label">العروض</span>
+                    </button>
                 @endif
-                <button type="button" class="story-chip" data-story-target="featured">مميزة</button>
                 @foreach($storyItems as $story)
-                    <button type="button" class="story-chip" data-story-target="{{ $story['key'] }}">{{ $story['label'] }}</button>
+                    <button type="button" class="story-chip" data-story-target="{{ $story['key'] }}">
+                        <span class="story-thumb">
+                            <img src="{{ $story['image'] }}" alt="{{ $story['label'] }}" loading="lazy">
+                        </span>
+                        <span class="story-label">{{ $story['label'] }}</span>
+                    </button>
                 @endforeach
             </div>
         </section>
@@ -145,7 +162,7 @@
                                             @endif
                                             {{ number_format((float) $offer->new_price, 2) }} {{ __('home.currency_egp') }}
                                         </span>
-                                        <a href="#section-featured" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
+                                        <a href="{{ $productsSectionTarget }}" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
                                     </div>
                                 </div>
                             </article>
@@ -153,51 +170,6 @@
                     </div>
                 </section>
                 @endif
-
-                <section class="section-card product-section" data-category="featured" id="section-featured">
-                    <div class="section-head">
-                        <div>
-                            <h3 class="section-title">منتجات مميزة</h3>
-                            <p class="section-sub">اختيارات خفيفة وسريعة من المنيو.</p>
-                        </div>
-                    </div>
-
-                    <div class="featured-strip">
-                        @foreach($featuredProducts as $product)
-                            @php
-                                $productPayload = [
-                                    'id' => $product->id,
-                                    'name' => $product->name,
-                                    'price' => $product->price,
-                                    'description' => $product->description,
-                                    'image' => $product->image ? \App\Support\MediaUrl::fromPath($product->image) : null,
-                                    'options' => $product->relationLoaded('optionGroups')
-                                        ? $product->optionGroups->map(function ($group) {
-                                            return [
-                                                'id' => $group->id,
-                                                'name' => $group->name,
-                                                'type' => $group->type ?? 'single',
-                                                'is_required' => (bool) ($group->is_required ?? false),
-                                                'items' => $group->relationLoaded('items')
-                                                    ? $group->items->map(fn ($item) => ['id' => $item->id, 'name' => $item->name, 'price' => $item->price ?? 0])->values()->toArray()
-                                                    : [],
-                                            ];
-                                        })->values()->toArray()
-                                        : [],
-                                ];
-                            @endphp
-
-                            <article class="featured-item product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
-                                <img src="{{ $product->image ? \App\Support\MediaUrl::fromPath($product->image) : 'https://via.placeholder.com/600x400?text=Food' }}" alt="{{ $product->name }}">
-                                <div>
-                                    <h4>{{ $product->name }}</h4>
-                                    <p>{{ $product->description ?: __('home.default_product_description') }}</p>
-                                </div>
-                                <button type="button" class="add-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>{{ __('home.add_to_cart') }}</button>
-                            </article>
-                        @endforeach
-                    </div>
-                </section>
 
                 @foreach($groupedProducts as $categoryName => $categoryProducts)
                     <section class="section-card product-section" data-category="{{ \Illuminate\Support\Str::slug($categoryName) }}" id="section-{{ \Illuminate\Support\Str::slug($categoryName) }}">
@@ -262,8 +234,6 @@
             <i class="bi bi-bag-check-fill"></i>
             <span class="floating-cart-badge" id="floatingCheckoutCount">{{ $cartCount }}</span>
         </a>
-        <div class="floating-cart-total" id="floatingCheckoutValue">{{ $cartCount }} {{ __('home.product') }} • {{ number_format($cartTotal, 2) }} {{ __('home.currency_egp') }}</div>
-        <a href="{{ route('cart.index') }}" class="floating-cart-cta">{{ __('home.continue_order') }}</a>
     </div>
 </div>
 
