@@ -29,8 +29,9 @@
 
     .elite-product-image{
         width: 100%;
-        min-height: 520px;
+        min-height: clamp(280px, 48vw, 520px);
         max-height: 700px;
+        aspect-ratio: 4 / 3;
         object-fit: cover;
         display: block;
         border-radius: 22px;
@@ -301,7 +302,7 @@
         }
 
         .elite-product-image{
-            min-height: 360px;
+            min-height: clamp(260px, 56vw, 360px);
             max-height: 460px;
         }
     }
@@ -328,8 +329,8 @@
         }
 
         .elite-product-image{
-            min-height: 240px;
-            max-height: 320px;
+            min-height: clamp(210px, 62vw, 300px);
+            max-height: 300px;
             border-radius: 16px;
         }
 
