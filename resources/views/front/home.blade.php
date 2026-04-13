@@ -247,9 +247,11 @@
 window.frontHomeConfig = {
     cartCount: {{ $cartCount }},
     cartTotal: {{ (float) $cartTotal }},
+    cartAddBase: @json(url('/cart/add')),
     currency: @json(__('home.currency_egp')),
     productLabel: @json(__('home.product')),
     addingText: @json(__('home.adding')),
+    productFallbackImage: @json('https://via.placeholder.com/600x400?text=Food'),
     popup: @json($popupCampaign ? [
         'id' => $popupCampaign->id,
         'showOnce' => (bool) ($popupCampaign->show_once_per_user ?? $popupCampaign->show_once ?? false),
