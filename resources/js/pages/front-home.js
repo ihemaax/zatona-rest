@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const optionsWrap = document.getElementById('quickProductOptions');
     const quantityInput = form.querySelector('input[name="quantity"]');
     const floatingCheckout = document.getElementById('floatingCheckout');
-    const floatingCheckoutValue = document.getElementById('floatingCheckoutValue');
+    const floatingCheckoutCount = document.getElementById('floatingCheckoutCount');
     const headerCartButton = document.getElementById('headerCartButton');
     let headerCartCount = document.getElementById('headerCartCount');
     const modalElement = document.getElementById('productQuickAddModal');
@@ -19,10 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const config = window.frontHomeConfig || {};
     let currentCartCount = Number(config.cartCount || 0);
-        let currentCartTotal = Number(config.cartTotal || 0);
     let activeCategory = 'all';
-
-    function formatMoney(value){return Number(value || 0).toFixed(2) + ' ' + (config.currency || 'EGP');}
 
     function ensureHeaderBadge(count){
         if (!headerCartCount && headerCartButton) {
@@ -84,13 +81,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCartUI(cartCount, cartTotal){
         currentCartCount = Number(cartCount || 0);
-        currentCartTotal = Number(cartTotal || 0);
         ensureHeaderBadge(currentCartCount);
 
-        if (floatingCheckout && floatingCheckoutValue) {
+        if (floatingCheckout) {
             if (currentCartCount > 0) {
                 floatingCheckout.style.display = '';
-                floatingCheckoutValue.textContent = `${currentCartCount} ${config.productLabel || ''} • ${formatMoney(currentCartTotal)}`;
+                if (floatingCheckoutCount) floatingCheckoutCount.textContent = currentCartCount;
             } else {
                 floatingCheckout.style.display = 'none';
             }
