@@ -2,16 +2,30 @@
 
 @section('content')
 @php
-    $steps = [
-        'pending' => 1,
-        'confirmed' => 2,
-        'preparing' => 3,
-        'out_for_delivery' => 4,
-        'ready_for_pickup' => 4,
-        'delivered' => 5,
-    ];
+    $isPickupOrder = $order->order_type === 'pickup';
 
-    $currentStep = $steps[$order->status] ?? 0;
+    $trackingSteps = $isPickupOrder
+        ? [
+            ['status' => 'pending', 'label' => 'تم الاستلام'],
+            ['status' => 'confirmed', 'label' => 'تم التأكيد'],
+            ['status' => 'preparing', 'label' => 'جاري التحضير'],
+            ['status' => 'ready_for_pickup', 'label' => 'جاهز للاستلام'],
+            ['status' => 'delivered', 'label' => 'تم الاستلام'],
+        ]
+        : [
+            ['status' => 'pending', 'label' => 'تم الاستلام'],
+            ['status' => 'confirmed', 'label' => 'تم التأكيد'],
+            ['status' => 'preparing', 'label' => 'جاري التحضير'],
+            ['status' => 'out_for_delivery', 'label' => 'خرج للتوصيل'],
+            ['status' => 'delivered', 'label' => 'تم التوصيل'],
+        ];
+
+    $stepStatusMap = [];
+    foreach ($trackingSteps as $index => $step) {
+        $stepStatusMap[$step['status']] = $index + 1;
+    }
+
+    $currentStep = $stepStatusMap[$order->status] ?? 0;
 
     function orderStatusClass($status) {
         return match($status) {
@@ -44,12 +58,12 @@
         justify-content: space-between;
         gap: 10px;
         margin-bottom: 30px;
-        flex-wrap: wrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
     }
 
     .tracker-step {
-        flex: 1;
-        min-width: 120px;
+        flex: 1 0 120px;
         text-align: center;
     }
 
@@ -75,6 +89,29 @@
         font-size: 14px;
         font-weight: 600;
     }
+
+    @media (max-width: 767.98px) {
+        .order-tracker {
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tracker-step {
+            flex-basis: 100px;
+            min-width: 100px;
+        }
+
+        .tracker-step .circle {
+            width: 38px;
+            height: 38px;
+            margin-bottom: 8px;
+        }
+
+        .tracker-step .label {
+            font-size: 12px;
+            line-height: 1.35;
+        }
+    }
 </style>
 
 <h2 class="section-title mb-4">
@@ -85,30 +122,12 @@
     <h5 class="fw-bold mb-4">تتبع الطلب</h5>
 
     <div class="order-tracker">
-        <div class="tracker-step {{ $currentStep >= 1 ? 'done' : '' }}">
-            <div class="circle">1</div>
-            <div class="label">تم الاستلام</div>
-        </div>
-
-        <div class="tracker-step {{ $currentStep >= 2 ? 'done' : '' }}">
-            <div class="circle">2</div>
-            <div class="label">تم التأكيد</div>
-        </div>
-
-        <div class="tracker-step {{ $currentStep >= 3 ? 'done' : '' }}">
-            <div class="circle">3</div>
-            <div class="label">جاري التحضير</div>
-        </div>
-
-        <div class="tracker-step {{ $currentStep >= 4 ? 'done' : '' }}">
-            <div class="circle">4</div>
-            <div class="label">خرج للتوصيل</div>
-        </div>
-
-        <div class="tracker-step {{ $currentStep >= 5 ? 'done' : '' }}">
-            <div class="circle">5</div>
-            <div class="label">تم التوصيل</div>
-        </div>
+        @foreach($trackingSteps as $index => $step)
+            <div class="tracker-step {{ $currentStep >= ($index + 1) ? 'done' : '' }}">
+                <div class="circle">{{ $index + 1 }}</div>
+                <div class="label">{{ $step['label'] }}</div>
+            </div>
+        @endforeach
     </div>
 
     <div class="d-flex flex-wrap gap-3">
@@ -119,7 +138,7 @@
             </span>
         </div>
 
-        @if($order->estimated_delivery_at)
+        @if(!$isPickupOrder && $order->estimated_delivery_at)
             <div>
                 <strong>وقت التوصيل المتوقع:</strong>
                 {{ $order->estimated_delivery_at->format('Y-m-d h:i A') }}
