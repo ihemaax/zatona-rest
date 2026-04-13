@@ -3,31 +3,6 @@
 @section('title', 'حسابي')
 
 @section('content')
-<style>
-.accountx-wrap{max-width:1040px;margin:0 auto;display:grid;gap:14px}
-.accountx-hero{background:linear-gradient(135deg,#174f42,#2e7d67);color:#fff;border-radius:24px;padding:18px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;box-shadow:0 16px 35px rgba(20,58,49,.28)}
-.accountx-avatar{width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.45rem}
-.accountx-name{font-size:1.2rem;font-weight:900;margin:0}
-.accountx-phone{font-weight:700;opacity:.9;margin-top:3px}
-.accountx-chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.24);padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:800}
-.accountx-grid{display:grid;gap:14px;grid-template-columns:1fr}
-.accountx-card{background:#fff;border:1px solid #ebe1d3;border-radius:20px;padding:16px}
-.accountx-card h3{font-size:1rem;font-weight:900;margin:0 0 12px;color:#27302d}
-.accountx-sub{font-size:.82rem;color:#7f7669;margin:-4px 0 12px}
-.accountx-form-grid{display:grid;grid-template-columns:1fr;gap:10px}
-.accountx-btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800}
-.accountx-btn-primary{background:linear-gradient(120deg,#1d5f50,#2f8a70);color:#fff}
-.accountx-btn-soft{background:#f3f5f6;color:#3e4643}
-.accountx-address-list{display:grid;gap:10px}
-.accountx-address{border:1px solid #ede4d8;border-radius:14px;padding:12px;background:#fffdfa}
-.accountx-address-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px}
-.accountx-badge{font-size:.68rem;font-weight:900;background:#d9f3e8;color:#136347;border-radius:999px;padding:4px 8px}
-.accountx-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.accountx-input,.accountx-textarea{border:1px solid #e5dccf;background:#fcfaf7;border-radius:12px;padding:9px 11px;width:100%}
-.accountx-textarea{resize:vertical;min-height:74px}
-@media (min-width: 992px){.accountx-grid{grid-template-columns:1fr 1fr}.accountx-card.addresses{grid-column:1/-1}}
-</style>
-
 <div class="accountx-wrap">
     <section class="accountx-hero">
         <div class="d-flex gap-3 align-items-center">

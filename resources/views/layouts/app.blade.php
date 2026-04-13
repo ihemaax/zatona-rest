@@ -19,26 +19,29 @@
     @php
         $manifestPath = public_path('build/manifest.json');
         $hasFrontLayoutEntry = false;
+        $hasFrontThemeEntry = false;
         $hasAppJsEntry = false;
 
         if (file_exists($manifestPath)) {
             $manifest = json_decode(file_get_contents($manifestPath), true) ?: [];
             $hasFrontLayoutEntry = isset($manifest['resources/css/front-layout.css']);
+            $hasFrontThemeEntry = isset($manifest['resources/css/front-theme.css']);
             $hasAppJsEntry = isset($manifest['resources/js/app.js']);
         }
     @endphp
 
-    @if($hasFrontLayoutEntry && $hasAppJsEntry)
-        @vite(['resources/css/front-layout.css', 'resources/js/app.js'])
+    @if($hasFrontLayoutEntry && $hasFrontThemeEntry && $hasAppJsEntry)
+        @vite(['resources/css/front-layout.css', 'resources/css/front-theme.css', 'resources/js/app.js'])
     @else
         <style>{!! file_get_contents(resource_path('css/front-layout.css')) !!}</style>
+        <style>{!! file_get_contents(resource_path('css/front-theme.css')) !!}</style>
         <script nonce="{{ $cspNonce }}">
             {!! file_get_contents(resource_path('js/fallback-app.js')) !!}
         </script>
     @endif
 
 </head>
-<body>
+<body class="front-theme front-theme--{{ $activeFrontThemeKey ?? config('front_themes.fallback') }}">
 
 @php
     $newOrdersCount = $layoutNewOrdersCount ?? 0;
