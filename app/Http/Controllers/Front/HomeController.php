@@ -8,6 +8,7 @@ use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
 
 class HomeController extends Controller
 {
@@ -114,5 +115,23 @@ class HomeController extends Controller
             ->get();
 
         return view('front.home', compact('products', 'setting', 'popupCampaign', 'offers'));
+    }
+
+    public function show(Product $product): View
+    {
+        $product->load([
+            'category',
+            'optionGroups' => function ($query) {
+                $query->orderBy('sort_order')->with([
+                    'items' => function ($q) {
+                        $q->where('is_active', 1)->orderBy('sort_order');
+                    },
+                ]);
+            },
+        ]);
+
+        abort_if(!$product->is_available, 404);
+
+        return view('front.product-show', compact('product'));
     }
 }
