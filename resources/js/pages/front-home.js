@@ -9,19 +9,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const productDescription = document.getElementById('quickProductDescription');
     const productImage = document.getElementById('quickProductImage');
     const optionsWrap = document.getElementById('quickProductOptions');
-    const quantityInput = form.querySelector('input[name="quantity"]');
+    const quantityInput = document.getElementById('quickQtyInput');
+    const quantityValue = document.getElementById('quickQtyValue');
+    const qtyPlusBtn = document.getElementById('quickQtyPlus');
+    const qtyMinusBtn = document.getElementById('quickQtyMinus');
+    const finalPriceNode = document.getElementById('quickFinalPrice');
+    const submitPriceNode = document.getElementById('quickSubmitPrice');
+    const submitBtn = document.getElementById('quickAddSubmitBtn');
     const floatingCheckout = document.getElementById('floatingCheckout');
     const floatingCheckoutCount = document.getElementById('floatingCheckoutCount');
     const headerCartButton = document.getElementById('headerCartButton');
     let headerCartCount = document.getElementById('headerCartCount');
     const modalElement = document.getElementById('productQuickAddModal');
-    const productModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const productModal = modalElement ? bootstrap.Modal.getOrCreateInstance(modalElement) : null;
 
     const config = window.frontHomeConfig || {};
+    const fallbackImage = config.productFallbackImage || 'https://via.placeholder.com/600x400?text=Food';
+    const currency = config.currency || 'EGP';
+
     let currentCartCount = Number(config.cartCount || 0);
     let activeCategory = 'all';
+    let currentProduct = null;
 
-    function ensureHeaderBadge(count){
+    function formatMoney(value) {
+        const number = Number(value || 0);
+        return `${number.toFixed(2)} ${currency}`;
+    }
+
+    function ensureHeaderBadge(count) {
         if (!headerCartCount && headerCartButton) {
             headerCartCount = document.createElement('span');
             headerCartCount.id = 'headerCartCount';
@@ -79,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
         filterMenu();
     }
 
-    function updateCartUI(cartCount, cartTotal){
+    function updateCartUI(cartCount) {
         currentCartCount = Number(cartCount || 0);
         ensureHeaderBadge(currentCartCount);
 
@@ -91,6 +106,109 @@ document.addEventListener('DOMContentLoaded', function () {
                 floatingCheckout.style.display = 'none';
             }
         }
+    }
+
+    function getSelectedExtras() {
+        if (!currentProduct || !Array.isArray(currentProduct.options)) return 0;
+
+        return currentProduct.options.reduce((total, group) => {
+            const isMultiple = group.type === 'multiple';
+            const selectedValues = [];
+
+            if (isMultiple) {
+                const checked = form.querySelectorAll(`input[name="options[${group.id}][]"]:checked`);
+                checked.forEach(input => selectedValues.push(Number(input.value)));
+            } else {
+                const selected = form.querySelector(`input[name="options[${group.id}]"]:checked`);
+                if (selected) selectedValues.push(Number(selected.value));
+            }
+
+            const groupExtra = (group.items || []).reduce((groupTotal, item) => {
+                if (selectedValues.includes(Number(item.id))) {
+                    return groupTotal + Number(item.price || 0);
+                }
+                return groupTotal;
+            }, 0);
+
+            return total + groupExtra;
+        }, 0);
+    }
+
+    function updateFinalPrice() {
+        if (!currentProduct) {
+            finalPriceNode.textContent = formatMoney(0);
+            submitPriceNode.textContent = formatMoney(0);
+            return;
+        }
+
+        const quantity = Math.max(1, Number(quantityInput.value || 1));
+        const unitPrice = Number(currentProduct.price || 0) + getSelectedExtras();
+        const total = unitPrice * quantity;
+
+        finalPriceNode.textContent = formatMoney(total);
+        submitPriceNode.textContent = formatMoney(total);
+    }
+
+    function syncQuantity(nextValue) {
+        const quantity = Math.max(1, Number(nextValue || 1));
+        quantityInput.value = quantity;
+        quantityValue.textContent = String(quantity);
+        updateFinalPrice();
+    }
+
+    function renderOptions(groups) {
+        optionsWrap.innerHTML = '';
+
+        if (!Array.isArray(groups) || !groups.length) return;
+
+        groups.forEach(group => {
+            const section = document.createElement('div');
+            section.className = 'quick-section';
+
+            const title = document.createElement('div');
+            title.className = 'quick-section-head';
+            title.innerHTML = `<h6>${group.name || ''}</h6><span class="quick-option-note">${group.is_required ? 'إجباري' : 'اختياري'}</span>`;
+
+            const list = document.createElement('div');
+            list.className = 'quick-option-list';
+
+            (group.items || []).forEach(item => {
+                const itemPrice = Number(item.price || 0);
+                const type = group.type === 'multiple' ? 'checkbox' : 'radio';
+                const inputName = group.type === 'multiple' ? `options[${group.id}][]` : `options[${group.id}]`;
+                const inputId = `opt_${group.id}_${item.id}`;
+                const optionRow = document.createElement('div');
+                optionRow.className = 'quick-option-item';
+
+                optionRow.innerHTML = `
+                    <label for="${inputId}">
+                        <input type="${type}" id="${inputId}" name="${inputName}" value="${item.id}" ${group.type === 'single' && group.is_required ? 'required' : ''}>
+                        <span>${item.name || ''}</span>
+                    </label>
+                    <span class="quick-option-price">${itemPrice > 0 ? `+${formatMoney(itemPrice)}` : 'بدون تكلفة إضافية'}</span>
+                `;
+
+                list.appendChild(optionRow);
+            });
+
+            section.appendChild(title);
+            section.appendChild(list);
+            optionsWrap.appendChild(section);
+        });
+    }
+
+    function resetQuickModal() {
+        form.reset();
+        currentProduct = null;
+        productName.textContent = '';
+        productPrice.textContent = '';
+        productDescription.textContent = '';
+        productImage.src = fallbackImage;
+        productImage.alt = 'Product image';
+        optionsWrap.innerHTML = '';
+        form.action = '';
+        submitBtn.disabled = true;
+        syncQuantity(1);
     }
 
     stories.forEach(story => {
@@ -106,50 +224,60 @@ document.addEventListener('DOMContentLoaded', function () {
     desktopSearch?.addEventListener('input', function () { syncSearchInputs(desktopSearch); filterMenu(); });
 
     modalElement?.addEventListener('show.bs.modal', () => document.body.classList.add('mobile-modal-open'));
-    modalElement?.addEventListener('hidden.bs.modal', () => document.body.classList.remove('mobile-modal-open'));
+    modalElement?.addEventListener('hidden.bs.modal', () => {
+        document.body.classList.remove('mobile-modal-open');
+        resetQuickModal();
+    });
+
+    qtyPlusBtn?.addEventListener('click', () => syncQuantity(Number(quantityInput.value || 1) + 1));
+    qtyMinusBtn?.addEventListener('click', () => syncQuantity(Number(quantityInput.value || 1) - 1));
+
+    form?.addEventListener('change', function (event) {
+        if (event.target.matches('input[name^="options["]')) {
+            updateFinalPrice();
+        }
+    });
 
     document.querySelectorAll('.open-product-modal').forEach(button => {
         button.addEventListener('click', function () {
             let product = {};
-            try { product = JSON.parse(this.dataset.product || '{}'); } catch (e) { product = {}; }
-
-            productName.textContent = product.name || '';
-            productPrice.textContent = formatMoney(product.price || 0);
-            productDescription.textContent = product.description || '';
-            productImage.src = product.image || 'https://via.placeholder.com/600x400?text=Food';
-            form.action = `/cart/add/${product.id}`;
-            quantityInput.value = 1;
-            optionsWrap.innerHTML = '';
-
-            if (Array.isArray(product.options) && product.options.length) {
-                product.options.forEach(group => {
-                    const groupBox = document.createElement('div');
-                    groupBox.className = 'mb-3';
-                    let itemsHtml = '';
-
-                    if (group.type === 'multiple') {
-                        group.items.forEach(item => {
-                            itemsHtml += `<div class="form-check"><input class="form-check-input" type="checkbox" name="options[${group.id}][]" value="${item.id}" id="opt_${group.id}_${item.id}"><label class="form-check-label" for="opt_${group.id}_${item.id}">${item.name} ${parseFloat(item.price||0) > 0 ? `( +${parseFloat(item.price).toFixed(2)} ${config.currency || 'EGP'} )` : ''}</label></div>`;
-                        });
-                    } else {
-                        group.items.forEach(item => {
-                            itemsHtml += `<div class="form-check"><input class="form-check-input" type="radio" name="options[${group.id}]" value="${item.id}" id="opt_${group.id}_${item.id}" ${group.is_required?'required':''}><label class="form-check-label" for="opt_${group.id}_${item.id}">${item.name} ${parseFloat(item.price||0) > 0 ? `( +${parseFloat(item.price).toFixed(2)} ${config.currency || 'EGP'} )` : ''}</label></div>`;
-                        });
-                    }
-
-                    groupBox.innerHTML = `<label class="form-label fw-bold d-block mb-2">${group.name}${group.is_required ? '<span class="text-danger">*</span>' : ''}</label><div class="quick-option-box">${itemsHtml}</div>`;
-                    optionsWrap.appendChild(groupBox);
-                });
+            try {
+                product = JSON.parse(this.dataset.product || '{}');
+            } catch (e) {
+                product = {};
             }
+
+            if (!product.id) {
+                resetQuickModal();
+                return;
+            }
+
+            currentProduct = product;
+            productName.textContent = product.name || '';
+            productPrice.textContent = `سعر البداية: ${formatMoney(product.price || 0)}`;
+            productDescription.textContent = product.description || 'لا يوجد وصف لهذا المنتج.';
+            productImage.src = product.image || fallbackImage;
+            productImage.alt = product.name || 'Product image';
+            productImage.onerror = function () {
+                this.onerror = null;
+                this.src = fallbackImage;
+            };
+
+            form.action = `${config.cartAddBase || '/cart/add'}/${product.id}`;
+            renderOptions(product.options || []);
+            syncQuantity(1);
+            submitBtn.disabled = false;
         });
     });
 
-    form.addEventListener('submit', async function(e){
+    form?.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.textContent;
+
+        if (!form.action || !currentProduct) return;
+
+        const originalBtnHtml = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.textContent = config.addingText || '...';
+        submitBtn.innerHTML = `<span>${config.addingText || '...'}...</span><strong>${submitPriceNode.textContent}</strong>`;
 
         try {
             const formData = new FormData(form);
@@ -162,25 +290,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData
             });
-            const data = await response.json();
-            if (!response.ok) return;
 
-            productModal.hide();
-            form.reset();
-            optionsWrap.innerHTML = '';
-            quantityInput.value = 1;
-            const newCartCount = typeof data.cart_count !== 'undefined' ? data.cart_count : (currentCartCount + parseInt(formData.get('quantity') || 1, 10));
-            const newCartTotal = typeof data.cart_total !== 'undefined' ? data.cart_total : currentCartTotal;
-            updateCartUI(newCartCount, newCartTotal);
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                return;
+            }
+
+            updateCartUI(data.cart_count || (currentCartCount + 1));
+            productModal?.hide();
         } catch (error) {
-            // noop
-        } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = originalBtnText;
+            submitBtn.innerHTML = originalBtnHtml;
+            return;
         }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
     });
 
-    
+    resetQuickModal();
+
     const popup = document.getElementById('offerPopupOverlay');
     const closeBtn = document.getElementById('offerPopupCloseBtn');
     if (config.popup && popup) {
@@ -203,5 +335,4 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
 });
