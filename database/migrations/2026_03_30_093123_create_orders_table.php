@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('delivery_fee', 10, 2)->default(0);
             $table->decimal('total', 10, 2)->default(0);
-            $table->enum('payment_method', ['cash'])->default('cash');
+            $table->string('payment_method', 20)->default('cash');
             $table->enum('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])->default('pending');
             $table->timestamps();
         });

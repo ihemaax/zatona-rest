@@ -56,12 +56,17 @@ class MyOrderController extends Controller
         $cart = [];
 
         foreach ($order->items as $item) {
-            $cart[$item->product_id] = [
+            $cartKey = uniqid('cart_', true);
+
+            $cart[$cartKey] = [
+                'cart_key'   => $cartKey,
                 'product_id' => $item->product_id,
                 'name'       => $item->product_name,
                 'price'      => $item->price,
                 'quantity'   => $item->quantity,
                 'image'      => null,
+                'selected_options' => $item->selected_options ?? [],
+                'notes'      => $item->notes,
                 'total'      => $item->total,
             ];
         }

@@ -242,17 +242,8 @@
             @endif
 
             <div class="d-flex flex-wrap gap-2 mt-3">
-                @if($order->canBeCancelledByCustomer())
-                    <form action="{{ route('my.orders.cancel', $order->id) }}" method="POST">
-                        @csrf
-                        <button class="btn btn-danger">إلغاء الطلب</button>
-                    </form>
-                @endif
-
-                <form action="{{ route('my.orders.reorder', $order->id) }}" method="POST">
-                    @csrf
-                    <button class="btn btn-dark">إعادة الطلب</button>
-                </form>
+                <a href="{{ route('home') }}" class="btn btn-dark">العودة للمنيو</a>
+                <a href="{{ route('order.success', [$order->id, $token]) }}" class="btn btn-outline-secondary">ملخص الطلب</a>
             </div>
         </div>
     </div>

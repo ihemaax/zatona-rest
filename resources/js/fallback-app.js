@@ -1,5 +1,3 @@
-import './bootstrap';
-
 document.addEventListener('DOMContentLoaded', () => {
     const navbar = document.getElementById('mainNavbar');
 

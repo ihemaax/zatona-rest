@@ -56,7 +56,7 @@
 
             <div class="sb-brand">
                 <img
-                    src="https://imgg.io/images/2026/04/04/991cb410fcfc5d1d62d88526434044c8.png"
+                    src="{{ asset('images/brand/admin-logo.svg') }}"
                     alt="Logo"
                     class="sb-brand-logo-image"
                 >

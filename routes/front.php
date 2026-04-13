@@ -89,6 +89,7 @@ Route::get('/payment/paymob/fail', [PaymobPaymentController::class, 'fail'])->na
 Route::get('/payment/paymob/pending', [PaymobPaymentController::class, 'pending'])->name('payment.paymob.pending');
 Route::post('/payment/paymob/webhook', [PaymobPaymentController::class, 'webhook'])->name('payment.paymob.webhook');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
+Route::get('/guest-orders/{order}/{token}', [CheckoutController::class, 'guestTrack'])->name('guest.orders.show');
 
 /*
 |--------------------------------------------------------------------------
