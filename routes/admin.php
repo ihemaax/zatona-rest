@@ -124,25 +124,27 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         ->name('admin.ai.ask');
 
     /* Digital Menu */
-    Route::get('/digital-menu/settings', [DigitalMenuSettingController::class, 'edit'])->name('admin.digital-menu.settings');
-    Route::post('/digital-menu/settings', [DigitalMenuSettingController::class, 'update'])
-        ->middleware('throttle:admin-actions')
-        ->name('admin.digital-menu.settings.update');
+    Route::middleware('permission:manage_digital_menu')->group(function () {
+        Route::get('/digital-menu/settings', [DigitalMenuSettingController::class, 'edit'])->name('admin.digital-menu.settings');
+        Route::post('/digital-menu/settings', [DigitalMenuSettingController::class, 'update'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.digital-menu.settings.update');
 
-    Route::get('/digital-menu/categories', [DigitalMenuCategoryController::class, 'index'])->name('admin.digital-menu.categories');
-    Route::post('/digital-menu/categories', [DigitalMenuCategoryController::class, 'store'])->name('admin.digital-menu.categories.store');
-    Route::put('/digital-menu/categories/{category}', [DigitalMenuCategoryController::class, 'update'])->name('admin.digital-menu.categories.update');
-    Route::delete('/digital-menu/categories/{category}', [DigitalMenuCategoryController::class, 'destroy'])->name('admin.digital-menu.categories.destroy');
+        Route::get('/digital-menu/categories', [DigitalMenuCategoryController::class, 'index'])->name('admin.digital-menu.categories');
+        Route::post('/digital-menu/categories', [DigitalMenuCategoryController::class, 'store'])->name('admin.digital-menu.categories.store');
+        Route::put('/digital-menu/categories/{category}', [DigitalMenuCategoryController::class, 'update'])->name('admin.digital-menu.categories.update');
+        Route::delete('/digital-menu/categories/{category}', [DigitalMenuCategoryController::class, 'destroy'])->name('admin.digital-menu.categories.destroy');
 
-    Route::get('/digital-menu/items', [DigitalMenuItemController::class, 'index'])->name('admin.digital-menu.items');
-    Route::post('/digital-menu/items', [DigitalMenuItemController::class, 'store'])->name('admin.digital-menu.items.store');
-    Route::put('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'update'])->name('admin.digital-menu.items.update');
-    Route::delete('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'destroy'])->name('admin.digital-menu.items.destroy');
+        Route::get('/digital-menu/items', [DigitalMenuItemController::class, 'index'])->name('admin.digital-menu.items');
+        Route::post('/digital-menu/items', [DigitalMenuItemController::class, 'store'])->name('admin.digital-menu.items.store');
+        Route::put('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'update'])->name('admin.digital-menu.items.update');
+        Route::delete('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'destroy'])->name('admin.digital-menu.items.destroy');
 
-    Route::get('/digital-menu/qr', [DigitalMenuQrController::class, 'index'])->name('admin.digital-menu.qr');
-    Route::get('/digital-menu/qr/image', [DigitalMenuQrController::class, 'image'])->name('admin.digital-menu.qr.image');
-    Route::get('/digital-menu/qr/download', [DigitalMenuQrController::class, 'download'])->name('admin.digital-menu.qr.download');
-    Route::get('/digital-menu/qr/print', [DigitalMenuQrController::class, 'print'])->name('admin.digital-menu.qr.print');
+        Route::get('/digital-menu/qr', [DigitalMenuQrController::class, 'index'])->name('admin.digital-menu.qr');
+        Route::get('/digital-menu/qr/image', [DigitalMenuQrController::class, 'image'])->name('admin.digital-menu.qr.image');
+        Route::get('/digital-menu/qr/download', [DigitalMenuQrController::class, 'download'])->name('admin.digital-menu.qr.download');
+        Route::get('/digital-menu/qr/print', [DigitalMenuQrController::class, 'print'])->name('admin.digital-menu.qr.print');
+    });
 
 
     /* Cashier */

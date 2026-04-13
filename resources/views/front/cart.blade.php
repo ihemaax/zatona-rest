@@ -78,6 +78,11 @@
                                     @endforeach
                                 </div>
                             @endif
+                            @if(!empty($item['notes']))
+                                <div class="cartx-options">
+                                    <span><strong>ملاحظات:</strong> {{ $item['notes'] }}</span>
+                                </div>
+                            @endif
                             <div class="cartx-actions">
                                 <form action="{{ route('cart.update', $item['cart_key']) }}" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                                     @csrf

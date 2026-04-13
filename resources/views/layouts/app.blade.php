@@ -19,17 +19,22 @@
     @php
         $manifestPath = public_path('build/manifest.json');
         $hasFrontLayoutEntry = false;
+        $hasAppJsEntry = false;
 
         if (file_exists($manifestPath)) {
             $manifest = json_decode(file_get_contents($manifestPath), true) ?: [];
             $hasFrontLayoutEntry = isset($manifest['resources/css/front-layout.css']);
+            $hasAppJsEntry = isset($manifest['resources/js/app.js']);
         }
     @endphp
 
-    @if($hasFrontLayoutEntry)
+    @if($hasFrontLayoutEntry && $hasAppJsEntry)
         @vite(['resources/css/front-layout.css', 'resources/js/app.js'])
     @else
         <style>{!! file_get_contents(resource_path('css/front-layout.css')) !!}</style>
+        <script nonce="{{ $cspNonce }}">
+            {!! file_get_contents(resource_path('js/fallback-app.js')) !!}
+        </script>
     @endif
 
 </head>

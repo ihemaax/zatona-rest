@@ -23,6 +23,7 @@ use Illuminate\View\View;
 class CheckoutController extends Controller
 {
     protected int $otpTtlMinutes = 10;
+    protected int $otpMaxAttempts = 5;
 
     public function method()
     {
@@ -247,6 +248,7 @@ class CheckoutController extends Controller
                     'quantity'         => $item['quantity'],
                     'total'            => $item['total'],
                     'selected_options' => $item['selected_options'] ?? [],
+                    'notes'            => $item['notes'] ?? null,
                 ]);
             }
 
@@ -366,11 +368,19 @@ class CheckoutController extends Controller
             return back()->with('error', 'انتهت صلاحية الكود. اطلب كود جديد.');
         }
 
+        if ((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts) {
+            return back()->with('error', 'تم تجاوز عدد محاولات إدخال الكود. اطلب كود جديد.');
+        }
+
         if (!$this->isOtpCodeValid((string) ($payload['otp_hash'] ?? ''), (string) $data['otp_code'])) {
             $payload['attempts'] = ((int) ($payload['attempts'] ?? 0)) + 1;
             Cache::put($cacheKey, $payload, now()->addMinutes($this->otpTtlMinutes));
 
-            return back()->with('error', 'كود التحقق غير صحيح أو منتهي.');
+            if ((int) ($payload['attempts'] ?? 0) >= $this->otpMaxAttempts) {
+                return back()->with('error', 'تم تجاوز عدد محاولات إدخال الكود. اطلب كود جديد.');
+            }
+
+            return back()->with('error', 'كود التحقق غير صحيح.');
         }
 
         $payload['verified'] = true;
@@ -410,6 +420,21 @@ class CheckoutController extends Controller
         }
 
         return view('front.success', compact('order'));
+    }
+
+    public function guestTrack(Order $order, string $token)
+    {
+        if ($order->user_id) {
+            abort(404);
+        }
+
+        if (!hash_equals((string) $order->guest_token, (string) $token)) {
+            abort(403);
+        }
+
+        $order->load('items');
+
+        return view('front.my-orders.guest-show', compact('order', 'token'));
     }
 
     protected function resolveCouponData(?string $couponCode, float $subtotal): array

@@ -38,9 +38,23 @@
     })->values();
 @endphp
 
-<style>
-{!! file_get_contents(resource_path('css/pages/front-home.css')) !!}
-</style>
+@php
+    $manifestPath = public_path('build/manifest.json');
+    $hasFrontHomeAssets = false;
+    if (file_exists($manifestPath)) {
+        $manifest = json_decode(file_get_contents($manifestPath), true) ?: [];
+        $hasFrontHomeAssets = isset($manifest['resources/css/pages/front-home.css'])
+            && isset($manifest['resources/js/pages/front-home.js']);
+    }
+@endphp
+
+@if($hasFrontHomeAssets)
+    @vite(['resources/css/pages/front-home.css', 'resources/js/pages/front-home.js'])
+@else
+    <style>
+    {!! file_get_contents(resource_path('css/pages/front-home.css')) !!}
+    </style>
+@endif
 
 <div
     class="menu-home"
@@ -97,7 +111,7 @@
                 <a href="{{ route('home') }}" class="active">الرئيسية</a>
                 <a href="{{ $productsSectionTarget }}">المنتجات</a>
                 <a href="{{ Route::has('my.orders') ? route('my.orders') : route('pages.contact') }}">الطلبات</a>
-                <a href="{{ Route::has('pages.about') ? route('pages.about') : route('pages.contact') }}">الحساب</a>
+                <a href="{{ auth()->check() ? route('account.index') : route('login') }}">الحساب</a>
                 <a href="{{ route('cart.index') }}">السلة</a>
             </nav>
 
@@ -258,7 +272,9 @@ window.frontHomeConfig = {
     ] : null),
 };
 </script>
-<script nonce="{{ $cspNonce }}">
-{!! file_get_contents(resource_path('js/pages/front-home.js')) !!}
-</script>
+@if(!$hasFrontHomeAssets)
+    <script nonce="{{ $cspNonce }}">
+    {!! file_get_contents(resource_path('js/pages/front-home.js')) !!}
+    </script>
+@endif
 @endsection

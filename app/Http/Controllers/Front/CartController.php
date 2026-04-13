@@ -36,6 +36,7 @@ class CartController extends Controller
 
         $request->validate([
             'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $quantity = (int) $request->quantity;
@@ -110,6 +111,7 @@ class CartController extends Controller
 
         $unitPrice = $basePrice + $extraPrice;
         $lineTotal = $unitPrice * $quantity;
+        $notes = trim((string) $request->input('notes', ''));
 
         $cart = session()->get('cart', []);
         $cartKey = uniqid('cart_', true);
@@ -124,6 +126,7 @@ class CartController extends Controller
             'quantity' => $quantity,
             'image' => $product->image,
             'selected_options' => $selectedOptions,
+            'notes' => $notes !== '' ? $notes : null,
             'total' => $lineTotal,
         ];
 

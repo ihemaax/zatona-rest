@@ -629,7 +629,12 @@
             <div class="elite-checkout-items">
                 @foreach($cart as $item)
                     <div class="elite-checkout-item">
-                        <span>{{ $item['name'] }} × {{ $item['quantity'] }}</span>
+                        <span>
+                            {{ $item['name'] }} × {{ $item['quantity'] }}
+                            @if(!empty($item['notes']))
+                                <small class="d-block text-muted">ملاحظات: {{ $item['notes'] }}</small>
+                            @endif
+                        </span>
                         <span>{{ number_format($item['total'], 2) }} {{ __('checkout.currency_egp') }}</span>
                     </div>
                 @endforeach
@@ -878,8 +883,21 @@
     }
 
     function sanitizeLocalEgyptianPhone(value) {
-        const digits = (value || '').replace(/\D/g, '');
-        return digits.slice(0, 10);
+        let digits = (value || '').replace(/\D/g, '');
+
+        if (digits.startsWith('20') && digits.length >= 12) {
+            digits = digits.slice(2);
+        }
+
+        if (digits.startsWith('0') && digits.length === 11) {
+            digits = digits.slice(1);
+        }
+
+        if (digits.length > 10) {
+            digits = digits.slice(-10);
+        }
+
+        return digits;
     }
 
     if (customerPhoneInput) {

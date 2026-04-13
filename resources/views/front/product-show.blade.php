@@ -1,9 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
-<style>
-{!! file_get_contents(resource_path('css/pages/front-product-show.css')) !!}
-</style>
+@php
+    $manifestPath = public_path('build/manifest.json');
+    $hasFrontProductAssets = false;
+    if (file_exists($manifestPath)) {
+        $manifest = json_decode(file_get_contents($manifestPath), true) ?: [];
+        $hasFrontProductAssets = isset($manifest['resources/css/pages/front-product-show.css'])
+            && isset($manifest['resources/js/pages/front-product-show.js']);
+    }
+@endphp
+
+@if($hasFrontProductAssets)
+    @vite(['resources/css/pages/front-product-show.css', 'resources/js/pages/front-product-show.js'])
+@else
+    <style>
+    {!! file_get_contents(resource_path('css/pages/front-product-show.css')) !!}
+    </style>
+@endif
 
 <div class="elite-product-page">
     <div class="elite-product-wrap">
@@ -139,7 +153,9 @@ window.frontProductConfig = {
     maxSelectionText: @json(__('product.max_selection_reached')),
 };
 </script>
-<script nonce="{{ $cspNonce }}">
-{!! file_get_contents(resource_path('js/pages/front-product-show.js')) !!}
-</script>
+@if(!$hasFrontProductAssets)
+    <script nonce="{{ $cspNonce }}">
+    {!! file_get_contents(resource_path('js/pages/front-product-show.js')) !!}
+    </script>
+@endif
 @endsection

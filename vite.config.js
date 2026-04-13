@@ -14,7 +14,15 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/css/front-layout.css',
+                'resources/css/pages/front-home.css',
+                'resources/css/pages/front-product-show.css',
+                'resources/js/app.js',
+                'resources/js/pages/front-home.js',
+                'resources/js/pages/front-product-show.js',
+            ],
             refresh: true,
         }),
     ],

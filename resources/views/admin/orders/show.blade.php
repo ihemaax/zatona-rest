@@ -614,6 +614,11 @@
                                                     @endforeach
                                                 </div>
                                             @endif
+                                            @if(!empty($item->notes))
+                                                <div class="item-options">
+                                                    <div><strong>ملاحظات:</strong> {{ $item->notes }}</div>
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>{{ number_format($item->price, 2) }} ج.م</td>
                                         <td>{{ $item->quantity }}</td>
@@ -646,6 +651,11 @@
                                             @endif
                                         </div>
                                     @endforeach
+                                </div>
+                            @endif
+                            @if(!empty($item->notes))
+                                <div class="item-options mb-3">
+                                    <div><strong>ملاحظات:</strong> {{ $item->notes }}</div>
                                 </div>
                             @endif
 

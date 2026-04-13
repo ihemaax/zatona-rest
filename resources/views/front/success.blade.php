@@ -33,7 +33,11 @@
         </p>
 
         <div class="d-flex gap-2 justify-content-center">
-            <a href="{{ route('my.orders.show', $order->id) }}" class="btn btn-dark">{{ __('order_success.track_order') }}</a>
+            @if($order->user_id)
+                <a href="{{ route('my.orders.show', $order->id) }}" class="btn btn-dark">{{ __('order_success.track_order') }}</a>
+            @elseif($order->guest_token)
+                <a href="{{ route('guest.orders.show', [$order->id, $order->guest_token]) }}" class="btn btn-dark">{{ __('order_success.track_order') }}</a>
+            @endif
             <a href="{{ route('home') }}" class="btn btn-main">{{ __('order_success.back_to_menu') }}</a>
         </div>
     </div>
