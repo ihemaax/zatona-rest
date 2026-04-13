@@ -51,7 +51,6 @@
     }
 
     body { overflow-x: hidden; background: var(--zz-bg); }
-    #mainNavbar, .site-footer, .mobile-bottom-bar { display: none !important; }
     .page-container.container { max-width: 100%; width: 100%; padding: 0 !important; }
 
     .menu-home,
@@ -215,7 +214,7 @@
     .menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
     .floating-cart {
-        position: fixed; z-index: 45; inset-inline: 10px; bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+        position: fixed; z-index: 45; inset-inline: 10px; bottom: calc(var(--mobile-bar-h, 64px) + env(safe-area-inset-bottom, 0px) + 10px);
         display: flex; justify-content: center; pointer-events: none;
     }
 
@@ -232,26 +231,6 @@
         text-decoration: none; border-radius: 10px; padding: 7px 10px; background: #f8ebd5;
         color: #18352d; font-size: .72rem; font-weight: 900;
     }
-
-    .home-nav {
-        position: fixed; z-index: 46; inset-inline: 0; bottom: 0;
-        background: rgba(247, 244, 238, 0.95); border-top: 1px solid var(--zz-border);
-        padding: 7px 10px calc(7px + env(safe-area-inset-bottom, 0px)); backdrop-filter: blur(10px);
-    }
-
-    .home-nav-inner {
-        max-width: min(760px, 100%); margin: 0 auto;
-        display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px;
-    }
-
-    .home-nav a {
-        text-decoration: none; color: #6c6459;
-        display: grid; justify-items: center; gap: 2px;
-        font-size: .63rem; font-weight: 800; padding: 3px;
-    }
-
-    .home-nav a i { font-size: .98rem; }
-    .home-nav a.active { color: #154f40; }
 
     .quick-modal .modal-dialog{max-width:820px}
     .quick-modal .modal-content{border-radius:18px;border:1px solid #e3d6c3}
@@ -338,7 +317,6 @@
         .menu-item { grid-template-columns: 102px minmax(0,1fr); }
         .menu-item img { height: 102px; }
 
-        .home-nav { display: none; }
         .floating-cart { bottom: 14px; }
     }
 </style>
@@ -560,16 +538,6 @@
         <a href="{{ route('cart.index') }}">{{ __('home.continue_order') }}</a>
     </div>
 </div>
-
-<nav class="home-nav" aria-label="التنقل السفلي">
-    <div class="home-nav-inner">
-        <a href="{{ route('home') }}" class="active"><i class="bi bi-house-door"></i><span>الرئيسية</span></a>
-        <a href="#section-featured" data-story-target="featured"><i class="bi bi-grid"></i><span>المنتجات</span></a>
-        <a href="{{ Route::has('my.orders') ? route('my.orders') : route('pages.contact') }}"><i class="bi bi-receipt"></i><span>الطلبات</span></a>
-        <a href="{{ Route::has('pages.about') ? route('pages.about') : route('pages.contact') }}"><i class="bi bi-person"></i><span>الحساب</span></a>
-        <a href="{{ route('cart.index') }}"><i class="bi bi-bag"></i><span>السلة</span></a>
-    </div>
-</nav>
 
 @include('front.partials.quick-add-modal', ['cspNonce' => $cspNonce])
 
