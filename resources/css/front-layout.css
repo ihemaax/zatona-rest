@@ -120,6 +120,24 @@
             flex-wrap:wrap;
             gap:10px;
             align-items:center;
+            justify-content:center;
+        }
+
+        @media (min-width: 992px){
+            .main-navbar .container{
+                display:flex;
+                align-items:center;
+                gap:20px;
+            }
+
+            .main-navbar .navbar-collapse{
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .main-navbar .nav-actions{
+                margin-inline: auto;
+            }
         }
 
         .btn-soft{

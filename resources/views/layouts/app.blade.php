@@ -59,7 +59,7 @@
         <div class="collapse navbar-collapse" id="mainNavbarContent">
             <div class="ms-auto me-auto mt-3 mt-lg-0"></div>
 
-            <div class="nav-actions ms-lg-auto">
+            <div class="nav-actions">
                 <div class="lang-switch">
                     <a href="{{ route('locale.switch', 'ar') }}" class="{{ app()->getLocale() === 'ar' ? 'active' : '' }}">AR</a>
                     <a href="{{ route('locale.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
@@ -68,16 +68,6 @@
                 @auth
                     @if(auth()->user()->canAccessAdminPanel())
                         <a href="{{ route('admin.dashboard') }}" class="btn-soft">{{ __('site.admin_panel') }}</a>
-                        <a href="{{ route('admin.settings.edit') }}" class="btn-soft">الإعدادات</a>
-                        <a href="{{ route('admin.categories.index') }}" class="btn-soft">{{ __('site.categories') }}</a>
-                        <a href="{{ route('admin.products.index') }}" class="btn-soft">{{ __('site.products') }}</a>
-                        <a href="{{ route('admin.branches.index') }}" class="btn-soft">الفروع</a>
-                        <a href="{{ route('admin.orders.index') }}" class="btn-soft position-relative">
-                            الطلبات
-                            @if($newOrdersCount > 0)
-                                <span class="admin-new-badge">{{ $newOrdersCount }}</span>
-                            @endif
-                        </a>
                     @else
                         <a href="{{ route('cart.index') }}" class="btn-soft">
                             {{ __('site.cart') }}
@@ -205,31 +195,7 @@
             <div class="mobile-bottom-item">
                 <a href="{{ route('admin.dashboard') }}" class="mobile-bottom-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="bi bi-grid-1x2-fill"></i>
-                    <span>الرئيسية</span>
-                </a>
-            </div>
-
-            <div class="mobile-bottom-item">
-                <a href="{{ route('admin.orders.index') }}" class="mobile-bottom-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                    <i class="bi bi-bag-check-fill"></i>
-                    <span>الطلبات</span>
-                    @if($newOrdersCount > 0)
-                        <span class="mobile-bottom-badge">{{ $newOrdersCount }}</span>
-                    @endif
-                </a>
-            </div>
-
-            <div class="mobile-bottom-item">
-                <a href="{{ route('admin.products.index') }}" class="mobile-bottom-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
-                    <i class="bi bi-box-seam-fill"></i>
-                    <span>المنتجات</span>
-                </a>
-            </div>
-
-            <div class="mobile-bottom-item">
-                <a href="{{ route('admin.settings.edit') }}" class="mobile-bottom-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-sliders2-vertical"></i>
-                    <span>الإعدادات</span>
+                    <span>لوحة الأدمن</span>
                 </a>
             </div>
 

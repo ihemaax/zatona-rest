@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const quantityInput = form.querySelector('input[name="quantity"]');
     const floatingCheckout = document.getElementById('floatingCheckout');
     const floatingCheckoutValue = document.getElementById('floatingCheckoutValue');
+    const floatingCheckoutCount = document.getElementById('floatingCheckoutCount');
     const headerCartButton = document.getElementById('headerCartButton');
     let headerCartCount = document.getElementById('headerCartCount');
     const modalElement = document.getElementById('productQuickAddModal');
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (currentCartCount > 0) {
                 floatingCheckout.style.display = '';
                 floatingCheckoutValue.textContent = `${currentCartCount} ${config.productLabel || ''} • ${formatMoney(currentCartTotal)}`;
+                if (floatingCheckoutCount) floatingCheckoutCount.textContent = currentCartCount;
             } else {
                 floatingCheckout.style.display = 'none';
             }
