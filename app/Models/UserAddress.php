@@ -10,11 +10,24 @@ class UserAddress extends Model
     protected $fillable = [
         'user_id',
         'label',
+        'recipient_name',
+        'phone',
         'address_line',
         'area',
+        'district',
+        'street',
+        'building',
+        'floor',
+        'apartment',
+        'landmark',
+        'notes',
         'latitude',
         'longitude',
         'is_default',
+    ];
+
+    protected $casts = [
+        'is_default' => 'boolean',
     ];
 
     public function user(): BelongsTo
