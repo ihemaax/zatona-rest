@@ -4,6 +4,7 @@ use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\CheckoutController;
 use App\Http\Controllers\Front\DigitalMenuController;
 use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\Front\AccountController;
 use App\Http\Controllers\Front\MediaController;
 use App\Http\Controllers\Front\MyOrderController;
 use App\Http\Controllers\Front\PaymobPaymentController;
@@ -95,13 +96,21 @@ Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'succe
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+    Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+    Route::patch('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('account.addresses.store');
+    Route::patch('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
+    Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('account.addresses.destroy');
+    Route::patch('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
+
     Route::get('/my-orders', [MyOrderController::class, 'index'])->name('my.orders');
     Route::get('/my-orders/{order}', [MyOrderController::class, 'show'])->name('my.orders.show');
     Route::post('/my-orders/{order}/cancel', [MyOrderController::class, 'cancel'])->name('my.orders.cancel');
     Route::post('/my-orders/{order}/reorder', [MyOrderController::class, 'reorder'])->name('my.orders.reorder');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', fn () => redirect()->route('account.index'))->name('profile.edit');
+    Route::patch('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

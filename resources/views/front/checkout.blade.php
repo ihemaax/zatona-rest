@@ -518,11 +518,21 @@
                         <select id="savedAddressSelect" class="form-select mb-3">
                             <option value="">{{ __('checkout.choose_saved_address_placeholder') }}</option>
                             @foreach($savedAddresses as $address)
-                                <option value="{{ $address->id }}" data-address="{{ $address->address_line }}" data-area="{{ $address->area }}" data-lat="{{ $address->latitude }}" data-lng="{{ $address->longitude }}">
+                                <option
+                                    value="{{ $address->id }}"
+                                    data-address="{{ $address->address_line }}"
+                                    data-area="{{ $address->area }}"
+                                    data-lat="{{ $address->latitude }}"
+                                    data-lng="{{ $address->longitude }}"
+                                    data-name="{{ $address->recipient_name }}"
+                                    data-phone="{{ $address->phone }}"
+                                    @selected(old('selected_address_id', $defaultAddress?->id) == $address->id)
+                                >
                                     {{ $address->label }} - {{ $address->address_line }}
                                 </option>
                             @endforeach
                         </select>
+                        <input type="hidden" name="selected_address_id" id="selectedAddressIdInput" value="{{ old('selected_address_id', $defaultAddress?->id) }}">
                     @endif
 
                     <div class="elite-checkout-2">
@@ -678,6 +688,8 @@
     const discountText = document.getElementById('discountText');
     const discountRow = document.getElementById('discountRow');
     const customerPhoneInput = document.getElementById('customerPhoneInput');
+    const selectedAddressIdInput = document.getElementById('selectedAddressIdInput');
+    const customerNameInput = document.querySelector('input[name=\"customer_name\"]');
 
 
     const paymentChoices = Array.from(document.querySelectorAll('.payment-choice'));
@@ -833,24 +845,36 @@
     });
 
     if (savedAddressSelect) {
-        savedAddressSelect.addEventListener('change', async function () {
+        const applySavedAddress = async function () {
             const selected = this.options[this.selectedIndex];
+            if (selectedAddressIdInput) {
+                selectedAddressIdInput.value = selected.value || '';
+            }
             if (!selected.value) return;
 
             const address = selected.getAttribute('data-address') || '';
             const area = selected.getAttribute('data-area') || '';
             const lat = parseFloat(selected.getAttribute('data-lat'));
             const lng = parseFloat(selected.getAttribute('data-lng'));
+            const contactName = selected.getAttribute('data-name') || '';
+            const contactPhone = selected.getAttribute('data-phone') || '';
 
             addressInput.value = address;
             areaInput.value = area;
+            if (contactName && customerNameInput) customerNameInput.value = contactName;
+            if (contactPhone && customerPhoneInput) customerPhoneInput.value = sanitizeLocalEgyptianPhone(contactPhone);
 
             if (!isNaN(lat) && !isNaN(lng)) {
                 marker.setLatLng([lat, lng]);
                 map.setView([lat, lng], 16);
                 updateLatLng(lat, lng);
             }
-        });
+        };
+
+        savedAddressSelect.addEventListener('change', applySavedAddress);
+        if (savedAddressSelect.value) {
+            applySavedAddress.call(savedAddressSelect);
+        }
     }
 
     function sanitizeLocalEgyptianPhone(value) {

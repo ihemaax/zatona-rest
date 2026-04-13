@@ -108,6 +108,7 @@ class CheckoutController extends Controller
             'area'           => 'nullable|string|max:255',
             'latitude'       => 'nullable|numeric',
             'longitude'      => 'nullable|numeric',
+            'selected_address_id' => 'nullable|integer',
             'notes'          => 'nullable|string',
 
             'save_address'   => 'nullable|boolean',
@@ -133,6 +134,7 @@ class CheckoutController extends Controller
                 'area',
                 'latitude',
                 'longitude',
+                'selected_address_id',
                 'notes',
                 'save_address',
                 'address_label',
@@ -144,7 +146,18 @@ class CheckoutController extends Controller
                 ->with('info', 'أدخل كود التحقق اللي هيوصلك على واتساب لإكمال الطلب.');
         }
 
-        if ($request->order_type === 'delivery' && empty($request->address_line)) {
+        $savedAddress = null;
+        if (auth()->check() && $request->filled('selected_address_id')) {
+            $savedAddress = auth()->user()->addresses()
+                ->whereKey($request->integer('selected_address_id'))
+                ->first();
+
+            if (!$savedAddress) {
+                return redirect()->back()->with('error', 'العنوان المختار غير متاح.');
+            }
+        }
+
+        if ($request->order_type === 'delivery' && empty($request->address_line) && !$savedAddress) {
             return redirect()->back()->with('error', 'يرجى إدخال عنوان التوصيل');
         }
 
@@ -196,19 +209,19 @@ class CheckoutController extends Controller
                 'customer_phone'             => $normalizedPhone,
 
                 'address_line'               => $request->order_type === 'delivery'
-                    ? $request->address_line
+                    ? ($savedAddress?->address_line ?: $request->address_line)
                     : ($selectedBranch?->address ?? 'استلام من المطعم'),
 
                 'area'                       => $request->order_type === 'delivery'
-                    ? $request->area
+                    ? ($savedAddress?->area ?: $request->area)
                     : ($selectedBranch?->name ?? 'الفرع'),
 
                 'latitude'                   => $request->order_type === 'delivery'
-                    ? $request->latitude
+                    ? ($savedAddress?->latitude ?: $request->latitude)
                     : $selectedBranch?->latitude,
 
                 'longitude'                  => $request->order_type === 'delivery'
-                    ? $request->longitude
+                    ? ($savedAddress?->longitude ?: $request->longitude)
                     : $selectedBranch?->longitude,
 
                 'notes'                      => $request->notes,
@@ -262,6 +275,8 @@ class CheckoutController extends Controller
                 UserAddress::create([
                     'user_id'      => auth()->id(),
                     'label'        => $request->address_label ?: 'عنوان محفوظ',
+                    'recipient_name' => $request->customer_name,
+                    'phone'        => $normalizedPhone,
                     'address_line' => $request->address_line,
                     'area'         => $request->area,
                     'latitude'     => $request->latitude,

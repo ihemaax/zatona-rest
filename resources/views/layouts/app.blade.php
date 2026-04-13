@@ -79,6 +79,10 @@
                                 {{ __('site.my_orders') }}
                             </a>
                         @endif
+
+                        <a href="{{ route('account.index') }}" class="btn-soft {{ request()->routeIs('account.*') ? 'active' : '' }}">
+                            حسابي
+                        </a>
                     @endif
 
                     <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -155,6 +159,7 @@
                         @auth
                             @if(!auth()->user()->canAccessAdminPanel() && Route::has('my.orders'))
                                 <a href="{{ route('my.orders') }}">طلباتي</a>
+                                <a href="{{ route('account.index') }}">حسابي</a>
                             @endif
                         @else
                             <a href="{{ route('login') }}">تسجيل الدخول</a>
@@ -234,6 +239,13 @@
                     </a>
                 </div>
             @endif
+
+            <div class="mobile-bottom-item">
+                <a href="{{ route('account.index') }}" class="mobile-bottom-link {{ request()->routeIs('account.*') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>حسابي</span>
+                </a>
+            </div>
 
             <div class="mobile-bottom-item">
                 <a href="{{ route('locale.switch', app()->getLocale() === 'ar' ? 'en' : 'ar') }}" class="mobile-bottom-link">
