@@ -1,0 +1,56 @@
+<?php
+
+return [
+    'fallback' => 'premium_slate',
+
+    'themes' => [
+        'premium_slate' => [
+            'name' => 'Premium Slate',
+            'description' => 'ثيم عصري بتجربة تطبيق موبايل مع بطاقات واضحة وCTA قوية مناسب للطلبات السريعة.',
+            'preview' => 'Premium app-like layout with deep slate surfaces and emerald accents.',
+            'tokens' => [
+                'primary' => '#155e52',
+                'secondary' => '#1f7668',
+                'accent' => '#c39252',
+                'background' => '#f5f6f8',
+                'surface' => '#ffffff',
+                'surface_soft' => '#eef3f2',
+                'text' => '#1e2229',
+                'text_muted' => '#69707d',
+                'border' => '#dde4e7',
+                'success' => '#0f9f68',
+                'warning' => '#d08a28',
+                'danger' => '#c64848',
+                'info' => '#2476d2',
+                'radius' => '18px',
+                'radius_lg' => '26px',
+                'shadow' => '0 12px 30px rgba(28, 38, 49, .08)',
+                'shadow_lg' => '0 24px 44px rgba(28, 38, 49, .12)',
+            ],
+        ],
+        'classic_olive' => [
+            'name' => 'Classic Olive',
+            'description' => 'الثيم القديم الكلاسيكي للحفاظ على الهوية الحالية بدرجات زيتونية دافئة.',
+            'preview' => 'Warm beige base with olive gradients and soft rounded controls.',
+            'tokens' => [
+                'primary' => '#1d5a4c',
+                'secondary' => '#2f7462',
+                'accent' => '#b58a55',
+                'background' => '#f6f1e7',
+                'surface' => '#fffdf9',
+                'surface_soft' => '#f5ecde',
+                'text' => '#222222',
+                'text_muted' => '#6f6a61',
+                'border' => '#e9e3d8',
+                'success' => '#4e7a57',
+                'warning' => '#ad8039',
+                'danger' => '#c7685d',
+                'info' => '#2f6ea8',
+                'radius' => '14px',
+                'radius_lg' => '24px',
+                'shadow' => '0 8px 24px rgba(60, 52, 40, .08)',
+                'shadow_lg' => '0 16px 40px rgba(60, 52, 40, .12)',
+            ],
+        ],
+    ],
+];

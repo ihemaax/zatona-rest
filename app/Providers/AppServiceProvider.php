@@ -11,6 +11,7 @@ use App\Models\PopupCampaign;
 use App\Models\Category;
 use App\Models\Setting;
 use App\Models\Order;
+use App\Support\FrontThemeManager;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +50,9 @@ class AppServiceProvider extends ServiceProvider
         $sharedSetting = Setting::first();
 
         View::share('setting', $sharedSetting);
+        View::share('frontThemes', FrontThemeManager::all());
+        View::share('activeFrontThemeKey', FrontThemeManager::activeKey($sharedSetting));
+        View::share('activeFrontTheme', FrontThemeManager::activeTheme($sharedSetting));
 
         RateLimiter::for('auth-login', function (Request $request) {
             $email = strtolower((string) $request->input('email'));

@@ -1,22 +1,22 @@
 :root{
-            --fb-bg: #f2eee4;
-            --fb-card: #fffdf9;
-            --fb-border: #e9e3d8;
-            --fb-text: #222222;
-            --fb-muted: #6f6a61;
+            --fb-bg: var(--th-bg, #f2eee4);
+            --fb-card: var(--th-surface, #fffdf9);
+            --fb-border: var(--th-border, #e9e3d8);
+            --fb-text: var(--th-text, #222222);
+            --fb-muted: var(--th-text-muted, #6f6a61);
 
-            --fb-primary: #1d5a4c;
-            --fb-primary-dark: #123e34;
-            --fb-soft: #eef2e8;
+            --fb-primary: var(--th-primary, #1d5a4c);
+            --fb-primary-dark: var(--th-secondary, #123e34);
+            --fb-soft: var(--th-surface-soft, #eef2e8);
 
-            --fb-success: #4e7a57;
-            --fb-danger: #c7685d;
+            --fb-success: var(--th-success, #4e7a57);
+            --fb-danger: var(--th-danger, #c7685d);
 
-            --fb-shadow: 0 8px 24px rgba(60, 52, 40, .08);
-            --fb-shadow-lg: 0 16px 40px rgba(60, 52, 40, .12);
+            --fb-shadow: var(--th-shadow, 0 8px 24px rgba(60, 52, 40, .08));
+            --fb-shadow-lg: var(--th-shadow-lg, 0 16px 40px rgba(60, 52, 40, .12));
 
-            --radius-xl: 24px;
-            --radius-lg: 18px;
+            --radius-xl: var(--th-radius-lg, 24px);
+            --radius-lg: var(--th-radius, 18px);
             --radius-md: 14px;
             --radius-sm: 12px;
 

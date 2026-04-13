@@ -52,68 +52,6 @@
     }
 @endphp
 
-<style>
-    .order-tracker {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 30px;
-        overflow-x: auto;
-        padding-bottom: 6px;
-    }
-
-    .tracker-step {
-        flex: 1 0 120px;
-        text-align: center;
-    }
-
-    .tracker-step .circle {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: #9fb6e4;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        font-weight: 700;
-    }
-
-    .tracker-step.done .circle {
-        background: #111827;
-        color: #fff;
-    }
-
-    .tracker-step .label {
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    @media (max-width: 767.98px) {
-        .order-tracker {
-            gap: 8px;
-            margin-bottom: 18px;
-        }
-
-        .tracker-step {
-            flex-basis: 100px;
-            min-width: 100px;
-        }
-
-        .tracker-step .circle {
-            width: 38px;
-            height: 38px;
-            margin-bottom: 8px;
-        }
-
-        .tracker-step .label {
-            font-size: 12px;
-            line-height: 1.35;
-        }
-    }
-</style>
-
 <h2 class="section-title mb-4">
     تفاصيل الطلب {{ $order->order_number ?? ('#' . $order->id) }}
 </h2>

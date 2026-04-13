@@ -116,7 +116,7 @@ class AdminSidebar
                     'url' => $demoOrAdminUrl('offers', Route::has('admin.offers.index') ? route('admin.offers.index') : url('/admin/offers')),
                     'active' => request()->routeIs('admin.offers.*'),
                 ];
-                $operationsLinks[] = ['label' => 'الإعدادات', 'url' => $demoOrAdminUrl('settings', route('admin.settings.edit')), 'active' => request()->routeIs('admin.settings.*')];
+                $operationsLinks[] = ['label' => 'الإعدادات والثيم', 'url' => $demoOrAdminUrl('settings', route('admin.settings.edit')), 'active' => request()->routeIs('admin.settings.*')];
             }
 
             if ($hasAdminPermission('manage_staff')) {

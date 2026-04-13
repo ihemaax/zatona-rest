@@ -247,6 +247,24 @@
                         <div class="field-hint">تحدد هذه الحالة ما إذا كان المطعم متاحاً لاستقبال الطلبات في الوقت الحالي أم لا.</div>
                     </div>
 
+                    <div class="field-card field-col-12">
+                        <label class="form-label">Front Theme</label>
+                        <select name="front_theme" class="form-select">
+                            @foreach(($frontThemes ?? []) as $themeKey => $theme)
+                                <option value="{{ $themeKey }}" {{ old('front_theme', $setting->front_theme ?? config('front_themes.fallback')) === $themeKey ? 'selected' : '' }}>
+                                    {{ $theme['name'] ?? $themeKey }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @php
+                            $selectedTheme = ($frontThemes ?? [])[old('front_theme', $setting->front_theme ?? config('front_themes.fallback'))] ?? null;
+                        @endphp
+                        <div class="field-hint">
+                            <strong>الوصف:</strong> {{ $selectedTheme['description'] ?? 'ثيم واجهة العميل الحالي.' }}<br>
+                            <strong>Preview:</strong> {{ $selectedTheme['preview'] ?? '-' }}
+                        </div>
+                    </div>
+
                     <div class="field-card field-col-6">
                         <label class="form-label">الشعار</label>
                         <input type="file" name="logo" class="form-control">
