@@ -7,11 +7,16 @@ use App\Models\Offer;
 use App\Models\PopupCampaign;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+    public function __construct(protected SubscriptionService $subscriptionService)
+    {
+    }
+
     public function index()
     {
         $settingPayload = Cache::remember('front.home.setting.v3', now()->addMinutes(10), function () {
@@ -33,7 +38,8 @@ class HomeController extends Controller
             ];
         });
 
-        $popupPayload = Cache::remember('front.home.popup.v2', now()->addMinutes(3), function () {
+        $popupPayload = $this->subscriptionService->featureEnabled('popup_campaigns')
+            ? Cache::remember('front.home.popup.v2', now()->addMinutes(3), function () {
             $popup = PopupCampaign::query()
                 ->where('is_active', true)
                 ->where(function ($q) {
@@ -59,12 +65,14 @@ class HomeController extends Controller
                 'starts_at' => optional($popup->starts_at)->toDateTimeString(),
                 'ends_at' => optional($popup->ends_at)->toDateTimeString(),
             ];
-        });
+        })
+            : null;
 
         $setting = $settingPayload ? new Setting($settingPayload) : null;
         $popupCampaign = $popupPayload ? new PopupCampaign($popupPayload) : null;
 
-        $offersPayload = Cache::remember('front.home.offers.v1', now()->addMinutes(3), function () {
+        $offersPayload = $this->subscriptionService->featureEnabled('offers')
+            ? Cache::remember('front.home.offers.v1', now()->addMinutes(3), function () {
             return Offer::query()
                 ->activeNow()
                 ->orderByRaw('sort_order IS NULL, sort_order ASC')
@@ -96,7 +104,8 @@ class HomeController extends Controller
                     ];
                 })
                 ->all();
-        });
+        })
+            : [];
 
         $offers = collect($offersPayload)->map(fn (array $payload) => new Offer($payload));
 

@@ -13,8 +13,16 @@ use App\Http\Controllers\Demo\SalesDemoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
+Route::middleware('feature:online_menu')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
+
+    /* المنيو الإلكتروني العام للعملاء - بدون تسجيل دخول */
+    Route::get('/digital-menu/{slug}', [DigitalMenuController::class, 'show'])
+        ->middleware('feature:qr_menu')
+        ->name('digital.menu.show');
+});
+
 Route::get('/sales-demo', [SalesDemoController::class, 'index'])
     ->withoutMiddleware([
         \App\Http\Middleware\AuthenticateSessionFingerprint::class,
@@ -28,8 +36,6 @@ Route::get('/contact', [PageController::class, 'contact'])->name('pages.contact'
 Route::get('/privacy-policy', [PageController::class, 'privacy'])->name('pages.privacy');
 Route::get('/faq', [PageController::class, 'faq'])->name('pages.faq');
 
-/* المنيو الإلكتروني العام للعملاء - بدون تسجيل دخول */
-Route::get('/digital-menu/{slug}', [DigitalMenuController::class, 'show'])->name('digital.menu.show');
 Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
     ->withoutMiddleware([
@@ -54,7 +60,7 @@ Route::get('/locale/{locale}', function ($locale) {
 | Cart Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('cart')->middleware('throttle:cart')->group(function () {
+Route::prefix('cart')->middleware(['throttle:cart', 'feature:cart'])->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::post('/add/{product}', [CartController::class, 'add'])->name('cart.add');
     Route::post('/update/{cartKey}', [CartController::class, 'update'])->name('cart.update');
@@ -66,30 +72,45 @@ Route::prefix('cart')->middleware('throttle:cart')->group(function () {
 | Checkout Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/checkout/method', [CheckoutController::class, 'method'])->name('checkout.method');
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
-    ->middleware('throttle:checkout-coupon')
-    ->name('checkout.apply-coupon');
-Route::get('/checkout/otp', [CheckoutController::class, 'showOtpVerificationPage'])
-    ->name('checkout.otp.page');
-Route::post('/checkout/otp/verify', [CheckoutController::class, 'verifyOtpAndContinue'])
-    ->middleware('throttle:checkout-otp-verify')
-    ->name('checkout.otp.verify');
-Route::post('/checkout/otp/resend', [CheckoutController::class, 'resendOtp'])
-    ->middleware('throttle:checkout-otp-send')
-    ->name('checkout.otp.resend');
-Route::post('/checkout', [CheckoutController::class, 'store'])
-    ->middleware('throttle:checkout-store')
-    ->name('checkout.store');
+Route::middleware('feature:checkout')->group(function () {
+    Route::get('/checkout/method', [CheckoutController::class, 'method'])->name('checkout.method');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+        ->middleware(['throttle:checkout-coupon', 'feature:coupons'])
+        ->name('checkout.apply-coupon');
 
-Route::match(['get', 'post'], '/checkout/paymob/start/{order}', [PaymobPaymentController::class, 'start'])->name('checkout.paymob.start');
-Route::get('/payment/paymob/success', [PaymobPaymentController::class, 'success'])->name('payment.paymob.success');
-Route::get('/payment/paymob/fail', [PaymobPaymentController::class, 'fail'])->name('payment.paymob.fail');
-Route::get('/payment/paymob/pending', [PaymobPaymentController::class, 'pending'])->name('payment.paymob.pending');
+    Route::get('/checkout/otp', [CheckoutController::class, 'showOtpVerificationPage'])
+        ->middleware('feature:otp')
+        ->name('checkout.otp.page');
+    Route::post('/checkout/otp/verify', [CheckoutController::class, 'verifyOtpAndContinue'])
+        ->middleware(['throttle:checkout-otp-verify', 'feature:otp'])
+        ->name('checkout.otp.verify');
+    Route::post('/checkout/otp/resend', [CheckoutController::class, 'resendOtp'])
+        ->middleware(['throttle:checkout-otp-send', 'feature:otp'])
+        ->name('checkout.otp.resend');
+
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('throttle:checkout-store')
+        ->name('checkout.store');
+});
+
+Route::match(['get', 'post'], '/checkout/paymob/start/{order}', [PaymobPaymentController::class, 'start'])
+    ->middleware('feature:paymob')
+    ->name('checkout.paymob.start');
+Route::get('/payment/paymob/success', [PaymobPaymentController::class, 'success'])
+    ->middleware('feature:paymob')
+    ->name('payment.paymob.success');
+Route::get('/payment/paymob/fail', [PaymobPaymentController::class, 'fail'])
+    ->middleware('feature:paymob')
+    ->name('payment.paymob.fail');
+Route::get('/payment/paymob/pending', [PaymobPaymentController::class, 'pending'])
+    ->middleware('feature:paymob')
+    ->name('payment.paymob.pending');
 Route::post('/payment/paymob/webhook', [PaymobPaymentController::class, 'webhook'])->name('payment.paymob.webhook');
 Route::get('/order-success/{order}/{token?}', [CheckoutController::class, 'success'])->name('order.success');
-Route::get('/guest-orders/{order}/{token}', [CheckoutController::class, 'guestTrack'])->name('guest.orders.show');
+Route::get('/guest-orders/{order}/{token}', [CheckoutController::class, 'guestTrack'])
+    ->middleware('feature:order_tracking')
+    ->name('guest.orders.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -105,10 +126,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('account.addresses.destroy');
     Route::patch('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
 
-    Route::get('/my-orders', [MyOrderController::class, 'index'])->name('my.orders');
-    Route::get('/my-orders/{order}', [MyOrderController::class, 'show'])->name('my.orders.show');
-    Route::post('/my-orders/{order}/cancel', [MyOrderController::class, 'cancel'])->name('my.orders.cancel');
-    Route::post('/my-orders/{order}/reorder', [MyOrderController::class, 'reorder'])->name('my.orders.reorder');
+    Route::middleware('feature:order_tracking')->group(function () {
+        Route::get('/my-orders', [MyOrderController::class, 'index'])->name('my.orders');
+        Route::get('/my-orders/{order}', [MyOrderController::class, 'show'])->name('my.orders.show');
+        Route::post('/my-orders/{order}/cancel', [MyOrderController::class, 'cancel'])->name('my.orders.cancel');
+        Route::post('/my-orders/{order}/reorder', [MyOrderController::class, 'reorder'])->name('my.orders.reorder');
+    });
 
     Route::get('/profile', fn () => redirect()->route('account.index'))->name('profile.edit');
     Route::patch('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');

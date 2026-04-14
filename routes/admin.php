@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DigitalMenuQrController;
 use App\Http\Controllers\Admin\DigitalMenuSettingController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\OwnerSubscriptionController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\ProductController;
@@ -49,23 +50,31 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
     Route::get('/dashboard/export-snapshot', [DashboardController::class, 'exportSnapshot'])->name('admin.dashboard.export-snapshot');
 
+    Route::middleware('owner.subscription')->group(function () {
+        Route::get('/owner/subscription', [OwnerSubscriptionController::class, 'edit'])->name('admin.owner.subscription.edit');
+        Route::put('/owner/subscription', [OwnerSubscriptionController::class, 'update'])->name('admin.owner.subscription.update');
+    });
+
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
         Route::post('/settings', [SettingController::class, 'update'])
             ->middleware('throttle:admin-actions')
             ->name('admin.settings.update');
 
-        Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
-        Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])
-            ->middleware('throttle:admin-actions')
-            ->name('admin.popup-campaign.update');
+        Route::middleware('feature:popup_campaigns')->group(function () {
+            Route::get('/popup-campaign', [PopupCampaignController::class, 'edit'])->name('admin.popup-campaign.edit');
+            Route::post('/popup-campaign', [PopupCampaignController::class, 'update'])
+                ->middleware('throttle:admin-actions')
+                ->name('admin.popup-campaign.update');
+        });
 
         Route::resource('offers', OfferController::class)
+            ->middleware('feature:offers')
             ->except(['show', 'create'])
             ->names('admin.offers');
     });
 
-    Route::middleware('permission:manage_branches')->group(function () {
+    Route::middleware(['permission:manage_branches', 'feature:branches'])->group(function () {
         Route::resource('branches', BranchController::class)->names('admin.branches');
     });
 
@@ -87,20 +96,20 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::delete('/products/{product}/options/{group}/items/{item}', [ProductOptionItemController::class, 'destroy'])->name('admin.products.options.items.destroy');
     });
 
-    Route::middleware('permission:manage_settings')->group(function () {
+    Route::middleware(['permission:manage_settings', 'feature:coupons'])->group(function () {
         Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
         Route::post('/coupons', [CouponController::class, 'store'])->middleware('throttle:admin-actions')->name('admin.coupons.store');
         Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->middleware('throttle:admin-actions')->name('admin.coupons.update');
         Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->middleware('throttle:admin-actions')->name('admin.coupons.destroy');
     });
 
-    Route::middleware('permission:view_reports')->group(function () {
+    Route::middleware(['permission:view_reports', 'feature:reports'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
     });
 
-    Route::middleware('permission:view_audit_logs')->group(function () {
+    Route::middleware(['permission:view_audit_logs', 'feature:audit_logs'])->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     });
 
@@ -109,7 +118,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/customer-leads/export/excel', [CustomerLeadController::class, 'export'])->name('admin.customer-leads.export.excel');
     });
 
-    Route::middleware('permission:manage_staff')->group(function () {
+    Route::middleware(['permission:manage_staff', 'feature:staff_management'])->group(function () {
         Route::get('/staff', [StaffController::class, 'index'])->name('admin.staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('admin.staff.store');
@@ -118,13 +127,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('admin.staff.destroy');
     });
 
-    Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('admin.ai.index');
-    Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])
-        ->middleware('throttle:admin-ai')
-        ->name('admin.ai.ask');
+    Route::middleware('feature:ai_assistant')->group(function () {
+        Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('admin.ai.index');
+        Route::post('/ai-assistant/ask', [AiAssistantController::class, 'ask'])
+            ->middleware('throttle:admin-ai')
+            ->name('admin.ai.ask');
+    });
 
     /* Digital Menu */
-    Route::middleware('permission:manage_digital_menu')->group(function () {
+    Route::middleware(['permission:manage_digital_menu', 'feature:online_menu'])->group(function () {
         Route::get('/digital-menu/settings', [DigitalMenuSettingController::class, 'edit'])->name('admin.digital-menu.settings');
         Route::post('/digital-menu/settings', [DigitalMenuSettingController::class, 'update'])
             ->middleware('throttle:admin-actions')
@@ -140,21 +151,23 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::put('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'update'])->name('admin.digital-menu.items.update');
         Route::delete('/digital-menu/items/{item}', [DigitalMenuItemController::class, 'destroy'])->name('admin.digital-menu.items.destroy');
 
-        Route::get('/digital-menu/qr', [DigitalMenuQrController::class, 'index'])->name('admin.digital-menu.qr');
-        Route::get('/digital-menu/qr/image', [DigitalMenuQrController::class, 'image'])->name('admin.digital-menu.qr.image');
-        Route::get('/digital-menu/qr/download', [DigitalMenuQrController::class, 'download'])->name('admin.digital-menu.qr.download');
-        Route::get('/digital-menu/qr/print', [DigitalMenuQrController::class, 'print'])->name('admin.digital-menu.qr.print');
+        Route::middleware('feature:qr_menu')->group(function () {
+            Route::get('/digital-menu/qr', [DigitalMenuQrController::class, 'index'])->name('admin.digital-menu.qr');
+            Route::get('/digital-menu/qr/image', [DigitalMenuQrController::class, 'image'])->name('admin.digital-menu.qr.image');
+            Route::get('/digital-menu/qr/download', [DigitalMenuQrController::class, 'download'])->name('admin.digital-menu.qr.download');
+            Route::get('/digital-menu/qr/print', [DigitalMenuQrController::class, 'print'])->name('admin.digital-menu.qr.print');
+        });
     });
 
 
     /* Cashier */
-    Route::middleware('permission:use_cashier')->group(function () {
+    Route::middleware(['permission:use_cashier', 'feature:cashier_pos'])->group(function () {
         Route::get('/cashier/pos/{branch}', [CashierController::class, 'pos'])->name('admin.cashier.pos');
         Route::post('/cashier/pos/{branch}/checkout', [CashierController::class, 'checkout'])->name('admin.cashier.checkout');
         Route::get('/cashier/pos/{branch}/invoice/{order}', [CashierController::class, 'invoice'])->name('admin.cashier.invoice');
     });
 
-    Route::middleware('permission:manage_cashier')->group(function () {
+    Route::middleware(['permission:manage_cashier', 'feature:cashier_pos'])->group(function () {
         Route::get('/cashier', [CashierController::class, 'index'])->name('admin.cashier.index');
         Route::post('/cashier/menu-items', [CashierController::class, 'storeMenuItem'])->name('admin.cashier.menu-items.store');
         Route::put('/cashier/menu-items/{item}', [CashierController::class, 'updateMenuItem'])->name('admin.cashier.menu-items.update');
@@ -162,34 +175,40 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     });
 
     /* Orders */
-    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
-    Route::get('/orders-delivery', [OrderController::class, 'deliveryOrders'])->name('admin.orders.delivery');
-    Route::get('/orders-pickup', [OrderController::class, 'pickupOrders'])->name('admin.orders.pickup');
-    Route::get('/orders/poll', [OrderController::class, 'poll'])->name('admin.orders.poll');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])
-        ->middleware('throttle:admin-actions')
-        ->name('admin.orders.status');
-    Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])
-        ->middleware('throttle:admin-actions')
-        ->name('admin.orders.assign-delivery');
+    Route::middleware('feature:checkout')->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+        Route::get('/orders-delivery', [OrderController::class, 'deliveryOrders'])->name('admin.orders.delivery');
+        Route::get('/orders-pickup', [OrderController::class, 'pickupOrders'])->name('admin.orders.pickup');
+        Route::get('/orders/poll', [OrderController::class, 'poll'])->name('admin.orders.poll');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
+        Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.orders.status');
+        Route::patch('/orders/{order}/assign-delivery', [OrderController::class, 'assignDelivery'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.orders.assign-delivery');
+    });
 
-    Route::get('/kitchen', [KitchenController::class, 'index'])->name('admin.kitchen.index');
-    Route::get('/kitchen/poll', [KitchenController::class, 'poll'])->name('admin.kitchen.poll');
-    Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])
-        ->middleware('throttle:admin-actions')
-        ->name('admin.kitchen.start');
-    Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])
-        ->middleware('throttle:admin-actions')
-        ->name('admin.kitchen.ready');
+    Route::middleware('feature:kitchen_dashboard')->group(function () {
+        Route::get('/kitchen', [KitchenController::class, 'index'])->name('admin.kitchen.index');
+        Route::get('/kitchen/poll', [KitchenController::class, 'poll'])->name('admin.kitchen.poll');
+        Route::post('/kitchen/{order}/start', [KitchenController::class, 'start'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.kitchen.start');
+        Route::post('/kitchen/{order}/ready', [KitchenController::class, 'ready'])
+            ->middleware('throttle:admin-actions')
+            ->name('admin.kitchen.ready');
 
-    Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
-    Route::get('/ready-orders/poll', [ReadyOrderController::class, 'poll'])->name('admin.orders.ready.poll');
+        Route::get('/ready-orders', [ReadyOrderController::class, 'index'])->name('admin.orders.ready');
+        Route::get('/ready-orders/poll', [ReadyOrderController::class, 'poll'])->name('admin.orders.ready.poll');
+    });
 
-    Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])->name('admin.delivery.dashboard');
-    Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])
-        ->middleware('permission:manage_delivery')
-        ->name('admin.delivery.management');
+    Route::middleware('feature:delivery_dashboard')->group(function () {
+        Route::get('/delivery-dashboard', [DeliveryDashboardController::class, 'index'])->name('admin.delivery.dashboard');
+        Route::get('/delivery-management', [DeliveryManagementController::class, 'index'])
+            ->middleware('permission:manage_delivery')
+            ->name('admin.delivery.management');
+    });
 
     Route::redirect('/delivery', '/admin/delivery-dashboard');
     Route::redirect('/delivery/orders', '/admin/delivery-dashboard');

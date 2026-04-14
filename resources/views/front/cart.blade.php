@@ -22,7 +22,11 @@
             <p>{{ $restaurantName }} • {{ $cartCount }} {{ $cartCount == 1 ? __('cart.product_singular') : __('cart.product_plural') }}</p>
             <div class="cartx-head-actions">
                 <a href="{{ url()->previous() }}" class="cartx-btn cartx-btn-alt">{{ __('cart.continue_browsing') }}</a>
+                @featureEnabled('checkout')
                 <a href="{{ route('checkout.method') }}" class="cartx-btn cartx-btn-main">{{ __('cart.complete_order') }}</a>
+                @else
+                <button type="button" class="cartx-btn cartx-btn-main" disabled title="{{ config('subscription.blocked_message') }}">{{ __('cart.complete_order') }}</button>
+                @endfeatureEnabled
             </div>
         </section>
 
@@ -68,7 +72,11 @@
                 <div class="cartx-row"><span>{{ __('cart.product_plural') }}</span><span>{{ $cartCount }}</span></div>
                 <div class="cartx-row"><span>{{ __('cart.total') }}</span><span>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</span></div>
                 <div class="cartx-row"><strong>{{ __('cart.complete_order') }}</strong><strong>{{ number_format($subtotal, 2) }} {{ __('cart.currency_egp') }}</strong></div>
+                @featureEnabled('checkout')
                 <a href="{{ route('checkout.method') }}" class="cartx-cta">{{ __('cart.complete_order') }}</a>
+                @else
+                <button type="button" class="cartx-cta" disabled title="{{ config('subscription.blocked_message') }}">{{ __('cart.complete_order') }}</button>
+                @endfeatureEnabled
             </aside>
         </section>
     @endif

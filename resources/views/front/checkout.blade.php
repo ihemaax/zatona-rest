@@ -179,6 +179,7 @@
                                 <span class="desc">الدفع عند الاستلام بكل بساطة</span>
                             </span>
                         </label>
+                        @if($canUsePaymob)
                         <label class="payment-choice">
                             <input type="radio" name="payment_method" value="paymob" {{ old('payment_method') === 'paymob' ? 'checked' : '' }}>
                             <span class="icon"><i class="bi bi-credit-card-2-front"></i></span>
@@ -187,6 +188,7 @@
                                 <span class="desc">عبر Paymob</span>
                             </span>
                         </label>
+                        @endif
                     </div>
                 </div>
 
@@ -197,6 +199,7 @@
 
                 <div class="elite-checkout-card">
                     <h3 class="mb-2">{{ __('checkout.coupon_code') }}</h3>
+                    @if($canUseCoupons)
                     <div class="input-group">
                         <input type="text" name="coupon_code" id="couponCodeInput" class="form-control" value="{{ $couponCode }}" placeholder="{{ __('checkout.coupon_code_placeholder') }}">
                         @if(Route::has('checkout.apply-coupon'))
@@ -206,10 +209,16 @@
                         @endif
                     </div>
                     <div class="elite-checkout-note mt-2">{{ __('checkout.coupon_hint') }}</div>
+                    @else
+                    <input type="hidden" name="coupon_code" value="">
+                    <div class="elite-checkout-note mt-2">{{ config('subscription.blocked_message') }}</div>
+                    @endif
                 </div>
 
                 <button id="confirmOrderBtn" class="elite-checkout-submit w-100">{{ __('checkout.confirm_order') }}</button>
-                <div class="elite-checkout-note mt-2">بعد تأكيد الطلب هنحوّلك مباشرة لصفحة التحقق على واتساب.</div>
+                <div class="elite-checkout-note mt-2">
+                    {{ app(\App\Services\SubscriptionService::class)->featureEnabled('otp') ? 'بعد تأكيد الطلب هنحوّلك مباشرة لصفحة التحقق على واتساب.' : 'سيتم تأكيد الطلب مباشرة بدون خطوة OTP.' }}
+                </div>
             </form>
         </section>
 
