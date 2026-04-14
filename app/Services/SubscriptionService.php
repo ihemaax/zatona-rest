@@ -51,11 +51,12 @@ class SubscriptionService
 
     public function featureEnabled(string $feature): bool
     {
-        if (!$this->subscriptionActive()) {
-            return false;
+        if ($this->subscriptionActive()) {
+            return $this->planHasFeature($feature);
         }
 
-        return $this->planHasFeature($feature);
+        return in_array($feature, (array) config('subscription.grace_features_when_inactive', []), true)
+            && $this->planHasFeature($feature);
     }
 
     public function planHasFeature(string $feature, ?string $planSlug = null): bool

@@ -3,6 +3,7 @@
 return [
     'default_plan' => 'menu',
     'fallback_status' => 'pending',
+    'blocked_message' => 'هذه الميزة غير متاحة في الباقة الحالية.',
 
     'statuses' => [
         'active',
@@ -10,6 +11,13 @@ return [
         'suspended',
         'cancelled',
         'pending',
+    ],
+
+    'grace_features_when_inactive' => [
+        'online_menu',
+        'qr_menu',
+        'offers',
+        'popup_campaigns',
     ],
 
     'features' => [
@@ -40,6 +48,8 @@ return [
             'features' => [
                 'online_menu',
                 'qr_menu',
+                'offers',
+                'popup_campaigns',
             ],
             'limits' => [],
         ],
@@ -52,7 +62,9 @@ return [
                 'checkout',
                 'order_tracking',
                 'otp',
-                'paymob',
+                'coupons',
+                'offers',
+                'popup_campaigns',
             ],
             'limits' => [],
         ],
@@ -73,9 +85,6 @@ return [
                 'kitchen_dashboard',
                 'delivery_dashboard',
                 'cashier_pos',
-                'paymob',
-                'reports',
-                'theme_switching',
             ],
             'limits' => [],
         ],

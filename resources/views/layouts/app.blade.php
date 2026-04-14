@@ -80,16 +80,20 @@
                     @if(auth()->user()->canAccessAdminPanel())
                         <a href="{{ route('admin.dashboard') }}" class="btn-soft">{{ __('site.admin_panel') }}</a>
                     @else
+                        @featureEnabled('cart')
                         <a href="{{ route('cart.index') }}" class="btn-soft">
                             {{ __('site.cart') }}
                             <span class="badge text-bg-danger">{{ $cartCount }}</span>
                         </a>
+                        @endfeatureEnabled
 
+                        @featureEnabled('order_tracking')
                         @if(Route::has('my.orders'))
                             <a href="{{ route('my.orders') }}" class="btn-soft">
                                 {{ __('site.my_orders') }}
                             </a>
                         @endif
+                        @endfeatureEnabled
 
                         <a href="{{ route('account.index') }}" class="btn-soft {{ request()->routeIs('account.*') ? 'active' : '' }}">
                             حسابي
@@ -101,10 +105,12 @@
                         <button type="submit" class="btn-brand">{{ __('site.logout') }}</button>
                     </form>
                 @else
+                    @featureEnabled('cart')
                     <a href="{{ route('cart.index') }}" class="btn-soft">
                         {{ __('site.cart') }}
                         <span class="badge text-bg-danger">{{ $cartCount }}</span>
                     </a>
+                    @endfeatureEnabled
 
                     <a href="{{ route('login') }}" class="btn-brand">{{ __('site.login') }}</a>
                 @endauth
@@ -168,7 +174,7 @@
                         <a href="{{ route('pages.privacy') }}">سياسة الخصوصية</a>
 
                         @auth
-                            @if(!auth()->user()->canAccessAdminPanel() && Route::has('my.orders'))
+                            @if(!auth()->user()->canAccessAdminPanel() && Route::has('my.orders') && app(\App\Services\SubscriptionService::class)->featureEnabled('order_tracking'))
                                 <a href="{{ route('my.orders') }}">طلباتي</a>
                                 <a href="{{ route('account.index') }}">حسابي</a>
                             @endif
@@ -232,6 +238,7 @@
                 </a>
             </div>
 
+            @featureEnabled('cart')
             <div class="mobile-bottom-item">
                 <a href="{{ route('cart.index') }}" class="mobile-bottom-link is-cart {{ request()->routeIs('cart.*') ? 'active' : '' }}">
                     <i class="bi bi-bag-fill"></i>
@@ -241,7 +248,9 @@
                     @endif
                 </a>
             </div>
+            @endfeatureEnabled
 
+            @featureEnabled('order_tracking')
             @if(Route::has('my.orders'))
                 <div class="mobile-bottom-item">
                     <a href="{{ route('my.orders') }}" class="mobile-bottom-link {{ request()->routeIs('my.orders*') ? 'active' : '' }}">
@@ -250,6 +259,7 @@
                     </a>
                 </div>
             @endif
+            @endfeatureEnabled
 
             <div class="mobile-bottom-item">
                 <a href="{{ route('account.index') }}" class="mobile-bottom-link {{ request()->routeIs('account.*') ? 'active' : '' }}">
@@ -283,6 +293,7 @@
             </a>
         </div>
 
+        @featureEnabled('cart')
         <div class="mobile-bottom-item">
             <a href="{{ route('cart.index') }}" class="mobile-bottom-link is-cart {{ request()->routeIs('cart.*') ? 'active' : '' }}">
                 <i class="bi bi-bag-fill"></i>
@@ -292,6 +303,7 @@
                 @endif
             </a>
         </div>
+        @endfeatureEnabled
 
         <div class="mobile-bottom-item">
             <a href="{{ route('login') }}" class="mobile-bottom-link {{ request()->routeIs('login') ? 'active' : '' }}">

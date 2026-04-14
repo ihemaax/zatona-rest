@@ -15,6 +15,7 @@ use App\Support\FrontThemeManager;
 use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -55,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
         View::share('activeFrontThemeKey', FrontThemeManager::activeKey($sharedSetting));
         View::share('activeFrontTheme', FrontThemeManager::activeTheme($sharedSetting));
         View::share('subscription', app(SubscriptionService::class));
+
+        Blade::if('featureEnabled', fn (string $feature) => app(SubscriptionService::class)->featureEnabled($feature));
 
         RateLimiter::for('auth-login', function (Request $request) {
             $email = strtolower((string) $request->input('email'));
