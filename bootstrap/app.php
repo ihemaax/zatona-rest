@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'setLocale' => \App\Http\Middleware\SetLocale::class,
             'feature' => \App\Http\Middleware\EnsureSubscriptionFeature::class,
+            'owner.subscription' => \App\Http\Middleware\EnsureOwnerSubscriptionAccess::class,
         ]);
 
 

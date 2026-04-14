@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DigitalMenuQrController;
 use App\Http\Controllers\Admin\DigitalMenuSettingController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\OwnerSubscriptionController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\PopupCampaignController;
 use App\Http\Controllers\Admin\ProductController;
@@ -48,6 +49,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/poll', [DashboardController::class, 'poll'])->name('admin.dashboard.poll');
     Route::get('/dashboard/export-snapshot', [DashboardController::class, 'exportSnapshot'])->name('admin.dashboard.export-snapshot');
+
+    Route::middleware('owner.subscription')->group(function () {
+        Route::get('/owner/subscription', [OwnerSubscriptionController::class, 'edit'])->name('admin.owner.subscription.edit');
+        Route::put('/owner/subscription', [OwnerSubscriptionController::class, 'update'])->name('admin.owner.subscription.update');
+    });
 
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');

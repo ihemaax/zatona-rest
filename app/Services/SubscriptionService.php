@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SiteSubscription;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionService
 {
@@ -68,6 +69,43 @@ class SubscriptionService
         $features = $this->resolvedFeatures($planSlug ?? $this->currentPlan());
 
         return in_array($feature, $features, true);
+    }
+
+
+    public function updateCurrentSubscription(array $attributes): SiteSubscription
+    {
+        return DB::transaction(function () use ($attributes) {
+            $existing = SiteSubscription::query()
+                ->where('is_current', true)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$existing) {
+                $existing = new SiteSubscription();
+            }
+
+            SiteSubscription::query()->update(['is_current' => false]);
+
+            $existing->fill([
+                'is_current' => true,
+                'plan_slug' => (string) ($attributes['plan_slug'] ?? $this->currentPlan()),
+                'subscription_status' => (string) ($attributes['subscription_status'] ?? $this->subscriptionStatus()),
+                'starts_at' => $attributes['starts_at'] ?? null,
+                'ends_at' => $attributes['ends_at'] ?? null,
+                'features' => $existing->features ?? null,
+                'limits' => $existing->limits ?? null,
+            ]);
+
+            $existing->save();
+            $this->cachedSubscription = $existing->fresh();
+
+            return $this->cachedSubscription;
+        });
+    }
+
+    public function currentEnabledFeatures(): array
+    {
+        return $this->resolvedFeatures($this->currentPlan());
     }
 
     public function planLimits(?string $planSlug = null): array
