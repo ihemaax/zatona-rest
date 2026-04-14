@@ -63,22 +63,6 @@
 @endsection
 
 @push('scripts')
-<style>
-    .otp-whatsapp-note {
-        background: linear-gradient(135deg, rgba(13, 166, 152, .16), rgba(7, 93, 126, .14));
-        border: 1px solid rgba(13, 166, 152, .2);
-        color: #0f3f46;
-        padding: .85rem 1rem;
-        border-radius: 14px;
-        font-weight: 700;
-        text-align: center;
-    }
-
-    #otpConfirmButton {
-        min-height: 44px;
-    }
-</style>
-
 <script nonce="{{ $cspNonce }}">
     (() => {
         const form = document.querySelector('form[action="{{ route('checkout.otp.verify') }}"]');

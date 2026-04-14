@@ -6,7 +6,7 @@
     $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
 @endphp
 
-<div class="card-shell p-5">
+<div class="card-shell p-5 front-content-page">
     <h1 class="section-title">الأسئلة الشائعة</h1>
 
     <div class="accordion" id="faqAccordion">

@@ -6,7 +6,7 @@
     $metaDescription = 'Online ordering experience for faster checkout and clear delivery tracking.';
 @endphp
 
-<div class="card border-0 shadow-sm rounded-4 text-center">
+<div class="card border-0 shadow-sm rounded-4 text-center order-success-card">
     <div class="card-body p-5">
         <h2 class="fw-bold text-success mb-3">{{ __('order_success.order_sent_successfully') }}</h2>
         <p class="mb-2">{{ __('order_success.order_number') }}: <strong>#{{ $order->id }}</strong></p>

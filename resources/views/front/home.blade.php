@@ -165,6 +165,7 @@
                     <div class="most-row">
                         @foreach($offers as $offer)
                             <article class="most-card product-card-item" data-name="{{ strtolower($offer->name . ' ' . ($offer->short_description ?? '')) }}">
+                                <span class="menu-badge offer">عرض</span>
                                 <img src="{{ $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer' }}" class="most-image" alt="{{ $offer->name }}">
                                 <div class="most-body">
                                     <h4 class="most-title">{{ $offer->name }}</h4>
@@ -197,6 +198,13 @@
                         <div class="menu-grid">
                             @foreach($categoryProducts as $product)
                                 @php
+                                    $badgeLabel = null;
+                                    $badgeClass = '';
+                                    if ($loop->iteration <= 2) {
+                                        $badgeLabel = 'الأكثر طلبًا';
+                                    } elseif ($product->created_at && $product->created_at->gt(now()->subDays(10))) {
+                                        $badgeLabel = 'جديد';
+                                    }
                                     $productPayload = [
                                         'id' => $product->id,
                                         'name' => $product->name,
@@ -219,6 +227,9 @@
                                     ];
                                 @endphp
                                 <article class="menu-item product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
+                                    @if($badgeLabel)
+                                        <span class="menu-badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                                    @endif
                                     <img src="{{ $product->image ? \App\Support\MediaUrl::fromPath($product->image) : 'https://via.placeholder.com/600x400?text=Food' }}" alt="{{ $product->name }}">
                                     <div class="menu-body">
                                         <div class="menu-top">

@@ -16,6 +16,7 @@ class Setting extends Model
         'banner',
         'delivery_fee',
         'is_open',
+        'front_theme',
     ];
 
 
