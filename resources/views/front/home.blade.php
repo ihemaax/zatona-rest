@@ -71,12 +71,14 @@
                             <span class="identity-status {{ $isOpen ? '' : 'closed' }}">{{ $isOpen ? 'مفتوح الآن' : 'مغلق الآن' }}</span>
                         </div>
                     </div>
+                    @featureEnabled('cart')
                     <a href="{{ route('cart.index') }}" class="cart-icon" aria-label="السلة" id="headerCartButton">
                         <i class="bi bi-bag"></i>
                         @if($cartCount > 0)
                             <span class="cart-count" id="headerCartCount">{{ $cartCount }}</span>
                         @endif
                     </a>
+                    @endfeatureEnabled
                 </div>
 
                 <label class="search-box" for="menuSearchInput">
@@ -104,15 +106,21 @@
                         </div>
                     </div>
                 </div>
+                @featureEnabled('cart')
                 <a href="{{ route('cart.index') }}" class="profile-cta">السلة ({{ $cartCount }})</a>
+                @endfeatureEnabled
             </div>
 
             <nav class="desktop-tabs" aria-label="روابط الصفحة">
                 <a href="{{ route('home') }}" class="active">الرئيسية</a>
                 <a href="{{ $productsSectionTarget }}">المنتجات</a>
+                @featureEnabled('order_tracking')
                 <a href="{{ Route::has('my.orders') ? route('my.orders') : route('pages.contact') }}">الطلبات</a>
+                @endfeatureEnabled
                 <a href="{{ auth()->check() ? route('account.index') : route('login') }}">الحساب</a>
+                @featureEnabled('cart')
                 <a href="{{ route('cart.index') }}">السلة</a>
+                @endfeatureEnabled
             </nav>
 
             <label class="search-box mt-3" for="menuSearchInputDesktop">
@@ -238,7 +246,11 @@
                                         <p class="menu-desc">{{ $product->description ?: __('home.default_product_description') }}</p>
                                         <div class="menu-footer">
                                             <span class="price">{{ number_format($product->price, 2) }} {{ __('home.currency_egp') }}</span>
+                                            @featureEnabled('cart')
                                             <button type="button" class="add-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>{{ __('home.add_to_cart') }}</button>
+                                            @else
+                                            <button type="button" class="add-btn" disabled title="{{ config('subscription.blocked_message') }}">{{ __('home.add_to_cart') }}</button>
+                                            @endfeatureEnabled
                                         </div>
                                     </div>
                                 </article>
@@ -253,6 +265,7 @@
     </div>
 </div>
 
+@featureEnabled('cart')
 <div class="floating-cart" id="floatingCheckout" style="{{ $cartCount > 0 ? '' : 'display:none;' }}">
     <div class="floating-cart-inner">
         <a href="{{ route('cart.index') }}" class="floating-cart-icon-link" aria-label="{{ __('site.cart') }}">
@@ -261,6 +274,7 @@
         </a>
     </div>
 </div>
+@endfeatureEnabled
 
 @include('front.partials.quick-add-modal', ['cspNonce' => $cspNonce])
 

@@ -214,7 +214,7 @@
     </main>
 </div>
 
-@if(!request()->is('admin/ai-assistant'))
+@if(!request()->is('admin/ai-assistant') && app(\App\Services\SubscriptionService::class)->featureEnabled('ai_assistant'))
     <button type="button" class="admin-ai-fab" id="adminAiFab" aria-label="فتح المساعد الذكي">
         <span class="admin-ai-fab-badge">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.9">

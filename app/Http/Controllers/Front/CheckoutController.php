@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\WapilotService;
+use App\Services\SubscriptionService;
 use App\Support\ContactValidation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
+    public function __construct(protected SubscriptionService $subscriptionService)
+    {
+    }
+
     protected int $otpTtlMinutes = 10;
     protected int $otpMaxAttempts = 5;
 
@@ -57,6 +62,8 @@ class CheckoutController extends Controller
         $couponCode = $request->old('coupon_code', session('checkout_coupon_code'));
         $subtotal = (float) collect($cart)->sum('total');
         $couponPreview = $this->resolveCouponData($couponCode, $subtotal);
+        $canUseCoupons = $this->subscriptionService->featureEnabled('coupons');
+        $canUsePaymob = $this->subscriptionService->featureEnabled('paymob') && (bool) config('paymob.enabled');
 
         return view('front.checkout', compact(
             'cart',
@@ -65,12 +72,18 @@ class CheckoutController extends Controller
             'defaultAddress',
             'branches',
             'selectedOrderType',
-            'couponPreview'
+            'couponPreview',
+            'canUseCoupons',
+            'canUsePaymob'
         ));
     }
 
     public function applyCoupon(Request $request)
     {
+        if (!$this->subscriptionService->featureEnabled('coupons')) {
+            return back()->with('error', (string) config('subscription.blocked_message'));
+        }
+
         $request->validate([
             'coupon_code' => 'required|string|max:40',
         ], ContactValidation::messages());
@@ -120,7 +133,7 @@ class CheckoutController extends Controller
         ], ContactValidation::messages());
 
 
-        if ($request->payment_method === 'paymob' && !config('paymob.enabled')) {
+        if ($request->payment_method === 'paymob' && (!$this->subscriptionService->featureEnabled('paymob') || !config('paymob.enabled'))) {
             return redirect()->back()->with('error', 'الدفع الإلكتروني غير متاح حالياً.');
         }
 
@@ -439,6 +452,10 @@ class CheckoutController extends Controller
 
     protected function resolveCouponData(?string $couponCode, float $subtotal): array
     {
+        if (!$this->subscriptionService->featureEnabled('coupons')) {
+            return ['coupon' => null, 'discount' => 0, 'message' => (string) config('subscription.blocked_message')];
+        }
+
         $code = strtoupper(trim((string) $couponCode));
         if ($code === '') {
             return ['coupon' => null, 'discount' => 0, 'message' => null];
@@ -543,7 +560,8 @@ class CheckoutController extends Controller
 
     protected function isOtpFeatureEnabled(): bool
     {
-        return (bool) config('services.wapilot.enabled', true);
+        return $this->subscriptionService->featureEnabled('otp')
+            && (bool) config('services.wapilot.enabled', true);
     }
 
     protected function generateOtpCode(): string

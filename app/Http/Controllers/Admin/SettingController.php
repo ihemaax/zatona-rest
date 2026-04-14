@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    public function __construct(protected SubscriptionService $subscriptionService)
+    {
+    }
+
     public function edit()
     {
         $setting = Setting::first();
@@ -25,7 +30,9 @@ class SettingController extends Controller
             ]);
         }
 
-        $frontThemes = config('front_themes.themes', []);
+        $frontThemes = $this->subscriptionService->featureEnabled('theme_switching')
+            ? config('front_themes.themes', [])
+            : [config('front_themes.fallback', 'premium_slate') => ['name' => 'Default Theme']];
 
         return view('admin.settings.edit', compact('setting', 'frontThemes'));
     }
@@ -40,7 +47,11 @@ class SettingController extends Controller
             'is_open' => 'required|boolean',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'banner' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'front_theme' => ['required', 'string', Rule::in(array_keys(config('front_themes.themes', [])))],
+            'front_theme' => [
+                $this->subscriptionService->featureEnabled('theme_switching') ? 'required' : 'nullable',
+                'string',
+                Rule::in(array_keys(config('front_themes.themes', []))),
+            ],
         ]);
 
         $setting = Setting::first();
@@ -62,7 +73,9 @@ class SettingController extends Controller
             'restaurant_address' => $validated['restaurant_address'] ?? null,
             'delivery_fee' => $validated['delivery_fee'],
             'is_open' => $validated['is_open'],
-            'front_theme' => $validated['front_theme'],
+            'front_theme' => $this->subscriptionService->featureEnabled('theme_switching')
+                ? ($validated['front_theme'] ?? config('front_themes.fallback', 'premium_slate'))
+                : ($setting->front_theme ?? config('front_themes.fallback', 'premium_slate')),
         ];
 
         if ($request->hasFile('logo')) {

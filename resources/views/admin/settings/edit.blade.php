@@ -249,6 +249,7 @@
 
                     <div class="field-card field-col-12">
                         <label class="form-label">Front Theme</label>
+                        @featureEnabled('theme_switching')
                         <select name="front_theme" class="form-select">
                             @foreach(($frontThemes ?? []) as $themeKey => $theme)
                                 <option value="{{ $themeKey }}" {{ old('front_theme', $setting->front_theme ?? config('front_themes.fallback')) === $themeKey ? 'selected' : '' }}>
@@ -263,6 +264,10 @@
                             <strong>الوصف:</strong> {{ $selectedTheme['description'] ?? 'ثيم واجهة العميل الحالي.' }}<br>
                             <strong>Preview:</strong> {{ $selectedTheme['preview'] ?? '-' }}
                         </div>
+                        @else
+                        <input type="hidden" name="front_theme" value="{{ $setting->front_theme ?? config('front_themes.fallback') }}">
+                        <div class="field-hint">{{ config('subscription.blocked_message') }}</div>
+                        @endfeatureEnabled
                     </div>
 
                     <div class="field-card field-col-6">
