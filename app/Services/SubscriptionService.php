@@ -94,6 +94,8 @@ class SubscriptionService
                 'ends_at' => $attributes['ends_at'] ?? null,
                 'features' => $existing->features ?? null,
                 'limits' => $existing->limits ?? null,
+                'admin_note' => $attributes['admin_note'] ?? $existing->admin_note,
+                'updated_by_user_id' => $attributes['updated_by_user_id'] ?? $existing->updated_by_user_id,
             ]);
 
             $existing->save();
