@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\SiteSubscription;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SubscriptionService
 {
@@ -86,15 +87,32 @@ class SubscriptionService
 
             SiteSubscription::query()->update(['is_current' => false]);
 
-            $existing->fill([
+            $existingPlan = (string) ($existing->plan_slug ?? '');
+            $resolvedPlan = (string) ($attributes['plan_slug'] ?? ($existingPlan !== '' ? $existingPlan : $this->currentPlan()));
+
+            $payload = [
                 'is_current' => true,
-                'plan_slug' => (string) ($attributes['plan_slug'] ?? $this->currentPlan()),
+                'plan_slug' => $resolvedPlan,
                 'subscription_status' => (string) ($attributes['subscription_status'] ?? $this->subscriptionStatus()),
                 'starts_at' => $attributes['starts_at'] ?? null,
                 'ends_at' => $attributes['ends_at'] ?? null,
                 'features' => $existing->features ?? null,
                 'limits' => $existing->limits ?? null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('site_subscriptions', 'admin_note')) {
+                $payload['admin_note'] = $attributes['admin_note'] ?? $existing->admin_note;
+            }
+
+            if (Schema::hasColumn('site_subscriptions', 'updated_by_user_id')) {
+                $payload['updated_by_user_id'] = $attributes['updated_by_user_id'] ?? $existing->updated_by_user_id;
+            }
+
+            if (Schema::hasColumn('site_subscriptions', 'last_action')) {
+                $payload['last_action'] = $attributes['last_action'] ?? $existing->last_action;
+            }
+
+            $existing->fill($payload);
 
             $existing->save();
             $this->cachedSubscription = $existing->fresh();
