@@ -1,52 +1,38 @@
 {{-- 
-  Unified Product Card Component
-  Reusable vertical card for both regular products and offers
-  Features: consistent height, fixed image ratio, bottom-pinned CTA
-  
-  @props includes:
-  - $name: Product/Offer name
-  - $description: Short description text
-  - $price: Formatted price (can be HTML with old-price)
-  - $image: Image URL
-  - $badge: Optional badge text
-  - $productPayload: Optional product data for modal
-  - $buttonText: Optional button text (default: Add to Cart)
+  Horizontal Product Card Component
+  Row-based layout with image on left, content on right
+  Features: consistent sizing, RTL support, responsive design
 --}}
-<article class="product-card product-card-item" data-name="{{ strtolower($name . ' ' . ($description ?? '')) }}">
-    @if($badge)
-        <span class="product-badge">{{ $badge }}</span>
-    @endif
-    
+<article class="menu-item product-card-item" data-name="{{ strtolower($name . ' ' . ($description ?? '')) }}">
     <div class="product-image-wrap">
-        <img 
-            src="{{ $image ?? 'https://via.placeholder.com/600x400?text=Food' }}" 
+        <img
+            src="{{ $image ?? 'https://via.placeholder.com/600x400?text=Food' }}"
             alt="{{ $name }}"
             class="product-image"
             loading="lazy"
         >
+        @if($badge)
+            <span class="menu-badge">{{ $badge }}</span>
+        @endif
     </div>
 
     <div class="product-content">
-        <div class="product-header">
-            <h4 class="product-title">{{ $name }}</h4>
-        </div>
-
+        <h4 class="product-name">{{ $name }}</h4>
         @if($description)
-            <p class="product-description">{{ $description }}</p>
+            <p class="product-desc">{{ $description }}</p>
         @endif
 
         <div class="product-footer">
             <span class="product-price">{!! $price !!}</span>
-            
+
             @if(isset($productPayload))
                 {{-- Regular product with add to cart --}}
                 @featureEnabled('cart')
-                <button type="button" class="product-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>
+                <button type="button" class="add-to-cart-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>
                     {{ $buttonText ?? __('home.add_to_cart') }}
                 </button>
                 @else
-                <button type="button" class="product-btn" disabled title="{{ config('subscription.blocked_message') }}">
-                    {{ $buttonText ?? __('home.add_to_cart') }}
+                <button type="button" class="add-to-cart-btn" disabled title="{{ config('subscription.blocked_message') }}">
                 </button>
                 @endfeatureEnabled
             @else

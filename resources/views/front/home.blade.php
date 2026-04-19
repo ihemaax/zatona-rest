@@ -170,23 +170,25 @@
                         </div>
                     </div>
 
-                    <div class="offers-grid">
+                    <div class="most-row">
                         @foreach($offers as $offer)
-                            @php
-                                $priceHtml = '';
-                                if (!is_null($offer->old_price)) {
-                                    $priceHtml = '<small class="product-old-price">' . number_format((float) $offer->old_price, 2) . ' ' . __('home.currency_egp') . '</small>';
-                                }
-                                $priceHtml .= '<span class="product-price">' . number_format((float) $offer->new_price, 2) . ' ' . __('home.currency_egp') . '</span>';
-                            @endphp
-                            @include('front.partials.product-card', [
-                                'name' => $offer->name,
-                                'description' => $offer->short_description ?: 'استفد من العرض الحالي قبل انتهاء الفترة المحددة.',
-                                'price' => $priceHtml,
-                                'image' => $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer',
-                                'badge' => 'عرض',
-                                'button' => '<a href="' . $productsSectionTarget . '" class="product-btn product-btn-link">شاهد المنيو</a>',
-                            ])
+                            <article class="most-card product-card-item" data-name="{{ strtolower($offer->name . ' ' . ($offer->short_description ?? '')) }}">
+                                <span class="menu-badge offer">عرض</span>
+                                <img src="{{ $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer' }}" class="most-image" alt="{{ $offer->name }}">
+                                <div class="most-body">
+                                    <h4 class="most-title">{{ $offer->name }}</h4>
+                                    <p class="most-desc">{{ $offer->short_description ?: 'استفد من العرض الحالي قبل انتهاء الفترة المحددة.' }}</p>
+                                    <div class="most-footer">
+                                        <span class="price">
+                                            @if(!is_null($offer->old_price))
+                                                <small class="text-muted text-decoration-line-through d-block">{{ number_format((float) $offer->old_price, 2) }} {{ __('home.currency_egp') }}</small>
+                                            @endif
+                                            {{ number_format((float) $offer->new_price, 2) }} {{ __('home.currency_egp') }}
+                                        </span>
+                                        <a href="{{ $productsSectionTarget }}" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
+                                    </div>
+                                </div>
+                            </article>
                         @endforeach
                     </div>
                 </section>
@@ -201,7 +203,7 @@
                             </div>
                         </div>
 
-                        <div class="products-grid">
+                        <div class="menu-grid">
                             @foreach($categoryProducts as $product)
                                 @php
                                     $badgeLabel = null;
