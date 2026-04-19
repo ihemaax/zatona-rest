@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SiteSubscription extends Model
 {
@@ -14,6 +15,8 @@ class SiteSubscription extends Model
         'ends_at',
         'features',
         'limits',
+        'admin_note',
+        'updated_by_user_id',
     ];
 
     protected $casts = [
@@ -23,4 +26,9 @@ class SiteSubscription extends Model
         'features' => 'array',
         'limits' => 'array',
     ];
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by_user_id');
+    }
 }
