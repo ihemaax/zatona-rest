@@ -230,12 +230,6 @@
                                             })->values()->toArray()
                                             : [],
                                     ];
-                                    $buttonHtml = '';
-                                    if (featureEnabled('cart')) {
-                                        $buttonHtml = '<button type="button" class="product-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product=\'' . json_encode($productPayload) . '\'>' . __('home.add_to_cart') . '</button>';
-                                    } else {
-                                        $buttonHtml = '<button type="button" class="product-btn" disabled title="' . config('subscription.blocked_message') . '">' . __('home.add_to_cart') . '</button>';
-                                    }
                                 @endphp
                                 @include('front.partials.product-card', [
                                     'name' => $product->name,
@@ -243,7 +237,8 @@
                                     'price' => number_format($product->price, 2) . ' ' . __('home.currency_egp'),
                                     'image' => $product->image ? \App\Support\MediaUrl::fromPath($product->image) : null,
                                     'badge' => $badgeLabel,
-                                    'button' => $buttonHtml,
+                                    'productPayload' => $productPayload,
+                                    'buttonText' => __('home.add_to_cart'),
                                 ])
                             @endforeach
                         </div>
