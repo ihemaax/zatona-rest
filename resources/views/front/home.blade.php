@@ -170,25 +170,23 @@
                         </div>
                     </div>
 
-                    <div class="most-row">
+                    <div class="offers-grid">
                         @foreach($offers as $offer)
-                            <article class="most-card product-card-item" data-name="{{ strtolower($offer->name . ' ' . ($offer->short_description ?? '')) }}">
-                                <span class="menu-badge offer">عرض</span>
-                                <img src="{{ $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer' }}" class="most-image" alt="{{ $offer->name }}">
-                                <div class="most-body">
-                                    <h4 class="most-title">{{ $offer->name }}</h4>
-                                    <p class="most-desc">{{ $offer->short_description ?: 'استفد من العرض الحالي قبل انتهاء الفترة المحددة.' }}</p>
-                                    <div class="most-footer">
-                                        <span class="price">
-                                            @if(!is_null($offer->old_price))
-                                                <small class="text-muted text-decoration-line-through d-block">{{ number_format((float) $offer->old_price, 2) }} {{ __('home.currency_egp') }}</small>
-                                            @endif
-                                            {{ number_format((float) $offer->new_price, 2) }} {{ __('home.currency_egp') }}
-                                        </span>
-                                        <a href="{{ $productsSectionTarget }}" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
-                                    </div>
-                                </div>
-                            </article>
+                            @php
+                                $priceHtml = '';
+                                if (!is_null($offer->old_price)) {
+                                    $priceHtml = '<small class="product-old-price">' . number_format((float) $offer->old_price, 2) . ' ' . __('home.currency_egp') . '</small>';
+                                }
+                                $priceHtml .= '<span class="product-price">' . number_format((float) $offer->new_price, 2) . ' ' . __('home.currency_egp') . '</span>';
+                            @endphp
+                            @include('front.partials.product-card', [
+                                'name' => $offer->name,
+                                'description' => $offer->short_description ?: 'استفد من العرض الحالي قبل انتهاء الفترة المحددة.',
+                                'price' => $priceHtml,
+                                'image' => $offer->image ? \App\Support\MediaUrl::fromPath($offer->image) : 'https://via.placeholder.com/600x400?text=Offer',
+                                'badge' => 'عرض',
+                                'button' => '<a href="' . $productsSectionTarget . '" class="product-btn product-btn-link">شاهد المنيو</a>',
+                            ])
                         @endforeach
                     </div>
                 </section>
@@ -203,11 +201,10 @@
                             </div>
                         </div>
 
-                        <div class="menu-grid">
+                        <div class="products-grid">
                             @foreach($categoryProducts as $product)
                                 @php
                                     $badgeLabel = null;
-                                    $badgeClass = '';
                                     if ($loop->iteration <= 2) {
                                         $badgeLabel = 'الأكثر طلبًا';
                                     } elseif ($product->created_at && $product->created_at->gt(now()->subDays(10))) {
@@ -233,27 +230,21 @@
                                             })->values()->toArray()
                                             : [],
                                     ];
+                                    $buttonHtml = '';
+                                    if (featureEnabled('cart')) {
+                                        $buttonHtml = '<button type="button" class="product-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product=\'' . json_encode($productPayload) . '\'>' . __('home.add_to_cart') . '</button>';
+                                    } else {
+                                        $buttonHtml = '<button type="button" class="product-btn" disabled title="' . config('subscription.blocked_message') . '">' . __('home.add_to_cart') . '</button>';
+                                    }
                                 @endphp
-                                <article class="menu-item product-card-item" data-name="{{ strtolower($product->name . ' ' . ($product->description ?? '')) }}">
-                                    @if($badgeLabel)
-                                        <span class="menu-badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
-                                    @endif
-                                    <img src="{{ $product->image ? \App\Support\MediaUrl::fromPath($product->image) : 'https://via.placeholder.com/600x400?text=Food' }}" alt="{{ $product->name }}">
-                                    <div class="menu-body">
-                                        <div class="menu-top">
-                                            <h4 class="menu-name">{{ $product->name }}</h4>
-                                        </div>
-                                        <p class="menu-desc">{{ $product->description ?: __('home.default_product_description') }}</p>
-                                        <div class="menu-footer">
-                                            <span class="price">{{ number_format($product->price, 2) }} {{ __('home.currency_egp') }}</span>
-                                            @featureEnabled('cart')
-                                            <button type="button" class="add-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>{{ __('home.add_to_cart') }}</button>
-                                            @else
-                                            <button type="button" class="add-btn" disabled title="{{ config('subscription.blocked_message') }}">{{ __('home.add_to_cart') }}</button>
-                                            @endfeatureEnabled
-                                        </div>
-                                    </div>
-                                </article>
+                                @include('front.partials.product-card', [
+                                    'name' => $product->name,
+                                    'description' => $product->description ?: __('home.default_product_description'),
+                                    'price' => number_format($product->price, 2) . ' ' . __('home.currency_egp'),
+                                    'image' => $product->image ? \App\Support\MediaUrl::fromPath($product->image) : null,
+                                    'badge' => $badgeLabel,
+                                    'button' => $buttonHtml,
+                                ])
                             @endforeach
                         </div>
                     </section>
