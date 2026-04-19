@@ -86,9 +86,12 @@ class SubscriptionService
 
             SiteSubscription::query()->update(['is_current' => false]);
 
+            $existingPlan = (string) ($existing->plan_slug ?? '');
+            $resolvedPlan = (string) ($attributes['plan_slug'] ?? ($existingPlan !== '' ? $existingPlan : $this->currentPlan()));
+
             $existing->fill([
                 'is_current' => true,
-                'plan_slug' => (string) ($attributes['plan_slug'] ?? $this->currentPlan()),
+                'plan_slug' => $resolvedPlan,
                 'subscription_status' => (string) ($attributes['subscription_status'] ?? $this->subscriptionStatus()),
                 'starts_at' => $attributes['starts_at'] ?? null,
                 'ends_at' => $attributes['ends_at'] ?? null,
@@ -96,6 +99,7 @@ class SubscriptionService
                 'limits' => $existing->limits ?? null,
                 'admin_note' => $attributes['admin_note'] ?? $existing->admin_note,
                 'updated_by_user_id' => $attributes['updated_by_user_id'] ?? $existing->updated_by_user_id,
+                'last_action' => $attributes['last_action'] ?? $existing->last_action,
             ]);
 
             $existing->save();

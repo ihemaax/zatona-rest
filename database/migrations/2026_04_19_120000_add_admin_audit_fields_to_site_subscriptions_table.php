@@ -10,9 +10,10 @@ return new class extends Migration
     {
         Schema::table('site_subscriptions', function (Blueprint $table) {
             $table->text('admin_note')->nullable()->after('limits');
+            $table->string('last_action', 100)->nullable()->after('admin_note');
             $table->foreignId('updated_by_user_id')
                 ->nullable()
-                ->after('admin_note')
+                ->after('last_action')
                 ->constrained('users')
                 ->nullOnDelete();
         });
@@ -22,7 +23,7 @@ return new class extends Migration
     {
         Schema::table('site_subscriptions', function (Blueprint $table) {
             $table->dropConstrainedForeignId('updated_by_user_id');
-            $table->dropColumn('admin_note');
+            $table->dropColumn(['last_action', 'admin_note']);
         });
     }
 };

@@ -125,6 +125,7 @@
                             <button type="button" class="btn btn-success subx-action-btn" data-quick-action="activate_now">تفعيل الاشتراك الآن</button>
                             <button type="button" class="btn btn-warning subx-action-btn" data-quick-action="pause">إيقاف الاشتراك مؤقتًا</button>
                             <button type="button" class="btn btn-danger subx-action-btn" data-quick-action="end_subscription">إنهاء الاشتراك</button>
+                            <button type="button" class="btn btn-outline-danger subx-action-btn" data-quick-action="cancel_subscription">إلغاء الاشتراك</button>
                             <button type="button" class="btn btn-outline-success subx-action-btn" data-quick-action="reactivate">إعادة التفعيل</button>
                             <button type="button" class="btn btn-outline-primary subx-action-btn" data-quick-action="renew_30">تجديد 30 يوم</button>
                             <button type="button" class="btn btn-outline-primary subx-action-btn" data-quick-action="renew_90">تجديد 90 يوم</button>
@@ -252,6 +253,7 @@
                 <div class="card-body">
                     <div class="mb-2"><span class="text-muted">آخر تعديل:</span> {{ optional($current?->updated_at)->format('Y-m-d h:i A') ?? 'غير متوفر' }}</div>
                     <div class="mb-2"><span class="text-muted">تم بواسطة:</span> {{ $current?->updatedBy?->name ?? 'غير متوفر' }}</div>
+                    <div class="mb-2"><span class="text-muted">آخر عملية:</span> {{ $lastActionLabel }}</div>
                     <div><span class="text-muted">الملاحظة:</span> {{ $current?->admin_note ?: 'لا توجد ملاحظات.' }}</div>
                 </div>
             </div>

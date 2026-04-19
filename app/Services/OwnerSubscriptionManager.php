@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SiteSubscription;
 use Carbon\CarbonInterface;
+use InvalidArgumentException;
 
 class OwnerSubscriptionManager
 {
@@ -11,73 +12,120 @@ class OwnerSubscriptionManager
     {
     }
 
-    public function manualUpdate(array $payload, ?int $actorId = null): SiteSubscription
+    public function updateSubscriptionManually(array $payload, ?int $actorId = null): SiteSubscription
     {
-        return $this->subscriptionService->updateCurrentSubscription([
+        return $this->persist([
             'plan_slug' => $payload['plan_slug'],
             'subscription_status' => $this->normalizeStatus($payload['subscription_status'] ?? 'pending'),
             'starts_at' => $payload['starts_at'] ?? null,
             'ends_at' => $payload['ends_at'] ?? null,
             'admin_note' => $payload['admin_note'] ?? null,
             'updated_by_user_id' => $actorId,
+            'last_action' => 'manual_update',
         ]);
     }
 
-    public function runQuickAction(string $action, string $planSlug, ?string $adminNote = null, ?int $actorId = null): array
+    public function applyQuickAction(string $action, string $planSlug, ?string $adminNote = null, ?int $actorId = null): array
     {
         $current = $this->subscriptionService->currentSubscription();
-        $now = now();
 
         $startsAt = optional($current)->starts_at;
         $endsAt = optional($current)->ends_at;
-        $status = $this->normalizeStatus((string) (optional($current)->subscription_status ?? 'pending'));
 
-        [$startsAt, $endsAt, $status, $message] = match ($action) {
-            'activate_now' => $this->activateNow($startsAt, $endsAt),
-            'pause' => [$startsAt, $endsAt, 'suspended', 'تم إيقاف الاشتراك مؤقتًا.'],
-            'end_subscription' => [$startsAt, $now, 'expired', 'تم إنهاء الاشتراك.'],
-            'reactivate' => $this->reactivate($startsAt, $endsAt),
-            'renew_30' => $this->extend($startsAt, $endsAt, 30, 'تم تجديد الاشتراك 30 يومًا.'),
-            'renew_90' => $this->extend($startsAt, $endsAt, 90, 'تم تجديد الاشتراك 90 يومًا.'),
-            'renew_365' => $this->extend($startsAt, $endsAt, 365, 'تم تجديد الاشتراك 365 يومًا.'),
-            'extend_7' => $this->extend($startsAt, $endsAt, 7, 'تم تمديد الاشتراك 7 أيام.'),
-            'extend_15' => $this->extend($startsAt, $endsAt, 15, 'تم تمديد الاشتراك 15 يومًا.'),
-            'extend_30' => $this->extend($startsAt, $endsAt, 30, 'تم تمديد الاشتراك شهرًا كاملًا.'),
-            default => [$startsAt, $endsAt, $status, 'تم تحديث الاشتراك.'],
+        [$payload, $message] = match ($action) {
+            'activate_now' => $this->activateSubscription($planSlug, $startsAt, $endsAt),
+            'pause' => $this->pauseSubscription($planSlug, $startsAt, $endsAt),
+            'end_subscription' => $this->expireSubscription($planSlug, $startsAt),
+            'cancel_subscription' => $this->cancelSubscription($planSlug, $startsAt),
+            'reactivate' => $this->reactivateSubscription($planSlug, $startsAt, $endsAt),
+            'renew_30' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 30, 'renew_30', 'تم تجديد الاشتراك 30 يومًا.'),
+            'renew_90' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 90, 'renew_90', 'تم تجديد الاشتراك 90 يومًا.'),
+            'renew_365' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 365, 'renew_365', 'تم تجديد الاشتراك سنة كاملة.'),
+            'extend_7' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 7, 'extend_7', 'تم تمديد الاشتراك 7 أيام.'),
+            'extend_15' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 15, 'extend_15', 'تم تمديد الاشتراك 15 يومًا.'),
+            'extend_30' => $this->renewSubscription($planSlug, $startsAt, $endsAt, 30, 'extend_30', 'تم تمديد الاشتراك شهرًا كاملًا.'),
+            default => throw new InvalidArgumentException('Unknown subscription quick action: ' . $action),
         };
 
-        $this->subscriptionService->updateCurrentSubscription([
-            'plan_slug' => $planSlug,
-            'subscription_status' => $status,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'admin_note' => $adminNote,
-            'updated_by_user_id' => $actorId,
-        ]);
+        $payload['admin_note'] = $adminNote;
+        $payload['updated_by_user_id'] = $actorId;
+
+        $this->persist($payload);
 
         return ['message' => $message];
     }
 
-    protected function activateNow($startsAt, $endsAt): array
+    public function activateSubscription(string $planSlug, $startsAt, $endsAt): array
     {
         $now = now();
         $durationDays = $this->resolveDurationDays($startsAt, $endsAt);
 
-        return [$now, $now->copy()->addDays($durationDays), 'active', 'تم تفعيل الاشتراك بنجاح.'];
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'active',
+            'starts_at' => $now,
+            'ends_at' => $now->copy()->addDays($durationDays),
+            'last_action' => 'activate_now',
+        ], 'تم تفعيل الاشتراك بنجاح.'];
     }
 
-    protected function reactivate($startsAt, $endsAt): array
+    public function pauseSubscription(string $planSlug, $startsAt, $endsAt): array
+    {
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'suspended',
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'last_action' => 'pause',
+        ], 'تم إيقاف الاشتراك مؤقتًا.'];
+    }
+
+    public function expireSubscription(string $planSlug, $startsAt): array
+    {
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'expired',
+            'starts_at' => $startsAt,
+            'ends_at' => now(),
+            'last_action' => 'end_subscription',
+        ], 'تم إنهاء الاشتراك.'];
+    }
+
+    public function cancelSubscription(string $planSlug, $startsAt): array
+    {
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'cancelled',
+            'starts_at' => $startsAt,
+            'ends_at' => now(),
+            'last_action' => 'cancel_subscription',
+        ], 'تم إلغاء الاشتراك.'];
+    }
+
+    public function reactivateSubscription(string $planSlug, $startsAt, $endsAt): array
     {
         $now = now();
 
         if ($endsAt instanceof CarbonInterface && $endsAt->isFuture()) {
-            return [$startsAt ?? $now, $endsAt, 'active', 'تمت إعادة تفعيل الاشتراك بنجاح.'];
+            return [[
+                'plan_slug' => $planSlug,
+                'subscription_status' => 'active',
+                'starts_at' => $startsAt ?? $now,
+                'ends_at' => $endsAt,
+                'last_action' => 'reactivate',
+            ], 'تمت إعادة تفعيل الاشتراك بنجاح.'];
         }
 
-        return [$now, $now->copy()->addDays($this->resolveDurationDays($startsAt, $endsAt)), 'active', 'تمت إعادة تفعيل الاشتراك بنجاح.'];
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'active',
+            'starts_at' => $now,
+            'ends_at' => $now->copy()->addDays($this->resolveDurationDays($startsAt, $endsAt)),
+            'last_action' => 'reactivate',
+        ], 'تمت إعادة تفعيل الاشتراك بنجاح.'];
     }
 
-    protected function extend($startsAt, $endsAt, int $days, string $message): array
+    public function renewSubscription(string $planSlug, $startsAt, $endsAt, int $days, string $action, string $message): array
     {
         $now = now();
 
@@ -89,7 +137,18 @@ class OwnerSubscriptionManager
             ? $startsAt
             : $now;
 
-        return [$newStart, $baseEnd->addDays($days), 'active', $message];
+        return [[
+            'plan_slug' => $planSlug,
+            'subscription_status' => 'active',
+            'starts_at' => $newStart,
+            'ends_at' => $baseEnd->addDays($days),
+            'last_action' => $action,
+        ], $message];
+    }
+
+    protected function persist(array $attributes): SiteSubscription
+    {
+        return $this->subscriptionService->updateCurrentSubscription($attributes);
     }
 
     protected function resolveDurationDays($startsAt, $endsAt): int

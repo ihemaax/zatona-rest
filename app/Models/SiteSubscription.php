@@ -17,6 +17,7 @@ class SiteSubscription extends Model
         'limits',
         'admin_note',
         'updated_by_user_id',
+        'last_action',
     ];
 
     protected $casts = [

@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\OwnerSubscriptionUpdateRequest;
 use App\Services\OwnerSubscriptionManager;
 use App\Services\SubscriptionService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class OwnerSubscriptionController extends Controller
 {
@@ -44,6 +43,21 @@ class OwnerSubscriptionController extends Controller
 
         $statusMeta = $statusBadgeMap[$statusUi] ?? ['label' => $statusUi, 'class' => 'is-pending'];
 
+        $actionLabels = [
+            'activate_now' => 'تفعيل الآن',
+            'pause' => 'إيقاف مؤقت',
+            'end_subscription' => 'إنهاء الاشتراك',
+            'cancel_subscription' => 'إلغاء الاشتراك',
+            'reactivate' => 'إعادة التفعيل',
+            'renew_30' => 'تجديد 30 يوم',
+            'renew_90' => 'تجديد 90 يوم',
+            'renew_365' => 'تجديد سنة',
+            'extend_7' => 'تمديد 7 أيام',
+            'extend_15' => 'تمديد 15 يوم',
+            'extend_30' => 'تمديد شهر',
+            'manual_update' => 'تعديل يدوي',
+        ];
+
         return view('admin.owner-subscription.edit', [
             'current' => $current,
             'planSlug' => $planSlug,
@@ -57,38 +71,19 @@ class OwnerSubscriptionController extends Controller
             'endsAt' => $endsAt,
             'daysRemaining' => $daysRemaining,
             'isExpired' => $statusUi === 'expired' || ($endsAt instanceof CarbonInterface && $endsAt->isPast()),
+            'lastActionLabel' => $actionLabels[(string) ($current?->last_action ?? '')] ?? 'غير متوفر',
         ]);
     }
 
-    public function update(Request $request)
+    public function update(OwnerSubscriptionUpdateRequest $request)
     {
-        $plans = array_keys((array) config('subscription.plans', []));
-
-        $data = $request->validate([
-            'plan_slug' => ['required', 'string', Rule::in($plans)],
-            'subscription_status' => ['required', 'string', Rule::in(['active', 'pending', 'paused', 'expired', 'cancelled'])],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'admin_note' => ['nullable', 'string', 'max:2000'],
-            'quick_action' => ['nullable', 'string', Rule::in([
-                'activate_now',
-                'pause',
-                'end_subscription',
-                'reactivate',
-                'renew_30',
-                'renew_90',
-                'renew_365',
-                'extend_7',
-                'extend_15',
-                'extend_30',
-            ])],
-        ]);
+        $data = $request->validated();
 
         $actorId = auth()->id();
         $quickAction = $data['quick_action'] ?? null;
 
         if ($quickAction) {
-            $result = $this->ownerSubscriptionManager->runQuickAction(
+            $result = $this->ownerSubscriptionManager->applyQuickAction(
                 action: $quickAction,
                 planSlug: $data['plan_slug'],
                 adminNote: $data['admin_note'] ?? null,
@@ -101,7 +96,7 @@ class OwnerSubscriptionController extends Controller
         $startsAt = !empty($data['starts_at']) ? Carbon::parse($data['starts_at']) : null;
         $endsAt = !empty($data['ends_at']) ? Carbon::parse($data['ends_at']) : null;
 
-        $this->ownerSubscriptionManager->manualUpdate([
+        $this->ownerSubscriptionManager->updateSubscriptionManually([
             'plan_slug' => $data['plan_slug'],
             'subscription_status' => $data['subscription_status'],
             'starts_at' => $startsAt,
