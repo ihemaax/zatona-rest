@@ -390,7 +390,8 @@
 
     .elite-products{
         display: grid;
-        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
         padding: 0 18px 18px;
     }
 
@@ -416,12 +417,12 @@
     .elite-product-media{
         position: relative;
         height: 100%;
+        min-height: 188px;
     }
 
     .elite-product-image{
         width: 100%;
         height: 100%;
-        min-height: 188px;
         object-fit: cover;
         display: block;
         background: #f1ece4;
@@ -446,6 +447,20 @@
         flex-direction: column;
         gap: 10px;
         padding: 16px 16px 16px 0;
+    }
+
+    .elite-product-desc{
+        flex: 1;
+        min-height: 2.6em;
+    }
+
+    .elite-product-bottom{
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
     }
 
     .elite-product-top{
