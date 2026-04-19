@@ -14,15 +14,26 @@ class OwnerSubscriptionManager
 
     public function updateSubscriptionManually(array $payload, ?int $actorId = null): SiteSubscription
     {
-        return $this->persist([
+        $attributes = [
             'plan_slug' => $payload['plan_slug'],
             'subscription_status' => $this->normalizeStatus($payload['subscription_status'] ?? 'pending'),
-            'starts_at' => $payload['starts_at'] ?? null,
-            'ends_at' => $payload['ends_at'] ?? null,
-            'admin_note' => $payload['admin_note'] ?? null,
             'updated_by_user_id' => $actorId,
             'last_action' => 'manual_update',
-        ]);
+        ];
+
+        if (array_key_exists('starts_at', $payload)) {
+            $attributes['starts_at'] = $payload['starts_at'];
+        }
+
+        if (array_key_exists('ends_at', $payload)) {
+            $attributes['ends_at'] = $payload['ends_at'];
+        }
+
+        if (array_key_exists('admin_note', $payload)) {
+            $attributes['admin_note'] = $payload['admin_note'];
+        }
+
+        return $this->persist($attributes);
     }
 
     public function applyQuickAction(string $action, string $planSlug, ?string $adminNote = null, ?int $actorId = null): array
@@ -47,8 +58,13 @@ class OwnerSubscriptionManager
             default => throw new InvalidArgumentException('Unknown subscription quick action: ' . $action),
         };
 
-        $payload['admin_note'] = $adminNote;
-        $payload['updated_by_user_id'] = $actorId;
+        if ($adminNote !== null) {
+            $payload['admin_note'] = $adminNote;
+        }
+
+        if ($actorId !== null) {
+            $payload['updated_by_user_id'] = $actorId;
+        }
 
         $this->persist($payload);
 

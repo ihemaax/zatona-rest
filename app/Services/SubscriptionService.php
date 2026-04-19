@@ -72,7 +72,6 @@ class SubscriptionService
         return in_array($feature, $features, true);
     }
 
-
     public function updateCurrentSubscription(array $attributes): SiteSubscription
     {
         return DB::transaction(function () use ($attributes) {
@@ -88,33 +87,39 @@ class SubscriptionService
             SiteSubscription::query()->update(['is_current' => false]);
 
             $existingPlan = (string) ($existing->plan_slug ?? '');
-            $resolvedPlan = (string) ($attributes['plan_slug'] ?? ($existingPlan !== '' ? $existingPlan : $this->currentPlan()));
-
             $payload = [
                 'is_current' => true,
-                'plan_slug' => $resolvedPlan,
-                'subscription_status' => (string) ($attributes['subscription_status'] ?? $this->subscriptionStatus()),
-                'starts_at' => $attributes['starts_at'] ?? null,
-                'ends_at' => $attributes['ends_at'] ?? null,
+                'plan_slug' => array_key_exists('plan_slug', $attributes)
+                    ? (string) $attributes['plan_slug']
+                    : ($existingPlan !== '' ? $existingPlan : $this->currentPlan()),
+                'subscription_status' => array_key_exists('subscription_status', $attributes)
+                    ? (string) $attributes['subscription_status']
+                    : ((string) ($existing->subscription_status ?? config('subscription.fallback_status', 'pending'))),
+                'starts_at' => array_key_exists('starts_at', $attributes)
+                    ? $attributes['starts_at']
+                    : $existing->starts_at,
+                'ends_at' => array_key_exists('ends_at', $attributes)
+                    ? $attributes['ends_at']
+                    : $existing->ends_at,
                 'features' => $existing->features ?? null,
                 'limits' => $existing->limits ?? null,
             ];
 
-            if (Schema::hasColumn('site_subscriptions', 'admin_note')) {
-                $payload['admin_note'] = $attributes['admin_note'] ?? $existing->admin_note;
+            if (Schema::hasColumn('site_subscriptions', 'admin_note') && array_key_exists('admin_note', $attributes)) {
+                $payload['admin_note'] = $attributes['admin_note'];
             }
 
-            if (Schema::hasColumn('site_subscriptions', 'updated_by_user_id')) {
-                $payload['updated_by_user_id'] = $attributes['updated_by_user_id'] ?? $existing->updated_by_user_id;
+            if (Schema::hasColumn('site_subscriptions', 'updated_by_user_id') && array_key_exists('updated_by_user_id', $attributes)) {
+                $payload['updated_by_user_id'] = $attributes['updated_by_user_id'];
             }
 
-            if (Schema::hasColumn('site_subscriptions', 'last_action')) {
-                $payload['last_action'] = $attributes['last_action'] ?? $existing->last_action;
+            if (Schema::hasColumn('site_subscriptions', 'last_action') && array_key_exists('last_action', $attributes)) {
+                $payload['last_action'] = $attributes['last_action'];
             }
 
             $existing->fill($payload);
-
             $existing->save();
+
             $this->cachedSubscription = $existing->fresh();
 
             return $this->cachedSubscription;

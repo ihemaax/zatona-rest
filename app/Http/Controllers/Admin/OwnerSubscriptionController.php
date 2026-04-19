@@ -86,23 +86,31 @@ class OwnerSubscriptionController extends Controller
             $result = $this->ownerSubscriptionManager->applyQuickAction(
                 action: $quickAction,
                 planSlug: $data['plan_slug'],
-                adminNote: $data['admin_note'] ?? null,
+                adminNote: $request->filled('admin_note') ? (string) $data['admin_note'] : null,
                 actorId: $actorId,
             );
 
             return redirect()->route('admin.owner.subscription.edit')->with('success', $result['message']);
         }
 
-        $startsAt = !empty($data['starts_at']) ? Carbon::parse($data['starts_at']) : null;
-        $endsAt = !empty($data['ends_at']) ? Carbon::parse($data['ends_at']) : null;
-
-        $this->ownerSubscriptionManager->updateSubscriptionManually([
+        $manualPayload = [
             'plan_slug' => $data['plan_slug'],
             'subscription_status' => $data['subscription_status'],
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'admin_note' => $data['admin_note'] ?? null,
-        ], $actorId);
+        ];
+
+        if ($request->filled('starts_at')) {
+            $manualPayload['starts_at'] = Carbon::parse((string) $data['starts_at']);
+        }
+
+        if ($request->filled('ends_at')) {
+            $manualPayload['ends_at'] = Carbon::parse((string) $data['ends_at']);
+        }
+
+        if ($request->filled('admin_note')) {
+            $manualPayload['admin_note'] = (string) $data['admin_note'];
+        }
+
+        $this->ownerSubscriptionManager->updateSubscriptionManually($manualPayload, $actorId);
 
         return redirect()
             ->route('admin.owner.subscription.edit')
