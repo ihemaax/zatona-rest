@@ -28,11 +28,11 @@
             @if(isset($productPayload))
                 {{-- Regular product with add to cart --}}
                 @featureEnabled('cart')
-                <button type="button" class="add-to-cart-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>
+                <button type="button" class="menu-cta-btn add-to-cart-btn open-product-modal" data-bs-toggle="modal" data-bs-target="#productQuickAddModal" data-product='@json($productPayload)'>
                     {{ $buttonText ?? __('home.add_to_cart') }}
                 </button>
                 @else
-                <button type="button" class="add-to-cart-btn" disabled title="{{ config('subscription.blocked_message') }}">
+                <button type="button" class="menu-cta-btn add-to-cart-btn" disabled title="{{ config('subscription.blocked_message') }}">
                 </button>
                 @endfeatureEnabled
             @else
