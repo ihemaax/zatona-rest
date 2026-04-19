@@ -34,9 +34,12 @@
         }
 
         body{
-            font-family:'Instrument Sans','Cairo', Tahoma, Arial, sans-serif !important;
+            font-family:'Alexandria','Manrope','Segoe UI',Tahoma,Arial,sans-serif !important;
             background: linear-gradient(180deg, #f6f1e7 0%, #faf7f1 50%, #efe6d8 100%);
             color: var(--fb-text);
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'tnum' 1;
         }
 
         a{

@@ -185,7 +185,7 @@
                                             @endif
                                             {{ number_format((float) $offer->new_price, 2) }} {{ __('home.currency_egp') }}
                                         </span>
-                                        <a href="{{ $productsSectionTarget }}" class="add-btn text-decoration-none d-inline-flex align-items-center">شاهد المنيو</a>
+                                        <a href="{{ $productsSectionTarget }}" class="add-btn menu-cta-btn text-decoration-none">شاهد المنيو</a>
                                     </div>
                                 </div>
                             </article>

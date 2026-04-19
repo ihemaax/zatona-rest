@@ -16,7 +16,7 @@
     --th-radius-lg: 26px;
     --th-shadow: 0 12px 30px rgba(28, 38, 49, .08);
     --th-shadow-lg: 0 24px 44px rgba(28, 38, 49, .12);
-    --th-font: 'Instrument Sans','Cairo',Tahoma,Arial,sans-serif;
+    --th-font: 'Alexandria','Manrope','Segoe UI',Tahoma,Arial,sans-serif;
 }
 
 .front-theme--classic_olive {
@@ -43,6 +43,15 @@ body.front-theme {
     font-family: var(--th-font) !important;
     background: linear-gradient(180deg, color-mix(in srgb, var(--th-bg) 92%, #fff 8%) 0%, var(--th-bg) 100%);
     color: var(--th-text);
+}
+
+body.front-theme :is(h1,h2,h3,h4,h5,h6,.theme-title){
+    font-weight: 800;
+    letter-spacing: -0.012em;
+}
+
+body.front-theme :is(p,li,span,small,label,button,input,textarea,select){
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'tnum' 1;
 }
 
 .theme-page-shell{max-width:1200px;margin:0 auto;display:grid;gap:14px}
